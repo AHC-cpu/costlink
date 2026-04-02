@@ -1,0 +1,2504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CostLink — Purchase & Costing</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f3ee;--bg2:#ede9e1;--bg3:#e4dfd5;
+  --ink:#1a1812;--ink2:#2e2b22;--ink3:#46432f;
+  --line:#cfc9bc;--line2:#b8b0a0;
+  --orange:#c9521a;--orange2:#e06030;--orange-bg:rgba(201,82,26,.08);--orange-line:rgba(201,82,26,.25);
+  --green:#2a7a45;--green-bg:rgba(42,122,69,.08);--green-line:rgba(42,122,69,.22);
+  --red:#b83030;--red-bg:rgba(184,48,48,.08);--red-line:rgba(184,48,48,.22);
+  --blue:#2c5fa8;--blue-bg:rgba(44,95,168,.08);
+  --gold:#8a6a18;--gold-bg:rgba(138,106,24,.1);
+  --change:#c93a1a;--change-bg:rgba(201,58,26,.09);--change-border:rgba(201,58,26,.3);
+  --font:'Inter',sans-serif;--mono:'Inter',sans-serif;
+  --r:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{font-size:15px;}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);min-height:100vh;-webkit-font-smoothing:antialiased;}
+.shell{display:flex;height:100vh;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:230px;flex-shrink:0;background:var(--ink2);display:flex;flex-direction:column;}
+.sb-brand{padding:1.3rem 1.2rem 1rem;border-bottom:1px solid rgba(255,255,255,.1);}
+.sb-logo{font-family:var(--font);font-size:1.2rem;font-weight:700;color:#fff;letter-spacing:-.02em;}
+.sb-logo span{color:var(--orange2);}
+.sb-tagline{font-size:.58rem;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.15em;margin-top:2px;}
+.sb-sync{margin:.6rem .8rem .2rem;padding:.5rem .75rem;border-radius:7px;font-size:.68rem;display:flex;align-items:center;gap:.5rem;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);}
+.sync-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:#555;}
+.sync-dot.ok{background:#3ddc84;}
+.sync-dot.syncing{background:#d4a843;animation:blink 1s infinite;}
+.sync-dot.err{background:var(--red);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.sync-text{color:rgba(255,255,255,.45);flex:1;font-size:.65rem;line-height:1.3;}
+.sync-btn-sm{background:none;border:1px solid rgba(255,255,255,.15);border-radius:4px;color:rgba(255,255,255,.4);padding:2px 6px;font-size:.6rem;cursor:pointer;font-family:var(--mono);white-space:nowrap;}
+.sync-btn-sm:hover{color:#fff;border-color:rgba(255,255,255,.4);}
+.sb-nav{padding:.4rem .6rem;flex:1;}
+.sb-section{font-size:.55rem;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.18em;padding:.5rem .6rem .3rem;margin-top:.4rem;}
+.sb-item{display:flex;align-items:center;gap:.65rem;padding:.6rem .75rem;border-radius:8px;cursor:pointer;font-size:.78rem;color:rgba(255,255,255,.55);transition:all .15s;border:1px solid transparent;margin-bottom:.15rem;}
+.sb-item .ico{font-size:1rem;flex-shrink:0;}
+.sb-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85);}
+.sb-item.active{background:var(--orange);color:#fff;}
+.sb-footer{padding:.9rem 1.2rem;border-top:1px solid rgba(255,255,255,.08);}
+.sb-user{font-size:.72rem;color:rgba(255,255,255,.55);margin-bottom:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-signout{background:none;border:1px solid rgba(255,255,255,.15);border-radius:5px;color:rgba(255,255,255,.35);padding:3px 8px;font-size:.62rem;cursor:pointer;font-family:var(--mono);transition:all .15s;}
+.sb-signout:hover{color:#fff;border-color:rgba(255,255,255,.4);}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{background:#fff;border-bottom:1px solid var(--line);padding:.75rem 1.4rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.pg-title{font-family:var(--font);font-size:1.15rem;font-weight:700;color:var(--ink);}
+.pg-sub{font-size:.62rem;color:var(--ink3);margin-top:1px;}
+.topbar-r{display:flex;gap:.6rem;align-items:center;}
+.t-search{position:relative;}
+.t-search input{background:var(--bg);border:1px solid var(--line2);border-radius:7px;padding:.4rem .75rem .4rem 1.85rem;color:var(--ink);font-family:var(--mono);font-size:.75rem;width:200px;outline:none;transition:border-color .15s;}
+.t-search input:focus{border-color:var(--orange);}
+.t-search input::placeholder{color:var(--ink3);}
+.si{position:absolute;left:.6rem;top:50%;transform:translateY(-50%);color:var(--ink3);}
+.btn{padding:.45rem 1rem;border:none;border-radius:7px;font-family:var(--font);font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-p{background:var(--orange);color:#fff;}
+.btn-p:hover{background:var(--orange2);transform:translateY(-1px);box-shadow:0 4px 14px rgba(201,82,26,.3);}
+.btn-s{background:var(--bg);color:var(--ink2);border:1px solid var(--line2);}
+.btn-s:hover{background:var(--bg2);}
+
+/* ── PAGES ── */
+.page{display:none;flex:1;overflow:auto;padding:1.2rem 1.4rem;}
+.page.active{display:block;}
+
+/* ── LOGIN PAGE ── */
+.login-wrap{display:flex;align-items:center;justify-content:center;height:100%;padding:2rem;}
+.login-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:2.5rem 2rem;width:380px;text-align:center;box-shadow:0 4px 24px rgba(26,24,18,.08);}
+.login-logo{font-family:var(--font);font-size:1.5rem;font-weight:700;color:var(--ink);margin-bottom:.3rem;letter-spacing:-.02em;}
+.login-tagline{font-size:.8rem;color:var(--ink3);margin-bottom:2rem;}
+.gsi-btn{width:100%;padding:.75rem;background:#4285f4;color:#fff;border:none;border-radius:8px;font-family:var(--font);font-size:.88rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.7rem;transition:all .2s;}
+.gsi-btn:hover:not(:disabled){background:#3367d6;transform:translateY(-1px);box-shadow:0 4px 16px rgba(66,133,244,.35);}
+.gsi-btn:disabled{background:#9ab4f0;cursor:not-allowed;transform:none;}
+.gsi-btn svg{width:20px;height:20px;flex-shrink:0;}
+
+/* ── KPI ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1.1rem;}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:.85rem 1.1rem;}
+.kl{font-size:.58rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:.3rem;}
+.kv{font-family:var(--font);font-size:1.5rem;font-weight:700;line-height:1;}
+.kv.orange{color:var(--orange);}.kv.green{color:var(--green);}.kv.red{color:var(--red);}
+.ks{font-size:.62rem;color:var(--ink3);margin-top:.25rem;}
+
+/* ── BOARD ── */
+.board-grid{display:block;}
+.prod-card{background:#fff;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;position:relative;transition:box-shadow .2s;}
+.prod-card:hover{box-shadow:0 4px 20px rgba(26,24,18,.1);}
+.prod-card.changed{border-color:var(--change-border);}
+.prod-card.changed::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--change);}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(201,58,26,.15)}50%{box-shadow:0 0 0 5px rgba(201,58,26,.1)}}
+.prod-card.changed{animation:glow 3s ease infinite;}
+.pc-head{padding:.85rem 1rem .7rem;border-bottom:1px solid var(--bg2);}
+.pc-name{font-family:var(--font);font-size:.95rem;font-weight:700;color:var(--ink);line-height:1.25;}
+.pc-code{font-size:.62rem;color:var(--ink3);margin-top:2px;}
+.pc-badges{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.45rem;}
+.change-pill{display:inline-flex;align-items:center;gap:3px;background:var(--change-bg);border:1px solid var(--change-border);color:var(--change);border-radius:20px;padding:2px 8px;font-size:.62rem;font-weight:600;}
+.pc-costs{padding:.75rem 1rem;}
+.cost-row{display:flex;justify-content:space-between;align-items:center;padding:.28rem 0;font-size:.75rem;border-bottom:1px solid var(--bg2);}
+.cost-row:last-child{border-bottom:none;}
+.cost-row .cl{color:var(--ink3);}
+.cost-row .cv{font-weight:500;color:var(--ink);}
+.pc-total{background:var(--ink2);padding:.7rem 1rem;display:flex;justify-content:space-between;align-items:center;}
+.pct-label{font-size:.68rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.1em;}
+.pct-val{font-family:var(--font);font-size:1.2rem;font-weight:700;color:#fff;}
+.pct-old{font-size:.68rem;color:rgba(255,255,255,.4);text-decoration:line-through;margin-right:.4rem;}
+.pct-chg{font-size:.7rem;font-weight:600;}
+.pct-chg.up{color:#ff8a65;}.pct-chg.down{color:#81c995;}
+.pc-actions{padding:.5rem .75rem;background:var(--bg);display:flex;gap:.4rem;border-top:1px solid var(--line);}
+
+/* ── PANELS & TABLES ── */
+.panel{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:1rem;}
+.panel-hd{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1.1rem;border-bottom:1px solid var(--line);background:var(--bg);}
+.panel-title{font-family:var(--font);font-size:.85rem;font-weight:700;color:var(--ink);}
+.panel-body{padding:1rem 1.1rem;}
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead th{padding:.5rem .85rem;text-align:left;font-size:.58rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);background:var(--bg);white-space:nowrap;position:sticky;top:0;z-index:2;}
+tbody tr{border-bottom:1px solid var(--bg2);transition:background .1s;}
+tbody tr:hover{background:var(--bg);}
+td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
+.tn{font-weight:500;color:var(--ink);}
+.ts{font-size:.62rem;color:var(--ink3);margin-top:1px;}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:.6rem;font-weight:600;white-space:nowrap;}
+.bg{background:var(--green-bg);color:var(--green);border:1px solid var(--green-line);}
+.bo{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-line);}
+.br{background:var(--red-bg);color:var(--red);border:1px solid var(--red-line);}
+.bb{background:var(--blue-bg);color:var(--blue);}
+.bgold{background:var(--gold-bg);color:var(--gold);}
+.bgray{background:var(--bg2);color:var(--ink3);border:1px solid var(--line);}
+
+/* ── ACTION BTNS ── */
+.act{background:none;border:1px solid var(--line2);border-radius:5px;color:var(--ink3);padding:3px 7px;cursor:pointer;font-size:.68rem;font-family:var(--mono);transition:all .12s;}
+.act:hover{color:var(--orange);border-color:var(--orange-line);background:var(--orange-bg);}
+.act.del:hover{color:var(--red);border-color:var(--red-line);background:var(--red-bg);}
+
+/* ── FORMS ── */
+.fg{display:flex;flex-direction:column;gap:.28rem;margin-bottom:.65rem;}
+.fg label{font-size:.6rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em;font-weight:600;}
+.fg input,.fg select{background:var(--bg);border:1px solid var(--line2);border-radius:7px;padding:.52rem .75rem;color:var(--ink);font-family:var(--mono);font-size:.8rem;outline:none;transition:border-color .15s;}
+.fg input:focus,.fg select:focus{border-color:var(--orange);box-shadow:0 0 0 2px rgba(201,82,26,.1);background:#fff;}
+.fg input::placeholder{color:var(--ink3);}
+.fg select option{background:#fff;}
+.fr2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;}
+.fr4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.55rem;}
+
+/* ── COST FORM ── */
+.cost-section{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:.8rem;margin-bottom:.7rem;}
+.cs-title{font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.12em;margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem;}
+.cs-title .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.link-tag{background:var(--blue-bg);color:var(--blue);border-radius:4px;padding:1px 5px;font-size:.6rem;margin-left:.3rem;}
+.mini-label{font-size:.62rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.35rem;}
+.calc-preview{background:#fff;border:1px solid var(--line);border-radius:7px;padding:.65rem .85rem;margin-top:.5rem;}
+.calc-row{display:flex;justify-content:space-between;font-size:.74rem;padding:.2rem 0;}
+.calc-row.total{font-weight:600;border-top:1px solid var(--line);margin-top:.2rem;padding-top:.3rem;font-family:var(--font);font-size:.85rem;}
+.type-inhouse{background:rgba(42,122,69,.1);color:var(--green);border:1px solid var(--green-line);border-radius:5px;padding:2px 7px;font-size:.62rem;font-weight:600;}
+.type-outside{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-line);border-radius:5px;padding:2px 7px;font-size:.62rem;font-weight:600;}
+
+/* ── MODAL ── */
+.mbg{display:none;position:fixed;inset:0;background:rgba(26,24,18,.6);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.mbg.open{display:flex;}
+.modal{background:#fff;border:1.5px solid var(--line);border-radius:14px;width:580px;max-width:96vw;max-height:92vh;overflow-y:auto;animation:mIn .2s cubic-bezier(.34,1.56,.64,1);box-shadow:0 20px 60px rgba(26,24,18,.2);}
+.modal-lg{width:720px;}
+@keyframes mIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+.mhd{display:flex;align-items:center;justify-content:space-between;padding:.95rem 1.2rem;border-bottom:1px solid var(--line);background:var(--bg);}
+.mtitle{font-family:var(--font);font-size:1rem;font-weight:700;color:var(--ink);}
+.mclose{background:none;border:none;color:var(--ink3);cursor:pointer;font-size:1.2rem;padding:0 4px;}
+.mclose:hover{color:var(--ink);}
+.mbody{padding:1.2rem;}
+.mfoot{padding:.85rem 1.2rem;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:.6rem;background:var(--bg);}
+.btn-save{padding:.55rem 1.3rem;background:var(--orange);color:#fff;border:none;border-radius:7px;font-family:var(--font);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-save:hover{background:var(--orange2);}
+.btn-cancel{padding:.55rem 1rem;background:var(--bg);color:var(--ink2);border:1px solid var(--line);border-radius:7px;font-family:var(--mono);font-size:.78rem;cursor:pointer;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:200;background:var(--ink2);border-radius:9px;padding:.7rem 1rem;display:flex;align-items:center;gap:.65rem;font-size:.78rem;color:#fff;transform:translateY(90px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 16px 40px rgba(26,24,18,.3);max-width:330px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.tdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* ── LOADING ── */
+#load-bar{position:fixed;top:0;left:0;height:3px;background:var(--orange);width:0;transition:width .3s;z-index:999;}
+.spinner-inline{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--orange);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--ink3);}
+.empty-icon{font-size:2.5rem;margin-bottom:.8rem;opacity:.4;}
+.empty-p{font-size:.78rem;}
+.divider{height:1px;background:var(--line);margin:.7rem 0;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div id="load-bar"></div>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo">Cost<span>Link</span></div>
+      <div class="sb-tagline">Purchase · Costing · Pricing</div>
+    </div>
+    <div class="sb-sync" id="sync-box">
+      <div class="sync-dot" id="sync-dot"></div>
+      <div class="sync-text" id="sync-text">Not signed in</div>
+      <button class="sync-btn-sm" onclick="syncAll(true)">↺ Sync</button>
+    </div>
+    <div class="sb-nav">
+      <div class="sb-section">Overview</div>
+      <div class="sb-item active" onclick="goto('board')" id="nav-board"><span class="ico">▦</span> Product Board</div>
+      <div class="sb-section" style="margin-top:.4rem">Purchase</div>
+      <div class="sb-item" onclick="goto('purchases')" id="nav-purchases"><span class="ico">🛒</span> Purchase Items</div>
+      <div class="sb-item" onclick="goto('materials')" id="nav-materials"><span class="ico">🗂</span> Item Master</div>
+      <div class="sb-section" style="margin-top:.4rem">Costing</div>
+      <div class="sb-item" onclick="goto('costing')" id="nav-costing"><span class="ico">⚙</span> Build Cost Sheet</div>
+      <div class="sb-item" onclick="goto('inhouse')" id="nav-inhouse"><span class="ico">🏭</span> In-House Production</div>
+      <div class="sb-item" onclick="goto('history')" id="nav-history"><span class="ico">📋</span> Cost History</div>
+    </div>
+    <div class="sb-footer">
+      <div class="sb-user" id="sb-user">Not signed in</div>
+      <button class="sb-signout" id="sb-signout" onclick="signOut()" style="display:none">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="pg-title" id="pg-title">Product Board</div>
+        <div class="pg-sub" id="pg-sub">Live pricing with 15-day change highlights</div>
+      </div>
+      <div class="topbar-r">
+        <div class="t-search"><span class="si">⌕</span><input type="text" id="gsearch" placeholder="Search…" oninput="renderBoard()"/></div>
+        <button class="btn btn-p" id="btn-main" onclick="mainAction()">+ New Product</button>
+      </div>
+    </div>
+
+    <!-- LOGIN PAGE -->
+    <div class="page active" id="page-login">
+      <div class="login-wrap">
+        <div class="login-card">
+          <div style="width:52px;height:52px;background:var(--orange);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto 1.2rem;">📦</div>
+          <div class="login-logo">CostLink</div>
+          <div class="login-tagline">Purchase & Costing — synced with Google Sheets</div>
+
+          <div id="login-status" style="display:none;margin-bottom:.75rem;padding:.6rem .9rem;border-radius:7px;font-size:.78rem;background:var(--bg);border:1px solid var(--line);color:var(--ink3);text-align:center;"></div>
+
+          <button class="gsi-btn" id="gsi-btn" onclick="startSignIn()">
+            <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C33.9 6.5 29.2 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-7.9 19.7-20 0-1.3-.1-2.7-.1-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.1 18.9 12 24 12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C33.9 6.5 29.2 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.4-5l-6.2-5.2C29.3 35.3 26.8 36 24 36c-5.2 0-9.6-3-11.3-7.3l-6.6 4.8C9.6 39.5 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.5-2.6 4.6-4.8 6l6.2 5.2C40.2 35.7 44 30.3 44 24c0-1.3-.1-2.7-.4-4z"/></svg>
+            Sign in with Google
+          </button>
+          <div style="margin-top:.85rem;font-size:.72rem;color:var(--ink3);line-height:1.6;">
+            Sign in once — browser remembers forever.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCT BOARD -->
+    <div class="page" id="page-board">
+      <div class="kpi-row">
+        <div class="kpi"><div class="kl">Total Products</div><div class="kv orange" id="kv-total">0</div><div class="ks">In cost sheet</div></div>
+        <div class="kpi"><div class="kl">Changed (15 days)</div><div class="kv red" id="kv-changed">0</div><div class="ks">Price movements</div></div>
+        <div class="kpi"><div class="kl">In-House</div><div class="kv green" id="kv-inhouse">0</div><div class="ks">Own production</div></div>
+        <div class="kpi"><div class="kl">Procured</div><div class="kv" id="kv-outside">0</div><div class="ks">From suppliers</div></div>
+      </div>
+      <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;" id="board-filters">
+        <button class="btn btn-s" id="filt-all" onclick="setBF('all')" style="font-size:.72rem;padding:.35rem .75rem">All</button>
+        <button class="btn btn-s" id="filt-changed" onclick="setBF('changed')" style="font-size:.72rem;padding:.35rem .75rem">🔥 Changed</button>
+        <button class="btn btn-s" id="filt-inhouse" onclick="setBF('inhouse')" style="font-size:.72rem;padding:.35rem .75rem">In-House</button>
+        <button class="btn btn-s" id="filt-outside" onclick="setBF('outside')" style="font-size:.72rem;padding:.35rem .75rem">Procured</button>
+      </div>
+      <div class="board-grid" id="board-grid"></div>
+    </div>
+
+    <!-- PURCHASES -->
+    <div class="page" id="page-purchases">
+      <div style="display:flex;gap:.6rem;margin-bottom:.9rem;align-items:center;">
+        <select id="pur-cat-filter" onchange="renderPurchases()" style="background:#fff;border:1px solid var(--line2);border-radius:7px;padding:.4rem .7rem;color:var(--ink);font-family:var(--mono);font-size:.74rem;outline:none;">
+          <option value="">All Categories</option>
+          <option value="Raw Material">Raw Material</option>
+          <option value="Product">Product (Procured)</option>
+          <option value="Label">Label</option>
+          <option value="Tag">Tag</option>
+          <option value="Product Packing">Product Packing</option>
+          <option value="Courier Packing">Courier Packing</option>
+        </select>
+        <div style="margin-left:auto;font-size:.7rem;color:var(--ink3)" id="pur-count"></div>
+      </div>
+      <div class="panel"><div class="tw">
+        <table>
+          <thead><tr><th>Item Name</th><th>Category</th><th>Rate</th><th>Unit</th><th>GST%</th><th>Transport</th><th>Effective Cost</th><th>Purchase Date</th><th></th></tr></thead>
+          <tbody id="tbl-purchases"></tbody>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- ITEM MASTER -->
+    <div class="page" id="page-materials">
+      <!-- hidden file input for excel upload -->
+      <input type="file" id="xlsx-input" accept=".xlsx,.xls" style="display:none" onchange="handleXLSX(this)"/>
+      <div style="display:flex;gap:.7rem;align-items:center;margin-bottom:.9rem;flex-wrap:wrap;">
+        <button class="btn btn-p" onclick="document.getElementById('xlsx-input').click()" style="display:flex;align-items:center;gap:.5rem;">
+          <span>📥</span> Import from Excel
+        </button>
+        <button class="btn btn-s" onclick="downloadTemplate()" style="display:flex;align-items:center;gap:.5rem;">
+          <span>📄</span> Download Template
+        </button>
+        <div style="margin-left:auto;font-size:.78rem;color:var(--ink3)" id="mat-count"></div>
+      </div>
+      <div class="panel"><div class="tw">
+        <table>
+          <thead><tr><th>Item Name</th><th>Category</th><th>Rate</th><th>Unit</th><th>GST</th><th>Effective Cost</th><th>Used In</th><th></th></tr></thead>
+          <tbody id="tbl-materials"></tbody>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- COSTING -->
+    <div class="page" id="page-costing">
+      <div style="display:grid;grid-template-columns:420px 1fr;gap:1.2rem;align-items:start;">
+        <div>
+          <div class="panel">
+            <div class="panel-hd"><div class="panel-title" id="cost-form-title">⚙ Build Cost Sheet</div></div>
+            <div class="panel-body" id="cost-form-body"></div>
+          </div>
+        </div>
+        <div>
+          <div class="panel">
+            <div class="panel-hd"><div class="panel-title">👁 Live Cost Preview</div></div>
+            <div class="panel-body" id="cost-preview-body">
+              <div class="empty-state"><div class="empty-icon">⚙</div><div class="empty-p">Fill the form to see live cost breakdown</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="page" id="page-history">
+      <div class="panel"><div class="tw">
+        <table>
+          <thead><tr><th>Product</th><th>SKU</th><th>Type</th><th>Old Cost</th><th>New Cost</th><th>Change</th><th>Changed On</th><th>Days Ago</th></tr></thead>
+          <tbody id="tbl-history"></tbody>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- IN-HOUSE PRODUCTION -->
+    <div class="page" id="page-inhouse">
+      <div style="display:grid;grid-template-columns:440px 1fr;gap:1.2rem;align-items:start;">
+
+        <!-- FORM PANEL -->
+        <div>
+          <div class="panel">
+            <div class="panel-hd"><div class="panel-title" id="inh-form-title">🏭 New Production Cost</div></div>
+            <div class="panel-body">
+              <div class="fg"><label>Product Name *</label><input type="text" id="inh-product" placeholder="e.g. Nursing Pad - 6 pcs"/></div>
+
+              <!-- FABRIC COST SECTION — multi-fabric -->
+              <div class="cost-section">
+                <div class="cs-title"><div class="dot" style="background:var(--blue)"></div>Fabric Cost</div>
+                <div id="inh-fabrics-wrap">
+                  <!-- fabric rows injected here -->
+                </div>
+                <button onclick="addFabricRow()" class="btn btn-s" style="width:100%;margin-top:.4rem;font-size:.76rem;padding:.4rem">+ Add Another Fabric / Material</button>
+                <div class="calc-preview" style="margin-top:.5rem">
+                  <div class="calc-row total"><span>Total Fabric Cost / product</span><span id="inh-fab-cost">₹0.00</span></div>
+                </div>
+              </div>
+
+              <!-- LABOUR COST SECTION -->
+              <div class="cost-section">
+                <div class="cs-title"><div class="dot" style="background:var(--orange)"></div>Labour Cost</div>
+                <div class="fr2">
+                  <div class="fg"><label>Stitching (₹/pc)</label><input type="number" id="inh-stitch" placeholder="0.00" min="0" step=".01" value="0" oninput="calcInhouse()"/></div>
+                  <div class="fg"><label>Cutting (₹/pc)</label><input type="number" id="inh-cut" placeholder="0.00" min="0" step=".01" value="0" oninput="calcInhouse()"/></div>
+                </div>
+                <div class="fr2">
+                  <div class="fg"><label>Finishing / Packing (₹/pc)</label><input type="number" id="inh-finish" placeholder="0.00" min="0" step=".01" value="0" oninput="calcInhouse()"/></div>
+                  <div class="fg"><label>Job Work (₹/pc)</label><input type="number" id="inh-jobwork" placeholder="0.00" min="0" step=".01" value="0" oninput="calcInhouse()"/></div>
+                </div>
+                <div class="calc-preview" style="margin-top:.3rem">
+                  <div class="calc-row"><span>Stitching</span><span id="inh-l-stitch">₹0.00</span></div>
+                  <div class="calc-row"><span>Cutting</span><span id="inh-l-cut">₹0.00</span></div>
+                  <div class="calc-row"><span>Finishing</span><span id="inh-l-finish">₹0.00</span></div>
+                  <div class="calc-row"><span>Job Work</span><span id="inh-l-job">₹0.00</span></div>
+                  <div class="calc-row total"><span>Total Labour / product</span><span id="inh-labour-total">₹0.00</span></div>
+                </div>
+              </div>
+
+              <div class="fg"><label>Notes</label><input type="text" id="inh-notes" placeholder="Optional"/></div>
+
+              <div style="display:flex;gap:.6rem;margin-top:.3rem">
+                <button class="btn btn-p" onclick="saveInhouse()" style="flex:1" id="btn-save-inh">Save Production Cost</button>
+                <button class="btn btn-s" onclick="resetInhouseForm()">New</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PREVIEW + LIST PANEL -->
+        <div>
+          <div class="panel" style="margin-bottom:1rem">
+            <div class="panel-hd"><div class="panel-title">📊 Live Cost Summary</div></div>
+            <div class="panel-body" id="inh-preview-body">
+              <div class="empty-state"><div class="empty-icon">🏭</div><div class="empty-p">Fill the form to see cost breakdown</div></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-hd">
+              <div class="panel-title">All In-House Products</div>
+              <span style="font-size:.72rem;color:var(--ink3)" id="inh-list-count"></span>
+            </div>
+            <div class="tw">
+              <table>
+                <thead><tr><th>Product</th><th>Fabrics Used</th><th>Fabric Cost</th><th>Labour Cost</th><th>Total Cost</th><th>Updated</th><th></th></tr></thead>
+                <tbody id="tbl-inhouse"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div><!-- main -->
+</div><!-- shell -->
+
+<!-- MODAL: PURCHASE ITEM -->
+<div class="mbg" id="modal-pur">
+  <div class="modal">
+    <div class="mhd"><div class="mtitle" id="modal-pur-title">🛒 Add Purchase Item</div><button class="mclose" onclick="closeM('modal-pur')">✕</button></div>
+    <div class="mbody">
+      <div class="fr2">
+        <div class="fg"><label>Item Name *</label>
+          <input type="text" id="pi-name" placeholder="e.g. Muslin Fabric 58 inch" list="pi-name-list" oninput="calcPurPreview()"/>
+          <datalist id="pi-name-list"></datalist>
+        </div>
+        <div class="fg"><label>Category *</label>
+          <select id="pi-cat" onchange="togglePurFields();populateNameSuggestions()">
+            <option value="Raw Material">Raw Material</option>
+            <option value="Product">Product (Procured)</option>
+            <option value="Label">Label</option>
+            <option value="Tag">Tag</option>
+            <option value="Product Packing">Product Packing</option>
+            <option value="Courier Packing">Courier Packing</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label>Item Code <span style="color:var(--ink3);font-weight:400">— unique identifier for tracking</span></label>
+        <input type="text" id="pi-code" placeholder="e.g. FAB-MUSLIN-58 (auto-filled if left blank)"/>
+      </div>
+      <div class="fr2">
+        <div class="fg"><label>Purchase Date *</label><input type="date" id="pi-date"/></div>
+        <div class="fg" id="pi-supp-wrap"><label>Supplier / Country of Origin</label><input type="text" id="pi-supplier" placeholder="e.g. China / Ramesh Fabrics"/></div>
+      </div>
+      <div class="fr3">
+        <div class="fg"><label>Rate (₹) *</label><input type="number" id="pi-rate" placeholder="0.00" min="0" step=".01" oninput="calcPurPreview()"/></div>
+        <div class="fg"><label>Quantity *</label><input type="number" id="pi-qty" placeholder="1" min="1" step=".01" value="1" oninput="calcPurPreview()"/></div>
+        <div class="fg"><label>Unit</label><select id="pi-unit"><option>PCS</option><option>METER</option><option>KG</option><option>BOX</option><option>ROLL</option><option>PACK</option><option>SET</option></select></div>
+      </div>
+      <div class="fr2">
+        <div class="fg"><label>GST %</label><select id="pi-gst" onchange="calcPurPreview()"><option value="0">0%</option><option value="5">5%</option><option value="12">12%</option><option value="18" selected>18%</option><option value="28">28%</option></select></div>
+        <div class="fg"><label>Domestic Transport (₹ total) <span style="color:var(--ink3);font-weight:400">÷ qty</span></label><input type="number" id="pi-transport" placeholder="0.00" min="0" step=".01" value="0" oninput="calcPurPreview()"/></div>
+      </div>
+
+      <!-- IMPORTED TOGGLE -->
+      <div style="display:flex;align-items:center;gap:.75rem;padding:.65rem .85rem;background:var(--blue-bg);border:1px solid rgba(44,95,168,.2);border-radius:8px;margin-bottom:.7rem;cursor:pointer;" onclick="toggleImported(false)">
+        <div style="position:relative;width:20px;height:20px;flex-shrink:0;">
+          <input type="checkbox" id="pi-imported" onchange="toggleImported(true)" onclick="event.stopPropagation()"
+            style="width:18px;height:18px;cursor:pointer;accent-color:var(--blue);"/>
+        </div>
+        <div>
+          <div style="font-size:.82rem;font-weight:600;color:var(--blue)">🌍 This is an Imported Product</div>
+          <div style="font-size:.68rem;color:var(--ink3);margin-top:1px;">Check to add Custom Duty & Import Transportation charges</div>
+        </div>
+      </div>
+
+      <!-- IMPORT FIELDS (shown only when imported is checked) -->
+      <div id="pi-import-fields" style="display:none">
+
+        <div style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:.85rem;margin-bottom:.7rem;">
+          <div style="font-size:.68rem;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.8rem;">
+            Import Cost Breakdown — all amounts divided by Quantity automatically
+          </div>
+          <div class="fr2">
+            <div class="fg">
+              <label>Total Custom Duty (₹) — full shipment</label>
+              <input type="number" id="pi-duty-val" placeholder="0.00" min="0" step=".01" value="0" oninput="calcPurPreview()"/>
+              <div style="font-size:.65rem;color:var(--ink3);margin-top:.2rem;">Divided by quantity → per unit duty</div>
+            </div>
+            <div class="fg">
+              <label>Per Unit Duty (auto)</label>
+              <input type="text" id="pi-duty-per-unit" readonly style="background:var(--bg2);color:var(--blue);font-weight:600;"/>
+            </div>
+          </div>
+          <div class="fr2" style="margin-top:.5rem">
+            <div class="fg">
+              <label>Total Import Transport / Freight (₹) — full shipment</label>
+              <input type="number" id="pi-imp-trans" placeholder="0.00" min="0" step=".01" value="0" oninput="calcPurPreview()"/>
+              <div style="font-size:.65rem;color:var(--ink3);margin-top:.2rem;">Divided by quantity → per unit freight</div>
+            </div>
+            <div class="fg">
+              <label>Per Unit Freight (auto)</label>
+              <input type="text" id="pi-imp-trans-unit" readonly style="background:var(--bg2);color:var(--orange);font-weight:600;"/>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /import fields -->
+
+      <div class="fg"><label>Notes</label><input type="text" id="pi-notes" placeholder="Optional"/></div>
+
+      <!-- COST PREVIEW -->
+      <div class="calc-preview" style="margin-top:.6rem">
+        <div class="calc-row"><span>Base Rate / unit</span><span id="pp-base">₹0.00</span></div>
+        <div class="calc-row"><span id="pp-gst-l">GST (18%)</span><span id="pp-gst">₹0.00</span></div>
+        <div class="calc-row"><span id="pp-trans-l">Domestic Transport (÷ qty)</span><span id="pp-trans">₹0.00</span></div>
+        <div class="calc-row" id="pp-duty-row" style="display:none"><span id="pp-duty-l">Custom Duty</span><span id="pp-duty">₹0.00</span></div>
+        <div class="calc-row" id="pp-imptrans-row" style="display:none"><span>Import Freight / unit</span><span id="pp-imptrans">₹0.00</span></div>
+        <div class="calc-row total"><span>Effective Cost / unit</span><span id="pp-total">₹0.00</span></div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-cancel" onclick="closeM('modal-pur')">Cancel</button>
+      <button class="btn-save" id="btn-save-pur" onclick="savePurItem()">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT PREVIEW MODAL -->
+<div class="mbg" id="modal-import">
+  <div class="modal modal-lg">
+    <div class="mhd">
+      <div class="mtitle">📥 Import from Excel</div>
+      <button class="mclose" onclick="closeM('modal-import')">✕</button>
+    </div>
+    <div class="mbody">
+
+      <!-- Sheet selector (shown if multiple sheets detected) -->
+      <div id="imp-sheet-selector" style="display:none;margin-bottom:.9rem;">
+        <div class="fg">
+          <label>Select Sheet to Import</label>
+          <select id="imp-sheet-select" onchange="switchImportSheet()" style="background:var(--bg);border:1px solid var(--line2);border-radius:7px;padding:.52rem .75rem;color:var(--ink);font-family:var(--mono);font-size:.8rem;outline:none;width:100%;"></select>
+        </div>
+      </div>
+
+      <!-- Column mapping grid -->
+      <div style="background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:1rem;margin-bottom:.9rem;">
+        <div style="font-size:.7rem;font-weight:700;color:var(--ink2);margin-bottom:.8rem;text-transform:uppercase;letter-spacing:.08em;">
+          Map Your Columns <span style="font-weight:400;color:var(--ink3);text-transform:none;letter-spacing:0">(auto-detected from your headers)</span>
+        </div>
+
+        <!-- Core fields -->
+        <div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;font-weight:600;">Core Fields</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:.8rem;" id="col-map-core"></div>
+
+        <!-- Cost fields -->
+        <div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;font-weight:600;">Cost & Tax Fields</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:.8rem;" id="col-map-cost"></div>
+
+        <!-- Import/Export fields -->
+        <div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;font-weight:600;">Import Fields <span style="font-weight:400;color:var(--ink3);text-transform:none;letter-spacing:0">(optional — for imported products)</span></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:.8rem;" id="col-map-import"></div>
+
+        <!-- Payment fields -->
+        <div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;font-weight:600;">Payment Fields <span style="font-weight:400;color:var(--ink3);text-transform:none;letter-spacing:0">(optional)</span></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;" id="col-map-payment"></div>
+      </div>
+
+      <!-- Defaults row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.65rem;margin-bottom:.9rem;">
+        <div class="fg">
+          <label>Default Category</label>
+          <select id="imp-default-cat">
+            <option value="Raw Material">Raw Material</option>
+            <option value="Product">Product (Procured)</option>
+            <option value="Label">Label</option>
+            <option value="Tag">Tag</option>
+            <option value="Product Packing">Product Packing</option>
+            <option value="Courier Packing">Courier Packing</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Default GST %</label>
+          <select id="imp-default-gst">
+            <option value="0">0%</option>
+            <option value="5">5%</option>
+            <option value="12">12%</option>
+            <option value="18" selected>18%</option>
+            <option value="28">28%</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Default Unit</label>
+          <select id="imp-default-unit">
+            <option>KG</option><option>PCS</option><option>METER</option>
+            <option>BOX</option><option>ROLL</option><option>PACK</option><option>SET</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Mark All As Imported?</label>
+          <select id="imp-default-imported">
+            <option value="auto">Auto-detect</option>
+            <option value="yes">Yes — all imported</option>
+            <option value="no">No — all local</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Preview table -->
+      <div style="font-size:.75rem;font-weight:600;color:var(--ink2);margin-bottom:.5rem;" id="imp-preview-label">Preview</div>
+      <div class="tw" style="max-height:280px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;">
+        <table>
+          <thead><tr>
+            <th>Item Name</th><th>Supplier</th><th>Date</th><th>Category</th>
+            <th>Qty</th><th>Rate</th><th>GST</th><th>Transport</th>
+            <th>Duty</th><th>Imp.Freight</th><th>Eff.Cost/unit</th><th>Status</th>
+          </tr></thead>
+          <tbody id="tbl-import-preview"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:.75rem;padding:.65rem .9rem;background:var(--bg);border-radius:7px;border:1px solid var(--line);font-size:.75rem;color:var(--ink3);" id="imp-summary"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-cancel" onclick="closeM('modal-import')">Cancel</button>
+      <button class="btn-save" id="btn-import-confirm" onclick="confirmImport()">Import All Items</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><div class="tdot" id="tdot"></div><span id="tmsg"></span></div>
+
+<!-- GOOGLE API -->
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
+<!-- SheetJS for Excel parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+// ══════════════════════════════════════════════════
+//  APP CONFIG — SET THESE ONCE, NEVER ENTER AGAIN
+// ══════════════════════════════════════════════════
+const APP_CONFIG = {
+  SHEET_ID:        '1LKFNAnYrYaSQxWSeLpzU1QHXx1xKBgqGjaUQ6IxPVhI',
+  OAUTH_CLIENT_ID: '289842293194-e3f0hqkkc1snbof9r7pot4314ufdbe7f.apps.googleusercontent.com',
+  COMPANY_NAME:    'My Manufacturing Co.',
+};
+
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+const DISCOVERY = 'https://sheets.googleapis.com/$discovery/rest?version=v4';
+
+// Sheet tab names
+const TAB_ITEMS   = 'PurchaseItems';
+const TAB_COSTS   = 'CostSheets';
+const TAB_HISTORY = 'CostHistory';
+const TAB_INHOUSE = 'InhouseProduction';
+
+// Headers for each tab
+const HDR_ITEMS   = ['ID','ItemCode','Name','Category','Rate','Qty','Unit','GST','GSTAmount','Transport','TransportPerUnit','IsImported','CustomDuty','CustomDutyPerUnit','ImportTransport','ImportTransportPerUnit','EffectiveCost','Supplier','Notes','PurchaseDate','UpdatedAt','CreatedAt'];
+const HDR_COSTS   = ['ID','Name','SKU','Category','ProductType','ProductItemID','InhouseCost','InhouseDesc','TagItemID','ProdPackItemID','LabelItemID','CourierPackItemID','CourierLabelItemID','ProductCost','TagCost','ProdPackCost','LabelCost','CourierPackCost','CourierLabelCost','ExtraItems','ExtraTotal','FinalCost','PrevFinalCost','CostChangedAt','UpdatedAt','CreatedAt'];
+const HDR_HISTORY = ['ID','SheetID','ProductName','SKU','ProductType','OldCost','NewCost','Diff','DiffPct','ChangedAt'];
+const HDR_INHOUSE = ['ID','ProductName','FabricItemID','FabricName','MetersPerUnit','WastagePct','FabricCostPerUnit','Stitching','Cutting','Finishing','JobWork','TotalLabour','TotalInhouseCost','Notes','UpdatedAt','CreatedAt'];
+
+// ══════════════════════════════════════════════════
+//  LOCAL DB (mirror of sheet)
+// ══════════════════════════════════════════════════
+let DB = { items:[], costSheets:[], costHistory:[], inhouse:[] };
+
+// ══════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════
+const uid  = () => Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+const fmt  = n  => '₹' + Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const gv   = id => document.getElementById(id)?.value || '';
+const sv   = (id,v) => { if(document.getElementById(id)) document.getElementById(id).value = v; };
+const gf   = id => parseFloat(gv(id)) || 0;
+const today= () => new Date().toISOString().slice(0,10);
+const daysSince = d => Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
+
+let _tt;
+function toast(msg, type='ok'){
+  const col = {ok:'#3ddc84', warn:'#d4a843', err:'var(--red)'}[type] || '#3ddc84';
+  document.getElementById('tdot').style.background = col;
+  document.getElementById('tmsg').textContent = msg;
+  document.getElementById('toast').classList.add('show');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => document.getElementById('toast').classList.remove('show'), 3200);
+}
+
+function setLoading(pct, msg='') {
+  document.getElementById('load-bar').style.width = pct + '%';
+  if(!pct) setTimeout(()=>document.getElementById('load-bar').style.width='0', 400);
+}
+
+function setSyncStatus(state, msg) {
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-text');
+  dot.className = 'sync-dot ' + state;
+  txt.textContent = msg;
+}
+
+// ══════════════════════════════════════════════════
+//  GOOGLE OAUTH
+// ══════════════════════════════════════════════════
+let tokenClient = null;
+let gapiReady   = false;
+let gisReady    = false;
+let isSignedIn  = false;
+
+function loadGAPI() { preloadGAPI(); }
+
+// Pre-load both libraries as soon as page starts
+// so the Sign-In button works instantly when clicked
+function preloadGAPI() {
+  if (typeof gapi === 'undefined') {
+    setLoginStatus('Google API script failed to load. Check your internet connection.', true);
+    return;
+  }
+  gapi.load('client', async () => {
+    try {
+      await gapi.client.init({ discoveryDocs: [DISCOVERY] });
+      gapiReady = true;
+      maybeInitGIS();
+    } catch(e) {
+      console.error('GAPI init error:', e);
+      setLoginStatus('Failed to initialise Google API: ' + e.message, true);
+    }
+  });
+}
+
+function maybeInitGIS() {
+  if (!gapiReady) return;
+  if (typeof google === 'undefined' || !google.accounts) {
+    setTimeout(maybeInitGIS, 200);
+    return;
+  }
+  try {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: APP_CONFIG.OAUTH_CLIENT_ID,
+      scope: SCOPES,
+      callback: async (resp) => {
+        if (resp.error) {
+          setLoginStatus('Sign-in failed: ' + resp.error + '. Check your Client ID and try again.', true);
+          setSyncStatus('err', 'Sign-in failed');
+          const btn = document.getElementById('gsi-btn');
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C33.9 6.5 29.2 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-7.9 19.7-20 0-1.3-.1-2.7-.1-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.1 18.9 12 24 12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C33.9 6.5 29.2 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.4-5l-6.2-5.2C29.3 35.3 26.8 36 24 36c-5.2 0-9.6-3-11.3-7.3l-6.6 4.8C9.6 39.5 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.5-2.6 4.6-4.8 6l6.2 5.2C40.2 35.7 44 30.3 44 24c0-1.3-.1-2.7-.4-4z"/></svg>Sign in with Google`;
+          }
+          return;
+        }
+        isSignedIn = true;
+        setLoginStatus('✓ Signed in! Loading your data…');
+        onSignedIn();
+      }
+    });
+    gisReady = true;
+    setLoginStatus('✓ Ready — click Sign in with Google');
+    // Auto-trigger sign-in if we got here from startSignIn
+    if (_pendingSignIn) { _pendingSignIn = false; startSignIn(); }
+  } catch(e) {
+    console.error('GIS init error:', e);
+    setLoginStatus('Failed to set up Google Sign-In: ' + e.message, true);
+  }
+}
+
+let _pendingSignIn = false;
+
+function setLoginStatus(msg, isErr=false) {
+  const el = document.getElementById('login-status');
+  if (!el) return;
+  el.style.display = msg ? '' : 'none';
+  el.textContent = msg;
+  el.style.background = isErr ? 'var(--red-bg)' : 'var(--bg)';
+  el.style.borderColor = isErr ? 'var(--red-line)' : 'var(--line)';
+  el.style.color = isErr ? 'var(--red)' : 'var(--ink3)';
+}
+
+function startSignIn() {
+  const btn = document.getElementById('gsi-btn');
+  setLoginStatus('⏳ Loading Google API…');
+
+  if (!gapiReady || !gisReady || !tokenClient) {
+    if(btn){ btn.disabled=true; btn.innerHTML='<span>Connecting…</span>'; }
+    if (!gapiReady) { _pendingSignIn = true; loadGAPI(); return; }
+    setTimeout(startSignIn, 500);
+    return;
+  }
+
+  if(btn){ btn.disabled=true; btn.innerHTML='<span>Opening Google sign-in…</span>'; }
+  setLoginStatus('⏳ Opening Google sign-in popup…');
+  try {
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  } catch(e) {
+    setLoginStatus('Error: ' + e.message, true);
+    if(btn){
+      btn.disabled=false;
+      btn.innerHTML=`<svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C33.9 6.5 29.2 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-7.9 19.7-20 0-1.3-.1-2.7-.1-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.1 18.9 12 24 12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C33.9 6.5 29.2 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.4-5l-6.2-5.2C29.3 35.3 26.8 36 24 36c-5.2 0-9.6-3-11.3-7.3l-6.6 4.8C9.6 39.5 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.5-2.6 4.6-4.8 6l6.2 5.2C40.2 35.7 44 30.3 44 24c0-1.3-.1-2.7-.4-4z"/></svg>Sign in with Google`;
+    }
+  }
+}
+
+async function onSignedIn() {
+  setSyncStatus('syncing', 'Setting up sheets…');
+  setLoading(20, 'Connecting…');
+
+  try {
+    await ensureSheetTabs();
+    setLoading(60, 'Loading data…');
+    await loadAllFromSheet();
+    setLoading(100);
+    setTimeout(()=>setLoading(0), 500);
+
+    // Update UI
+    const profile = await getGoogleUserInfo();
+    document.getElementById('sb-user').textContent = profile || APP_CONFIG.COMPANY_NAME;
+    document.getElementById('sb-signout').style.display = '';
+    document.getElementById('btn-main').style.display = '';
+
+    setSyncStatus('ok', 'Synced with Google Sheets');
+    toast('Connected! Data loaded from Google Sheets ✓');
+    goto('board');
+  } catch(e) {
+    console.error(e);
+    toast('Error connecting to sheet: ' + e.message, 'err');
+    setSyncStatus('err', 'Sync error');
+    setLoading(0);
+  }
+}
+
+async function getGoogleUserInfo() {
+  try {
+    const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: 'Bearer ' + gapi.client.getToken().access_token }
+    });
+    const d = await r.json();
+    return d.email || d.name || '';
+  } catch { return ''; }
+}
+
+function signOut() {
+  if (gapi.client.getToken()) {
+    google.accounts.oauth2.revoke(gapi.client.getToken().access_token, () => {});
+    gapi.client.setToken(null);
+  }
+  isSignedIn = false;
+  DB = { items:[], costSheets:[], costHistory:[] };
+  document.getElementById('sb-user').textContent = 'Not signed in';
+  document.getElementById('sb-signout').style.display = 'none';
+  setSyncStatus('', 'Not signed in');
+  goto('login');
+  toast('Signed out');
+}
+
+function syncNow() {
+  if (!isSignedIn) { toast('Please sign in first', 'warn'); return; }
+  setSyncStatus('syncing', 'Syncing…');
+  loadAllFromSheet().then(() => {
+    setSyncStatus('ok', 'Synced ' + new Date().toLocaleTimeString());
+    toast('Synced from Google Sheets ✓');
+    renderAll();
+  }).catch(e => {
+    setSyncStatus('err', 'Sync failed');
+    toast('Sync failed: ' + e.message, 'err');
+  });
+}
+
+// ══════════════════════════════════════════════════
+//  SHEET SETUP — create tabs + frozen bold headers
+// ══════════════════════════════════════════════════
+async function ensureSheetTabs() {
+  const meta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId: APP_CONFIG.SHEET_ID });
+  const existing = meta.result.sheets.map(s => s.properties.title);
+
+  const tabs = [
+    { name: TAB_ITEMS,   headers: HDR_ITEMS   },
+    { name: TAB_COSTS,   headers: HDR_COSTS   },
+    { name: TAB_HISTORY, headers: HDR_HISTORY },
+    { name: TAB_INHOUSE, headers: HDR_INHOUSE },
+  ];
+
+  // Add missing sheets
+  const toAdd = tabs.filter(t => !existing.includes(t.name));
+  if (toAdd.length) {
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+      spreadsheetId: APP_CONFIG.SHEET_ID,
+      resource: { requests: toAdd.map(t => ({ addSheet: { properties: { title: t.name } } })) }
+    });
+  }
+
+  // Write headers + bold + freeze row 1 for each tab
+  const metaAfter = await gapi.client.sheets.spreadsheets.get({ spreadsheetId: APP_CONFIG.SHEET_ID });
+  for (const tab of tabs) {
+    const sheetMeta = metaAfter.result.sheets.find(s => s.properties.title === tab.name);
+    const sheetId2  = sheetMeta.properties.sheetId;
+
+    // Check if header already written
+    try {
+      const existing_hdr = await gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: APP_CONFIG.SHEET_ID,
+        range: `${tab.name}!A1:A1`
+      });
+      if (existing_hdr.result.values && existing_hdr.result.values.length) continue; // already has header
+    } catch {}
+
+    // Write header row
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId: APP_CONFIG.SHEET_ID,
+      range: `${tab.name}!A1`,
+      valueInputOption: 'RAW',
+      resource: { values: [tab.headers] }
+    });
+
+    // Bold + freeze row 1
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+      spreadsheetId: APP_CONFIG.SHEET_ID,
+      resource: { requests: [
+        { repeatCell: {
+            range: { sheetId: sheetId2, startRowIndex:0, endRowIndex:1 },
+            cell: { userEnteredFormat: { textFormat: { bold:true }, backgroundColor: { red:.95, green:.93, blue:.88 } } },
+            fields: 'userEnteredFormat(textFormat,backgroundColor)'
+        }},
+        { updateSheetProperties: {
+            properties: { sheetId: sheetId2, gridProperties: { frozenRowCount:1 } },
+            fields: 'gridProperties.frozenRowCount'
+        }}
+      ]}
+    });
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  READ FROM SHEET
+// ══════════════════════════════════════════════════
+async function loadAllFromSheet() {
+  DB.items        = await readTab(TAB_ITEMS,   HDR_ITEMS,   rowToItem);
+  DB.costSheets   = await readTab(TAB_COSTS,   HDR_COSTS,   rowToCost);
+  DB.costHistory  = await readTab(TAB_HISTORY, HDR_HISTORY, rowToHistory);
+  DB.inhouse      = await readTab(TAB_INHOUSE, HDR_INHOUSE, rowToInhouse);
+}
+
+async function readTab(tab, headers, mapper) {
+  try {
+    const r = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId: APP_CONFIG.SHEET_ID,
+      range: `${tab}!A2:ZZ`
+    });
+    const rows = r.result.values || [];
+    return rows.filter(r => r[0]).map(row => mapper(row, headers));
+  } catch(e) { console.warn('read error', tab, e); return []; }
+}
+
+function rowToObj(row, headers) {
+  const obj = {};
+  headers.forEach((h, i) => obj[h] = row[i] || '');
+  return obj;
+}
+
+function rowToItem(row, h) {
+  const o = rowToObj(row, h);
+  return { id:o.ID, itemCode:o.ItemCode||'', name:o.Name, category:o.Category,
+    rate:+o.Rate, qty:+o.Qty||1, unit:o.Unit,
+    gst:+o.GST, gstAmount:+o.GSTAmount,
+    transport:+o.Transport||0, transportPerUnit:+o.TransportPerUnit||0,
+    isImported: o.IsImported==='true'||o.IsImported===true,
+    customDuty:+o.CustomDuty||0, customDutyPerUnit:+o.CustomDutyPerUnit||0,
+    importTransport:+o.ImportTransport||0, importTransportPerUnit:+o.ImportTransportPerUnit||0,
+    effectiveCost:+o.EffectiveCost,
+    supplier:o.Supplier, notes:o.Notes,
+    purchaseDate:o.PurchaseDate||'', updatedAt:o.UpdatedAt, createdAt:o.CreatedAt };
+}
+
+function rowToInhouse(row, h) {
+  const o = rowToObj(row, h);
+  return { id:o.ID, productName:o.ProductName, fabricItemId:o.FabricItemID, fabricName:o.FabricName,
+    metersPerUnit:+o.MetersPerUnit||0, wastagePct:+o.WastagePct||0, fabricCostPerUnit:+o.FabricCostPerUnit||0,
+    stitching:+o.Stitching||0, cutting:+o.Cutting||0, finishing:+o.Finishing||0, jobWork:+o.JobWork||0,
+    totalLabour:+o.TotalLabour||0, totalInhouseCost:+o.TotalInhouseCost||0,
+    notes:o.Notes||'', updatedAt:o.UpdatedAt, createdAt:o.CreatedAt };
+}
+
+function rowToCost(row, h) {
+  const o = rowToObj(row, h);
+  return { id:o.ID, name:o.Name, sku:o.SKU, category:o.Category, productType:o.ProductType,
+    productItemId:o.ProductItemID, inhouseCost:+o.InhouseCost, inhouseDesc:o.InhouseDesc,
+    tagItemId:o.TagItemID, prodPackItemId:o.ProdPackItemID, labelItemId:o.LabelItemID,
+    courierPackItemId:o.CourierPackItemID, courierLabelItemId:o.CourierLabelItemID||'',
+    productCost:+o.ProductCost, tagCost:+o.TagCost, prodPackCost:+o.ProdPackCost,
+    labelCost:+o.LabelCost, courierPackCost:+o.CourierPackCost, courierLabelCost:+o.CourierLabelCost||0,
+    extraItems:o.ExtraItems||'[]', extraTotal:+o.ExtraTotal||0,
+    finalCost:+o.FinalCost, prevFinalCost:o.PrevFinalCost?+o.PrevFinalCost:null,
+    costChangedAt:o.CostChangedAt, updatedAt:o.UpdatedAt, createdAt:o.CreatedAt };
+}
+
+function costToRow(s) {
+  return [s.id, s.name, s.sku||'', s.category||'', s.productType,
+    s.productItemId||'', s.inhouseCost||0, s.inhouseDesc||'',
+    s.tagItemId||'', s.prodPackItemId||'', s.labelItemId||'',
+    s.courierPackItemId||'', s.courierLabelItemId||'',
+    s.productCost, s.tagCost, s.prodPackCost, s.labelCost,
+    s.courierPackCost, s.courierLabelCost||0,
+    s.extraItems||'[]', s.extraTotal||0,
+    s.finalCost, s.prevFinalCost||'', s.costChangedAt||'', s.updatedAt, s.createdAt];
+}
+
+function rowToHistory(row, h) {
+  const o = rowToObj(row, h);
+  return { id:o.ID, sheetId:o.SheetID, productName:o.ProductName, sku:o.SKU,
+    productType:o.ProductType, oldCost:+o.OldCost, newCost:+o.NewCost,
+    diff:+o.Diff, diffPct:+o.DiffPct, changedAt:o.ChangedAt };
+}
+
+// ══════════════════════════════════════════════════
+//  WRITE TO SHEET
+// ══════════════════════════════════════════════════
+async function appendRow(tab, values) {
+  await gapi.client.sheets.spreadsheets.values.append({
+    spreadsheetId: APP_CONFIG.SHEET_ID,
+    range: `${tab}!A1`,
+    valueInputOption: 'RAW',
+    insertDataOption: 'INSERT_ROWS',
+    resource: { values: [values] }
+  });
+}
+
+async function updateRow(tab, rowIndex, values) {
+  // rowIndex is 1-based data index (row 2 = index 1)
+  const range = `${tab}!A${rowIndex + 2}`;
+  await gapi.client.sheets.spreadsheets.values.update({
+    spreadsheetId: APP_CONFIG.SHEET_ID,
+    range,
+    valueInputOption: 'RAW',
+    resource: { values: [values] }
+  });
+}
+
+async function deleteRow(tab, rowIndex) {
+  const meta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId: APP_CONFIG.SHEET_ID });
+  const sheet = meta.result.sheets.find(s => s.properties.title === tab);
+  const sheetId2 = sheet.properties.sheetId;
+  await gapi.client.sheets.spreadsheets.batchUpdate({
+    spreadsheetId: APP_CONFIG.SHEET_ID,
+    resource: { requests: [{ deleteDimension: {
+      range: { sheetId: sheetId2, dimension:'ROWS', startIndex: rowIndex+1, endIndex: rowIndex+2 }
+    }}]}
+  });
+}
+
+function itemToRow(i) {
+  return [i.id, i.itemCode||'', i.name, i.category, i.rate, i.qty||1, i.unit,
+    i.gst, i.gstAmount, i.transport||0, i.transportPerUnit||0,
+    i.isImported?'true':'false', i.customDuty||0, i.customDutyPerUnit||0,
+    i.importTransport||0, i.importTransportPerUnit||0,
+    i.effectiveCost, i.supplier||'', i.notes||'',
+    i.purchaseDate||'', i.updatedAt, i.createdAt];
+}
+function inhouseToRow(r) {
+  return [r.id,r.productName,r.fabricItemId||'',r.fabricName||'',r.metersPerUnit,r.wastagePct,r.fabricCostPerUnit,r.stitching,r.cutting,r.finishing,r.jobWork,r.totalLabour,r.totalInhouseCost,r.notes||'',r.updatedAt,r.createdAt];
+}
+function costToRow(s) {
+  return [s.id,s.name,s.sku||'',s.category||'',s.productType,s.productItemId||'',s.inhouseCost||0,s.inhouseDesc||'',
+    s.tagItemId||'',s.prodPackItemId||'',s.labelItemId||'',s.courierPackItemId||'',
+    s.productCost,s.tagCost,s.prodPackCost,s.labelCost,s.courierPackCost,s.finalCost,
+    s.prevFinalCost||'',s.costChangedAt||'',s.updatedAt,s.createdAt];
+}
+function histToRow(h) {
+  return [h.id,h.sheetId,h.productName,h.sku||'',h.productType,h.oldCost,h.newCost,h.diff,h.diffPct,h.changedAt];
+}
+
+// ══════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════
+const PAGE_META = {
+  login:    {title:'Sign In',            sub:'Connect your Google Sheet',                  main:''},
+  board:    {title:'Product Board',      sub:'All product costs — changes highlighted for 15 days', main:'+ New Product'},
+  purchases:{title:'Purchase Items',     sub:'All raw material & packing items',           main:'+ Add Item'},
+  materials:{title:'Item Master',        sub:'Complete catalogue of all purchasable items', main:'+ Add Item'},
+  costing:  {title:'Build Cost Sheet',   sub:'Create or edit a product cost sheet',        main:'+ New Product'},
+  inhouse:  {title:'In-House Production',sub:'Calculate fabric + labour cost per product',  main:'+ New Product Cost'},
+  history:  {title:'Cost Change History',sub:'All price changes over time',                main:''},
+};
+
+function goto(p) {
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p)?.classList.add('active');
+  document.getElementById('nav-'+p)?.classList.add('active');
+  const m = PAGE_META[p] || {};
+  document.getElementById('pg-title').textContent = m.title||'';
+  document.getElementById('pg-sub').textContent = m.sub||'';
+  document.getElementById('btn-main').textContent = m.main||'';
+  document.getElementById('btn-main').style.display = m.main ? '' : 'none';
+  if(p==='board')     renderBoard();
+  if(p==='purchases') renderPurchases();
+  if(p==='materials') renderMaterials();
+  if(p==='costing')   renderCostingForm();
+  if(p==='inhouse')   renderInhousePage();
+  if(p==='history')   renderHistory();
+}
+
+function mainAction() {
+  const p = document.querySelector('.page.active')?.id.replace('page-','');
+  if(p==='board') { goto('costing'); return; }
+  if(p==='purchases'||p==='materials') { openPurModal(); return; }
+  if(p==='costing') { resetCostForm(); return; }
+  if(p==='inhouse') { resetInhouseForm(); }
+}
+
+// ══════════════════════════════════════════════════
+//  PURCHASE ITEM CRUD
+// ══════════════════════════════════════════════════
+let editItemId = null;
+
+function openPurModal(id=null) {
+  editItemId = id || null;
+  if(id) {
+    const item = DB.items.find(x=>x.id===id);
+    if(!item) return;
+    document.getElementById('modal-pur-title').textContent = '✎ Edit Purchase Item';
+    sv('pi-name',    item.name);
+    sv('pi-code',    item.itemCode||'');
+    sv('pi-cat',     item.category);
+    sv('pi-rate',    item.rate);
+    sv('pi-qty',     item.qty||1);
+    sv('pi-unit',    item.unit);
+    sv('pi-gst',     item.gst);
+    sv('pi-supplier',item.supplier||'');
+    sv('pi-notes',   item.notes||'');
+    sv('pi-date',    item.purchaseDate||today());
+    sv('pi-transport',item.transport||0);
+    const cb = document.getElementById('pi-imported');
+    cb.checked = !!item.isImported;
+    sv('pi-duty-val',   item.customDuty||0);
+    sv('pi-imp-trans',  item.importTransport||0);
+  } else {
+    document.getElementById('modal-pur-title').textContent = '🛒 Add Purchase Item';
+    ['pi-name','pi-code','pi-supplier','pi-notes'].forEach(id=>sv(id,''));
+    sv('pi-rate',''); sv('pi-gst','18'); sv('pi-cat','Raw Material');
+    sv('pi-date',today()); sv('pi-transport','0'); sv('pi-qty','1');
+    sv('pi-duty-val','0'); sv('pi-imp-trans','0');
+    document.getElementById('pi-imported').checked = false;
+  }
+  togglePurFields();
+  populateNameSuggestions();
+  const show = document.getElementById('pi-imported').checked;
+  document.getElementById('pi-import-fields').style.display = show ? '' : 'none';
+  document.getElementById('pp-duty-row').style.display      = show ? '' : 'none';
+  document.getElementById('pp-imptrans-row').style.display  = show ? '' : 'none';
+  calcPurPreview();
+  openM('modal-pur');
+}
+
+function populateNameSuggestions() {
+  const cat = gv('pi-cat');
+  const dl  = document.getElementById('pi-name-list');
+  if (!dl) return;
+  const names = [...new Set(DB.items.filter(x=>x.category===cat).map(x=>x.name))].sort();
+  dl.innerHTML = names.map(n=>`<option value="${n}">`).join('');
+}
+
+function togglePurFields() {
+  // Supplier always visible — relevant for all categories
+  document.getElementById('pi-supp-wrap').style.display = '';
+}
+
+function toggleImported(fromCheckbox) {
+  const cb = document.getElementById('pi-imported');
+  // Only toggle if called from the wrapper div (not from the checkbox itself)
+  if (!fromCheckbox) cb.checked = !cb.checked;
+  const show = cb.checked;
+  document.getElementById('pi-import-fields').style.display = show ? '' : 'none';
+  document.getElementById('pp-duty-row').style.display      = show ? '' : 'none';
+  document.getElementById('pp-imptrans-row').style.display  = show ? '' : 'none';
+  calcPurPreview();
+}
+
+function calcPurPreview() {
+  const rate      = gf('pi-rate');
+  const gstPct    = gf('pi-gst');
+  const qty       = gf('pi-qty') || 1;
+  const transport = gf('pi-transport') || 0;
+  const imported  = document.getElementById('pi-imported')?.checked || false;
+
+  const gstAmt       = rate * (gstPct / 100);
+  const transPerUnit = qty > 0 ? transport / qty : 0;
+
+  let dutyPerUnit = 0, impTransPerUnit = 0;
+
+  if (imported) {
+    const totalDuty     = gf('pi-duty-val') || 0;
+    const totalImpTrans = gf('pi-imp-trans') || 0;
+    dutyPerUnit     = qty > 0 ? totalDuty / qty : 0;
+    impTransPerUnit = qty > 0 ? totalImpTrans / qty : 0;
+
+    // Update readonly per-unit display
+    const el1 = document.getElementById('pi-duty-per-unit');
+    const el2 = document.getElementById('pi-imp-trans-unit');
+    if (el1) el1.value = fmt(dutyPerUnit) + ' / unit';
+    if (el2) el2.value = fmt(impTransPerUnit) + ' / unit';
+  }
+
+  const total = rate + gstAmt + transPerUnit + dutyPerUnit + impTransPerUnit;
+
+  document.getElementById('pp-base').textContent    = fmt(rate);
+  document.getElementById('pp-gst-l').textContent   = `GST (${gstPct}%)`;
+  document.getElementById('pp-gst').textContent     = fmt(gstAmt);
+  document.getElementById('pp-trans-l').textContent = `Domestic Transport (÷ ${qty} units)`;
+  document.getElementById('pp-trans').textContent   = fmt(transPerUnit);
+  if (imported) {
+    document.getElementById('pp-duty-l').textContent   = `Custom Duty (÷ ${qty} units)`;
+    document.getElementById('pp-duty').textContent     = fmt(dutyPerUnit);
+    document.getElementById('pp-imptrans').textContent = fmt(impTransPerUnit);
+  }
+  document.getElementById('pp-total').textContent   = fmt(total);
+}
+
+async function savePurItem() {
+  if(!isSignedIn){toast('Please sign in first','err');return;}
+  const name = gv('pi-name').trim(), cat = gv('pi-cat'), rate = gf('pi-rate');
+  if(!name){toast('Enter item name','err');return;}
+  if(rate<=0){toast('Enter a valid rate','err');return;}
+
+  const gstPct    = gf('pi-gst');
+  const qty       = gf('pi-qty') || 1;
+  const transport = gf('pi-transport') || 0;
+  const imported  = document.getElementById('pi-imported')?.checked || false;
+
+  const gstAmt       = rate * (gstPct / 100);
+  const transPerUnit = qty > 0 ? transport / qty : 0;
+
+  // Import charges — total amounts divided by qty to get per unit
+  let customDuty = 0, customDutyPerUnit = 0, importTransport = 0, importTransportPerUnit = 0;
+  if (imported) {
+    customDuty         = gf('pi-duty-val') || 0;
+    customDutyPerUnit  = qty > 0 ? customDuty / qty : 0;
+    importTransport    = gf('pi-imp-trans') || 0;
+    importTransportPerUnit = qty > 0 ? importTransport / qty : 0;
+  }
+
+  const effective = rate + gstAmt + transPerUnit + customDutyPerUnit + importTransportPerUnit;
+
+  // Auto-generate item code if blank
+  let itemCode = gv('pi-code').trim();
+  if (!itemCode) {
+    // Use existing code if editing, else generate from name+category
+    const existing = editItemId ? DB.items.find(x=>x.id===editItemId) : null;
+    itemCode = existing?.itemCode ||
+      (cat.slice(0,3).toUpperCase() + '-' + name.replace(/[^a-z0-9]/gi,'').slice(0,8).toUpperCase() + '-' + Date.now().toString(36).slice(-4).toUpperCase());
+  }
+
+  const btn = document.getElementById('btn-save-pur');
+  btn.textContent='Saving…'; btn.disabled=true;
+
+  const rec = {
+    id: editItemId||uid(), itemCode, name, category:cat, rate,
+    qty, unit:gv('pi-unit'),
+    gst:gstPct, gstAmount:gstAmt,
+    transport, transportPerUnit:transPerUnit,
+    isImported:imported, customDuty, customDutyPerUnit,
+    importTransport, importTransportPerUnit,
+    effectiveCost:effective,
+    supplier:gv('pi-supplier'), notes:gv('pi-notes'),
+    purchaseDate:gv('pi-date')||today(),
+    updatedAt:today(),
+    createdAt: editItemId?(DB.items.find(x=>x.id===editItemId)?.createdAt||today()):today()
+  };
+
+  try {
+    setSyncStatus('syncing','Saving…');
+    if(editItemId) {
+      const idx = DB.items.findIndex(x=>x.id===editItemId);
+      if(idx>=0){ DB.items[idx]=rec; await updateRow(TAB_ITEMS, idx, itemToRow(rec)); }
+      toast('Item updated ✓');
+    } else {
+      DB.items.push(rec);
+      await appendRow(TAB_ITEMS, itemToRow(rec));
+      toast(`"${name}" saved ✓`);
+    }
+    setSyncStatus('ok','Saved ✓');
+    // Fix 5: recompute by name+category so new entries update existing cost sheets
+    await recomputeByName(name, cat, effective);
+    renderAll();
+    closeM('modal-pur');
+  } catch(e) {
+    toast('Save failed: '+e.message,'err');
+    setSyncStatus('err','Save error');
+  } finally {
+    btn.textContent='Save Item'; btn.disabled=false;
+  }
+}
+
+async function delItem(id) {
+  if(!confirm('Delete this item? It may be used in cost sheets.')) return;
+  const idx = DB.items.findIndex(x=>x.id===id);
+  if(idx<0) return;
+  try {
+    setSyncStatus('syncing','Deleting…');
+    await deleteRow(TAB_ITEMS, idx);
+    DB.items.splice(idx,1);
+    setSyncStatus('ok','Deleted ✓');
+    toast('Item deleted','warn');
+    renderAll();
+  } catch(e){toast('Delete failed: '+e.message,'err');setSyncStatus('err','Error');}
+}
+
+// ══════════════════════════════════════════════════
+//  COST SHEET CRUD
+// ══════════════════════════════════════════════════
+let editSheetId = null;
+
+function renderCostingForm(sheetId=null) {
+  editSheetId = sheetId;
+  const sheet = sheetId ? DB.costSheets.find(x=>x.id===sheetId) : null;
+  const pt = sheet?.productType||'outside';
+
+  // Fix 1: For each category, deduplicate by name keeping LATEST purchase date only
+  function latestItems(cat) {
+    const map = {};
+    DB.items.filter(x=>x.category===cat).forEach(i=>{
+      const key = i.name.toLowerCase().trim();
+      if (!map[key] || (i.purchaseDate||'') > (map[key].purchaseDate||'')) map[key] = i;
+    });
+    return Object.values(map);
+  }
+
+  const opts = (cat, val='') => latestItems(cat)
+    .sort((a,b)=>a.name.localeCompare(b.name))
+    .map(i=>`<option value="${i.id}" ${i.id===val?'selected':''}>${i.name} — ${fmt(i.effectiveCost)}/${i.unit}</option>`).join('');
+
+  // Restore saved extra items from sheet
+  const savedExtras = sheet?.extraItems ? JSON.parse(sheet.extraItems) : [];
+
+  document.getElementById('cost-form-body').innerHTML = `
+    <div class="fg"><label>Product Name *</label><input type="text" id="cs-name" placeholder="e.g. Nursing Pad 6pcs" value="${sheet?.name||''}"/></div>
+    <div class="fr2">
+      <div class="fg"><label>SKU / Code</label><input type="text" id="cs-sku" value="${sheet?.sku||''}"/></div>
+      <div class="fg"><label>Category</label><input type="text" id="cs-cat" placeholder="e.g. House, Import" value="${sheet?.category||''}"/></div>
+    </div>
+
+    <div class="cost-section">
+      <div class="cs-title"><div class="dot" style="background:var(--orange)"></div>A. Product Cost</div>
+      <div class="fg"><label>Production Type</label>
+        <select id="cs-pt" onchange="togglePT();calcCP()">
+          <option value="outside" ${pt==='outside'?'selected':''}>Procured (from Purchase)</option>
+          <option value="inhouse" ${pt==='inhouse'?'selected':''}>In-House Production</option>
+        </select>
+      </div>
+      <div id="cs-out">
+        <div class="fg"><label>Select Product Item <span class="link-tag">from Purchase — latest price</span></label>
+          <select id="cs-pi" onchange="calcCP()"><option value="">— Select —</option>${opts('Product',sheet?.productItemId||'')}</select>
+        </div>
+      </div>
+      <div id="cs-inh" style="display:none">
+        <div class="fr2">
+          <div class="fg"><label>Production Cost (₹)</label><input type="number" id="cs-ic" placeholder="0.00" value="${sheet?.inhouseCost||''}" oninput="calcCP()"/></div>
+          <div class="fg"><label>Description</label><input type="text" id="cs-id" placeholder="e.g. Fabric + Labour" value="${sheet?.inhouseDesc||''}"/></div>
+        </div>
+      </div>
+      <div style="margin-top:.5rem">
+        <div class="mini-label">Tag Cost (optional)</div>
+        <div class="fg"><select id="cs-ti" onchange="calcCP()"><option value="">— No tag —</option>${opts('Tag',sheet?.tagItemId||'')}</select></div>
+      </div>
+    </div>
+
+    <div class="cost-section">
+      <div class="cs-title"><div class="dot" style="background:var(--blue)"></div>B. Product Packing Cost</div>
+      <div class="fg"><label>Packing Item <span class="link-tag">from Purchase — latest price</span></label>
+        <select id="cs-ppi" onchange="calcCP()"><option value="">— No packing —</option>${opts('Product Packing',sheet?.prodPackItemId||'')}</select>
+      </div>
+      <div style="margin-top:.4rem">
+        <div class="mini-label">Label Cost (optional)</div>
+        <div class="fg"><select id="cs-li" onchange="calcCP()"><option value="">— No label —</option>${opts('Label',sheet?.labelItemId||'')}</select></div>
+      </div>
+    </div>
+
+    <div class="cost-section">
+      <div class="cs-title"><div class="dot" style="background:var(--green)"></div>C. Courier Packing Cost</div>
+      <div class="fg"><label>Courier Packing <span class="link-tag">from Purchase — latest price</span></label>
+        <select id="cs-cpi" onchange="calcCP()"><option value="">— No courier packing —</option>${opts('Courier Packing',sheet?.courierPackItemId||'')}</select>
+      </div>
+      <div style="margin-top:.4rem">
+        <div class="mini-label">Courier Label Cost (optional)</div>
+        <div class="fg"><select id="cs-cli" onchange="calcCP()"><option value="">— No courier label —</option>${opts('Label',sheet?.courierLabelItemId||'')}</select></div>
+      </div>
+    </div>
+
+    <div class="cost-section">
+      <div class="cs-title"><div class="dot" style="background:var(--gold)"></div>D. Other Costs</div>
+      <div id="cs-extras-wrap">
+        ${savedExtras.map((e,i)=>`
+          <div class="fr2" style="margin-bottom:.5rem" id="cs-extra-${i}">
+            <div class="fg" style="margin-bottom:0">
+              <label>Description</label>
+              <input type="text" id="cs-ex-desc-${i}" placeholder="e.g. Sticker, Thread" value="${e.desc||''}" oninput="calcCP()"/>
+            </div>
+            <div class="fg" style="margin-bottom:0;display:flex;gap:.4rem;align-items:flex-end">
+              <div style="flex:1">
+                <label>Cost (₹)</label>
+                <input type="number" id="cs-ex-cost-${i}" placeholder="0.00" min="0" step=".01" value="${e.cost||0}" oninput="calcCP()"/>
+              </div>
+              <button onclick="removeExtraItem(${i})" style="background:none;border:1px solid var(--red-line);border-radius:6px;color:var(--red);padding:.45rem .6rem;cursor:pointer;font-size:.8rem;flex-shrink:0;height:36px">✕</button>
+            </div>
+          </div>`).join('')}
+      </div>
+      <button onclick="addExtraItem()" class="btn btn-s" style="width:100%;margin-top:.4rem;font-size:.76rem;padding:.45rem">+ Add More Cost Item</button>
+    </div>
+
+    <div style="display:flex;gap:.6rem">
+      <button class="btn btn-p" onclick="saveCostSheet()" style="flex:1" id="btn-save-cost">${sheetId?'Update':'Save'} Cost Sheet</button>
+      ${sheetId?`<button class="btn btn-s" onclick="resetCostForm()">New</button>`:''}
+    </div>`;
+
+  document.getElementById('cost-form-title').textContent = sheetId ? '✎ Edit Cost Sheet' : '⚙ Build Cost Sheet';
+  togglePT(); calcCP();
+}
+
+let _extraCount = 0;
+function addExtraItem() {
+  const wrap = document.getElementById('cs-extras-wrap');
+  const i = _extraCount++;
+  const div = document.createElement('div');
+  div.className = 'fr2'; div.style.marginBottom = '.5rem'; div.id = `cs-extra-${i}`;
+  div.innerHTML = `
+    <div class="fg" style="margin-bottom:0">
+      <label>Description</label>
+      <input type="text" id="cs-ex-desc-${i}" placeholder="e.g. Sticker, Thread" oninput="calcCP()"/>
+    </div>
+    <div class="fg" style="margin-bottom:0;display:flex;gap:.4rem;align-items:flex-end">
+      <div style="flex:1">
+        <label>Cost (₹)</label>
+        <input type="number" id="cs-ex-cost-${i}" placeholder="0.00" min="0" step=".01" value="0" oninput="calcCP()"/>
+      </div>
+      <button onclick="removeExtraItem(${i})" style="background:none;border:1px solid var(--red-line);border-radius:6px;color:var(--red);padding:.45rem .6rem;cursor:pointer;font-size:.8rem;flex-shrink:0;height:36px">✕</button>
+    </div>`;
+  wrap.appendChild(div);
+  calcCP();
+}
+
+function removeExtraItem(i) {
+  document.getElementById(`cs-extra-${i}`)?.remove();
+  calcCP();
+}
+
+function resetCostForm() { editSheetId=null; renderCostingForm(); }
+
+function togglePT() {
+  const t = gv('cs-pt');
+  document.getElementById('cs-out').style.display = t==='outside' ? '' : 'none';
+  document.getElementById('cs-inh').style.display = t==='inhouse' ? '' : 'none';
+  calcCP();
+}
+
+function calcCP() {
+  const gi = id => id ? DB.items.find(x=>x.id===id) : null;
+  const pt = gv('cs-pt');
+  let pc=0, pl='Product Cost';
+  if(pt==='outside'){ const i=gi(gv('cs-pi')); if(i){pc=i.effectiveCost;pl=i.name;} }
+  else { pc=parseFloat(document.getElementById('cs-ic')?.value)||0; pl=document.getElementById('cs-id')?.value||'In-House'; }
+  const ti=gi(gv('cs-ti')), ppi=gi(gv('cs-ppi')), li=gi(gv('cs-li')), cpi=gi(gv('cs-cpi')), cli=gi(gv('cs-cli'));
+  const tc=ti?.effectiveCost||0, ppc=ppi?.effectiveCost||0, lc=li?.effectiveCost||0, cc=cpi?.effectiveCost||0, clc=cli?.effectiveCost||0;
+
+  // Collect D. Other Costs
+  const extras = getExtraItems();
+  const extraTotal = extras.reduce((s,e)=>s+e.cost,0);
+
+  const tpc=pc+tc, tpp=ppc+lc, tcp=cc+clc, grand=tpc+tpp+tcp+extraTotal;
+
+  const sections=[
+    {head:'A. Product Cost',items:[{l:pl,v:pc,s:pt==='outside'?'Procured':'In-House'},...(ti?[{l:ti.name,v:tc,s:'Tag'}]:[])],total:tpc},
+    {head:'B. Product Packing',items:[...(ppi?[{l:ppi.name,v:ppc,s:'Packing'}]:[]),...(li?[{l:li.name,v:lc,s:'Label'}]:[])],total:tpp},
+    {head:'C. Courier Packing',items:[...(cpi?[{l:cpi.name,v:cc,s:'Courier'}]:[]),...(cli?[{l:cli.name,v:clc,s:'Label'}]:[])],total:tcp},
+    {head:'D. Other Costs',items:extras.map(e=>({l:e.desc||'Other',v:e.cost,s:'Other'})),total:extraTotal},
+  ];
+  document.getElementById('cost-preview-body').innerHTML=`
+    <div style="padding:.2rem">
+      ${sections.map(s=>`<div style="margin-bottom:.8rem">
+        <div style="font-size:.62rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;padding-bottom:.3rem;border-bottom:1px solid var(--bg2)">${s.head}</div>
+        ${s.items.length?s.items.map(i=>`<div class="calc-row"><span>${i.l} <span style="font-size:.62rem;color:var(--ink3)">${i.s}</span></span><span style="font-weight:500">${fmt(i.v)}</span></div>`).join(''):'<div class="calc-row"><span style="color:var(--ink3)">— Not selected —</span><span>₹0.00</span></div>'}
+        <div class="calc-row" style="background:var(--bg);padding:.25rem .4rem;border-radius:4px;margin-top:.2rem"><span style="font-weight:600">Subtotal</span><span style="font-weight:600">${fmt(s.total)}</span></div>
+      </div>`).join('')}
+    </div>
+    <div style="background:var(--ink2);border-radius:8px;padding:.8rem 1rem;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:.7rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.1em">Final Product Cost</span>
+      <span style="font-family:var(--font);font-size:1.4rem;font-weight:700;color:#fff">${fmt(grand)}</span>
+    </div>`;
+}
+
+function getExtraItems() {
+  const wrap = document.getElementById('cs-extras-wrap');
+  if (!wrap) return [];
+  const extras = [];
+  wrap.querySelectorAll('[id^="cs-extra-"]').forEach(div => {
+    const i = div.id.replace('cs-extra-','');
+    const desc = document.getElementById(`cs-ex-desc-${i}`)?.value?.trim() || '';
+    const cost = parseFloat(document.getElementById(`cs-ex-cost-${i}`)?.value) || 0;
+    if (desc || cost > 0) extras.push({ desc, cost });
+  });
+  return extras;
+}
+
+async function saveCostSheet() {
+  if(!isSignedIn){toast('Please sign in first','err');return;}
+  const name=gv('cs-name').trim();
+  if(!name){toast('Enter product name','err');return;}
+  const pt=gv('cs-pt');
+  if(pt==='outside'&&!gv('cs-pi')){toast('Select a product item','err');return;}
+  if(pt==='inhouse'&&(parseFloat(document.getElementById('cs-ic')?.value)||0)<=0){toast('Enter production cost','err');return;}
+
+  const gi=id=>id?DB.items.find(x=>x.id===id):null;
+  const piId=gv('cs-pi'),tiId=gv('cs-ti'),ppiId=gv('cs-ppi'),liId=gv('cs-li'),cpiId=gv('cs-cpi'),cliId=gv('cs-cli');
+  const pi=gi(piId),ti=gi(tiId),ppi=gi(ppiId),li=gi(liId),cpi=gi(cpiId),cli=gi(cliId);
+  const ic=parseFloat(document.getElementById('cs-ic')?.value)||0;
+  const pc=pt==='outside'?(pi?.effectiveCost||0):ic;
+  const tc=ti?.effectiveCost||0, ppc=ppi?.effectiveCost||0, lc=li?.effectiveCost||0;
+  const cc=cpi?.effectiveCost||0, clc=cli?.effectiveCost||0;
+  const extras = getExtraItems();
+  const extraTotal = extras.reduce((s,e)=>s+e.cost,0);
+  const finalCost=pc+tc+ppc+lc+cc+clc+extraTotal;
+
+  const existing=editSheetId?DB.costSheets.find(x=>x.id===editSheetId):null;
+  const oldCost=existing?.finalCost||0;
+  const changed=existing&&Math.abs(finalCost-oldCost)>0.001;
+
+  const rec={
+    id:editSheetId||uid(), name, sku:gv('cs-sku'), category:gv('cs-cat'),
+    productType:pt, productItemId:piId, inhouseCost:ic, inhouseDesc:document.getElementById('cs-id')?.value||'',
+    tagItemId:tiId, prodPackItemId:ppiId, labelItemId:liId,
+    courierPackItemId:cpiId, courierLabelItemId:cliId,
+    productCost:pc, tagCost:tc, prodPackCost:ppc, labelCost:lc,
+    courierPackCost:cc, courierLabelCost:clc,
+    extraItems: JSON.stringify(extras), extraTotal,
+    finalCost, prevFinalCost:changed?oldCost:(existing?.prevFinalCost||null),
+    costChangedAt:changed?today():(existing?.costChangedAt||today()),
+    updatedAt:today(), createdAt:existing?.createdAt||today()
+  };
+
+  const btn=document.getElementById('btn-save-cost');
+  btn.textContent='Saving…'; btn.disabled=true;
+
+  try {
+    setSyncStatus('syncing','Saving…');
+    if(editSheetId) {
+      const idx=DB.costSheets.findIndex(x=>x.id===editSheetId);
+      if(idx>=0){DB.costSheets[idx]=rec; await updateRow(TAB_COSTS,idx,costToRow(rec));}
+    } else {
+      DB.costSheets.push(rec);
+      await appendRow(TAB_COSTS,costToRow(rec));
+    }
+    if(changed){
+      const h={id:uid(),sheetId:rec.id,productName:name,sku:rec.sku,productType:pt,oldCost,newCost:finalCost,diff:finalCost-oldCost,diffPct:oldCost>0?(finalCost-oldCost)/oldCost*100:0,changedAt:today()};
+      DB.costHistory.push(h);
+      await appendRow(TAB_HISTORY,histToRow(h));
+      toast(`Cost updated → ${fmt(finalCost)} (was ${fmt(oldCost)}) — saved to Sheets ✓`,'warn');
+    } else {
+      toast(`"${name}" saved to Google Sheets ✓`);
+    }
+    setSyncStatus('ok','Saved ✓');
+    renderAll();
+  } catch(e){toast('Save failed: '+e.message,'err');setSyncStatus('err','Error');}
+  finally{btn.textContent=editSheetId?'Update Cost Sheet':'Save Cost Sheet';btn.disabled=false;}
+}
+
+async function deleteCostSheet(id) {
+  if(!confirm('Delete this cost sheet?')) return;
+  const idx=DB.costSheets.findIndex(x=>x.id===id);
+  if(idx<0) return;
+  try{
+    setSyncStatus('syncing','Deleting…');
+    await deleteRow(TAB_COSTS,idx);
+    DB.costSheets.splice(idx,1);
+    setSyncStatus('ok','Deleted ✓');
+    toast('Deleted','warn'); renderAll();
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+// ══════════════════════════════════════════════════
+//  RECOMPUTE LINKED SHEETS when item rate changes
+// ══════════════════════════════════════════════════
+// Recompute by item ID (for edits to existing items)
+async function recomputeLinked(itemId) {
+  const item = DB.items.find(x=>x.id===itemId);
+  if (!item) return;
+  await recomputeByName(item.name, item.category, item.effectiveCost, itemId);
+}
+
+// Fix 5: Recompute cost sheets by item NAME — so adding a new entry for same item
+// updates all cost sheets that reference any item with that name+category
+async function recomputeByName(itemName, itemCat, newEffectiveCost, specificId=null) {
+  // Find the best (latest date) item with this name
+  const nameKey = itemName.toLowerCase().trim();
+  const latestItem = DB.items
+    .filter(x => x.name.toLowerCase().trim() === nameKey && x.category === itemCat)
+    .sort((a,b) => (b.purchaseDate||'').localeCompare(a.purchaseDate||''))[0];
+
+  if (!latestItem) return;
+
+  // Find all IDs for items with this name (any date)
+  const allIds = DB.items
+    .filter(x => x.name.toLowerCase().trim() === nameKey && x.category === itemCat)
+    .map(x => x.id);
+
+  let count = 0;
+  for (let i = 0; i < DB.costSheets.length; i++) {
+    const s = DB.costSheets[i];
+    const linkedIds = [s.productItemId, s.tagItemId, s.prodPackItemId, s.labelItemId, s.courierPackItemId, s.courierLabelItemId];
+    const isLinked = linkedIds.some(id => allIds.includes(id));
+    if (!isLinked) continue;
+
+    const gi = id => id ? (allIds.includes(id) ? latestItem : DB.items.find(x=>x.id===id)) : null;
+    const pi  = gi(s.productItemId);
+    const ti  = gi(s.tagItemId);
+    const ppi = gi(s.prodPackItemId);
+    const li  = gi(s.labelItemId);
+    const cpi = gi(s.courierPackItemId);
+    const cli = gi(s.courierLabelItemId);
+
+    const pc  = s.productType==='outside' ? (pi?.effectiveCost||0) : s.inhouseCost;
+    const etc = s.extraTotal || 0;
+    const newFinal = pc + (ti?.effectiveCost||0) + (ppi?.effectiveCost||0) +
+                     (li?.effectiveCost||0) + (cpi?.effectiveCost||0) +
+                     (cli?.effectiveCost||0) + etc;
+
+    if (Math.abs(newFinal - s.finalCost) < 0.001) continue;
+
+    const h = {
+      id:uid(), sheetId:s.id, productName:s.name, sku:s.sku||'',
+      productType:s.productType, oldCost:s.finalCost, newCost:newFinal,
+      diff:newFinal-s.finalCost,
+      diffPct:s.finalCost>0?(newFinal-s.finalCost)/s.finalCost*100:0,
+      changedAt:today()
+    };
+    DB.costHistory.push(h);
+    await appendRow(TAB_HISTORY, histToRow(h));
+
+    // Update productItemId to point to latest item entry
+    const updatedSheet = {
+      ...s,
+      productItemId:  allIds.includes(s.productItemId)  ? latestItem.id : s.productItemId,
+      tagItemId:      allIds.includes(s.tagItemId)       ? latestItem.id : s.tagItemId,
+      prodPackItemId: allIds.includes(s.prodPackItemId)  ? latestItem.id : s.prodPackItemId,
+      labelItemId:    allIds.includes(s.labelItemId)     ? latestItem.id : s.labelItemId,
+      courierPackItemId: allIds.includes(s.courierPackItemId) ? latestItem.id : s.courierPackItemId,
+      courierLabelItemId: allIds.includes(s.courierLabelItemId) ? latestItem.id : s.courierLabelItemId,
+      productCost:pc, tagCost:ti?.effectiveCost||0,
+      prodPackCost:ppi?.effectiveCost||0, labelCost:li?.effectiveCost||0,
+      courierPackCost:cpi?.effectiveCost||0, courierLabelCost:cli?.effectiveCost||0,
+      finalCost:newFinal, prevFinalCost:s.finalCost,
+      costChangedAt:today(), updatedAt:today()
+    };
+    DB.costSheets[i] = updatedSheet;
+    await updateRow(TAB_COSTS, i, costToRow(updatedSheet));
+    count++;
+  }
+  if (count > 0) toast(`${count} product cost${count>1?'s':''} auto-updated 🔄`, 'warn');
+}
+
+// ══════════════════════════════════════════════════
+//  RENDER FUNCTIONS
+// ══════════════════════════════════════════════════
+let boardFilter='all';
+function setBF(f){
+  boardFilter=f;
+  _highlightBF();
+  renderBoard();
+}
+
+function _highlightBF(){
+  document.querySelectorAll('#board-filters .btn').forEach(b=>{b.style.background='';b.style.color='';});
+  const el=document.getElementById('filt-'+boardFilter);
+  if(el){el.style.background='var(--ink2)';el.style.color='#fff';}
+}
+
+function renderBoard() {
+  const q = (document.getElementById('gsearch')?.value||'').toLowerCase().trim();
+  let sheets = [...DB.costSheets];
+
+  // Apply search
+  if (q) sheets = sheets.filter(s =>
+    s.name.toLowerCase().includes(q) ||
+    (s.sku||'').toLowerCase().includes(q) ||
+    (s.category||'').toLowerCase().includes(q)
+  );
+
+  // Apply filter
+  if (boardFilter==='changed') sheets = sheets.filter(s=>daysSince(s.costChangedAt)<=15&&s.prevFinalCost!=null);
+  if (boardFilter==='inhouse') sheets = sheets.filter(s=>s.productType==='inhouse');
+  if (boardFilter==='outside') sheets = sheets.filter(s=>s.productType==='outside');
+
+  // Update KPIs (always based on full data)
+  const ch = DB.costSheets.filter(s=>daysSince(s.costChangedAt)<=15&&s.prevFinalCost!=null).length;
+  const ih = DB.costSheets.filter(s=>s.productType==='inhouse').length;
+  document.getElementById('kv-total').textContent   = DB.costSheets.length;
+  document.getElementById('kv-changed').textContent = ch;
+  document.getElementById('kv-inhouse').textContent = ih;
+  document.getElementById('kv-outside').textContent = DB.costSheets.length - ih;
+
+  const grid = document.getElementById('board-grid');
+  if (!sheets.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--ink3);">
+      <div style="font-size:2rem;opacity:.4;margin-bottom:.8rem">📊</div>
+      <div style="font-size:.82rem">${isSignedIn ? (q?`No products match "${q}"`:'No products yet — go to <b>Build Cost Sheet</b>') : 'Sign in to load your data.'}</div>
+    </div>`;
+    _highlightBF(); return;
+  }
+
+  // TABLE VIEW
+  grid.innerHTML = `
+    <div style="grid-column:1/-1;overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;">
+        <thead>
+          <tr style="background:var(--bg);">
+            <th style="padding:.6rem .9rem;text-align:left;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);white-space:nowrap;">Product</th>
+            <th style="padding:.6rem .9rem;text-align:left;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">SKU</th>
+            <th style="padding:.6rem .9rem;text-align:left;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">Type</th>
+            <th style="padding:.6rem .9rem;text-align:right;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">Product Cost</th>
+            <th style="padding:.6rem .9rem;text-align:right;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">Packing</th>
+            <th style="padding:.6rem .9rem;text-align:right;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">Courier</th>
+            <th style="padding:.6rem .9rem;text-align:right;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">Other</th>
+            <th style="padding:.6rem .9rem;text-align:right;font-size:.6rem;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">Final Cost</th>
+            <th style="padding:.6rem .9rem;text-align:left;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">Change</th>
+            <th style="padding:.6rem .9rem;border-bottom:1px solid var(--line);"></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sheets.map(s => {
+            const isC  = daysSince(s.costChangedAt)<=15 && s.prevFinalCost!=null;
+            const diff = isC ? s.finalCost - s.prevFinalCost : 0;
+            const dp   = isC && s.prevFinalCost>0 ? diff/s.prevFinalCost*100 : 0;
+            const da   = isC ? daysSince(s.costChangedAt) : 0;
+            const rowBg = isC ? 'background:rgba(201,58,26,.04);' : '';
+            const extraT = s.extraTotal||0;
+            return `<tr style="border-bottom:1px solid var(--bg2);transition:background .1s;${rowBg}" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='${isC?'rgba(201,58,26,.04)':''}'" >
+              <td style="padding:.65rem .9rem;">
+                <div style="font-weight:600;color:var(--ink);font-size:.82rem;">${s.name}${isC?`<span class="change-pill" style="margin-left:.5rem;font-size:.58rem;">🔥 ${da===0?'Today':da+'d ago'}</span>`:''}</div>
+                ${s.category?`<div style="font-size:.62rem;color:var(--ink3);margin-top:1px">${s.category}</div>`:''}
+              </td>
+              <td style="padding:.65rem .9rem;font-size:.72rem;color:var(--ink3)">${s.sku||'—'}</td>
+              <td style="padding:.65rem .9rem;">
+                <span class="${s.productType==='inhouse'?'type-inhouse':'type-outside'}">${s.productType==='inhouse'?'In-House':'Procured'}</span>
+              </td>
+              <td style="padding:.65rem .9rem;text-align:right;font-size:.8rem;">${fmt(s.productCost)}</td>
+              <td style="padding:.65rem .9rem;text-align:right;font-size:.8rem;color:var(--ink3)">${fmt((s.prodPackCost||0)+(s.labelCost||0))}</td>
+              <td style="padding:.65rem .9rem;text-align:right;font-size:.8rem;color:var(--ink3)">${fmt((s.courierPackCost||0)+(s.courierLabelCost||0))}</td>
+              <td style="padding:.65rem .9rem;text-align:right;font-size:.8rem;color:var(--ink3)">${extraT>0?fmt(extraT):'—'}</td>
+              <td style="padding:.65rem .9rem;text-align:right;">
+                <div style="font-family:var(--font);font-size:.95rem;font-weight:700;color:var(--orange)">${fmt(s.finalCost)}</div>
+                ${isC&&s.prevFinalCost?`<div style="font-size:.65rem;color:var(--ink3);text-decoration:line-through">${fmt(s.prevFinalCost)}</div>`:''}
+              </td>
+              <td style="padding:.65rem .9rem;white-space:nowrap;">
+                ${isC ? `<span class="badge ${diff>=0?'br':'bg'}">${diff>=0?'▲':'▼'}${Math.abs(dp).toFixed(1)}%</span>` : '<span style="font-size:.7rem;color:var(--ink3)">—</span>'}
+              </td>
+              <td style="padding:.65rem .9rem;white-space:nowrap;">
+                <button class="act" onclick="goto('costing');setTimeout(()=>renderCostingForm('${s.id}'),50)">✎</button>
+                <button class="act del" onclick="deleteCostSheet('${s.id}')" style="margin-left:3px">✕</button>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+
+  _highlightBF();
+}
+
+function renderPurchases() {
+  const cf=gv('pur-cat-filter');
+  const items=DB.items.filter(x=>!cf||x.category===cf);
+  // sort by purchaseDate desc so latest is on top
+  items.sort((a,b)=>(b.purchaseDate||'').localeCompare(a.purchaseDate||''));
+  document.getElementById('pur-count').textContent=items.length+' items';
+  const CAT={'Raw Material':'bg', Product:'bo', Label:'bb', Tag:'bgold', 'Product Packing':'bg', 'Courier Packing':'bgray'};
+  const tb=document.getElementById('tbl-purchases');
+  tb.innerHTML=!items.length?`<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">🛒</div><div class="empty-p">No items yet.</div></div></td></tr>`:
+    items.map(i=>`<tr>
+      <td>
+        <div class="tn">${i.name}${i.isImported?' <span class="badge bb" style="margin-left:.3rem;font-size:.58rem">🌍 Imported</span>':''}</div>
+        ${i.supplier?`<div class="ts">${i.supplier}</div>`:''}
+      </td>
+      <td><span class="badge ${CAT[i.category]||'bgray'}">${i.category}</span></td>
+      <td style="font-weight:500">${fmt(i.rate)}</td>
+      <td style="color:var(--ink3)">${i.unit}</td>
+      <td><span class="badge bgray">${i.gst}%</span></td>
+      <td style="color:var(--ink3);font-size:.72rem;line-height:1.6;">
+        ${i.transport>0?`<div>${fmt(i.transport)} <span style="opacity:.6">domestic</span></div>`:''}
+        ${i.isImported&&i.customDuty>0?`<div style="color:var(--blue)">${fmt(i.customDuty)} <span style="opacity:.7">duty</span></div>`:''}
+        ${i.isImported&&i.importTransport>0?`<div style="color:var(--orange)">${fmt(i.importTransport)} <span style="opacity:.7">freight</span></div>`:''}
+        ${!i.transport&&!(i.isImported&&(i.customDuty||i.importTransport))?'—':''}
+      </td>
+      <td style="font-weight:700;color:var(--orange)">${fmt(i.effectiveCost)}</td>
+      <td style="color:var(--ink3);font-size:.72rem">${i.purchaseDate||'—'}</td>
+      <td><button class="act" onclick="openPurModal('${i.id}')">✎</button> <button class="act del" onclick="delItem('${i.id}')" style="margin-left:3px">✕</button></td>
+    </tr>`).join('');
+}
+
+function renderMaterials() {
+  const tb=document.getElementById('tbl-materials');
+  const mc=document.getElementById('mat-count');
+  if(mc) mc.textContent=DB.items.length+' items';
+  const CAT={Product:'bo',Label:'bb',Tag:'bgold','Product Packing':'bg','Courier Packing':'bgray'};
+  tb.innerHTML=!DB.items.length?`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🗂</div><div class="empty-p">No items yet.</div></div></td></tr>`:
+    DB.items.map(i=>{
+      const used=DB.costSheets.filter(s=>[s.productItemId,s.tagItemId,s.prodPackItemId,s.labelItemId,s.courierPackItemId].includes(i.id)).map(s=>s.name);
+      return `<tr>
+        <td><div class="tn">${i.name}</div></td>
+        <td><span class="badge ${CAT[i.category]||'bgray'}">${i.category}</span></td>
+        <td style="font-weight:500">${fmt(i.rate)}</td>
+        <td>${i.unit}</td>
+        <td><span class="badge bgray">${i.gst}%</span></td>
+        <td style="font-weight:600;color:var(--orange)">${fmt(i.effectiveCost)}</td>
+        <td style="font-size:.7rem;color:var(--ink3)">${used.length?used.slice(0,2).join(', ')+(used.length>2?` +${used.length-2}`:''): '—'}</td>
+        <td><button class="act" onclick="openPurModal('${i.id}')">✎</button></td>
+      </tr>`;
+    }).join('');
+}
+
+function renderHistory() {
+  const tb=document.getElementById('tbl-history');
+  const sorted=[...DB.costHistory].sort((a,b)=>b.changedAt.localeCompare(a.changedAt));
+  tb.innerHTML=!sorted.length?`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-p">No cost changes yet.</div></div></td></tr>`:
+    sorted.map(h=>{
+      const d=daysSince(h.changedAt), recent=d<=15;
+      return `<tr ${recent?'style="background:rgba(201,58,26,.03)"':''}>
+        <td><div class="tn">${h.productName}</div></td>
+        <td style="color:var(--ink3)">${h.sku||'—'}</td>
+        <td><span class="${h.productType==='inhouse'?'type-inhouse':'type-outside'}">${h.productType==='inhouse'?'In-House':'Procured'}</span></td>
+        <td style="color:var(--ink3)">${fmt(h.oldCost)}</td>
+        <td style="font-weight:600">${fmt(h.newCost)}</td>
+        <td><span class="badge ${h.diff>=0?'br':'bg'}">${h.diff>=0?'▲':'▼'} ${Math.abs(h.diffPct).toFixed(1)}% (${h.diff>=0?'+':''}${fmt(h.diff)})</span></td>
+        <td style="color:var(--ink3);font-size:.7rem">${h.changedAt}</td>
+        <td>${recent?`<span class="change-pill">🔥 ${d===0?'Today':d+'d ago'}</span>`:`<span style="font-size:.68rem;color:var(--ink3)">${d}d ago</span>`}</td>
+      </tr>`;
+    }).join('');
+}
+
+function renderAll() {
+  const p=document.querySelector('.page.active')?.id.replace('page-','');
+  if(p==='board') renderBoard();
+  else if(p==='purchases') renderPurchases();
+  else if(p==='materials') renderMaterials();
+  else if(p==='costing') calcCP();
+  else if(p==='inhouse') renderInhousePage();
+  else if(p==='history') renderHistory();
+}
+
+// ══════════════════════════════════════════════════
+//  MODAL HELPERS
+// ══════════════════════════════════════════════════
+function openM(id){document.getElementById(id).classList.add('open');}
+function closeM(id){document.getElementById(id).classList.remove('open');}
+// ══════════════════════════════════════════════════
+//  EXCEL IMPORT
+// ══════════════════════════════════════════════════
+let _importRows = [];
+let _importHeaders = [];
+let _importMapped = [];
+let _allSheetData = {}; // { sheetName: { headers, rows } }
+
+// ── Field definitions for column mapping ──────────────────
+const IMPORT_FIELDS = {
+  core: [
+    { id:'name',         label:'Item Name *',       guesses:['raw material','item','material','product','name','description'] },
+    { id:'supplier',     label:'Supplier / Party',  guesses:['party','supplier','vendor','company','party name'] },
+    { id:'purchaseDate', label:'Purchase Date',      guesses:['purchase date','date','invoice date','entry date'] },
+  ],
+  cost: [
+    { id:'rate',     label:'Rate (per unit) *',  guesses:['rate per kg','rate per unit','unit price','rate','price','per kg cost'] },
+    { id:'qty',      label:'Quantity',            guesses:['kgs','qty','quantity','pcs','units bought'] },
+    { id:'unit',     label:'Unit',                guesses:['units','unit','uom'] },
+    { id:'gst',      label:'GST / Tax %',         guesses:['tax','gst','gst%','tax rate'] },
+    { id:'category', label:'Category',            guesses:['category','cat','type','group','product used for','used for'] },
+    { id:'transport',label:'Transport (total ₹)', guesses:['transport cost','transport to factory','transport cost to bhilwara','transport','freight domestic'] },
+    { id:'invoiceNo',label:'Invoice Number',      guesses:['invoice number','invoice no','invoice','challan'] },
+  ],
+  import: [
+    { id:'exchangeRate',  label:'Exchange Rate',     guesses:['exchange rate','forex','fx rate'] },
+    { id:'dutyCharge',    label:'Custom Duty (₹)',   guesses:['duty charge','custom duty','duty','import duty'] },
+    { id:'impFreight',    label:'Import Freight (₹)',guesses:['courier charge','import freight','shipping','freight'] },
+    { id:'igst',          label:'IGST %',            guesses:['igst','integrated gst'] },
+  ],
+  payment: [
+    { id:'paymentMode',   label:'Payment Mode',   guesses:['payment mode','mode of payment','payment type'] },
+    { id:'paymentAmt',    label:'Payment Amount', guesses:['payment amount','amount paid','paid'] },
+    { id:'paymentDate',   label:'Payment Date',   guesses:['payment date','paid on','date of payment'] },
+  ],
+};
+
+function guessColumn(headers, guesses) {
+  for (const h of headers) {
+    const hl = h.toLowerCase().trim();
+    if (guesses.some(g => hl === g || hl.includes(g) || g.includes(hl))) {
+      return headers.indexOf(h);
+    }
+  }
+  return -1;
+}
+
+function handleXLSX(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const wb = XLSX.read(e.target.result, { type:'array', cellDates:true });
+      _allSheetData = {};
+      for (const sname of wb.SheetNames) {
+        const ws = wb.Sheets[sname];
+        const data = XLSX.utils.sheet_to_json(ws, { header:1, defval:'', raw:false });
+        const validRows = data.filter(r => r.some(c => String(c||'').trim() !== ''));
+        if (validRows.length < 2) continue;
+        _allSheetData[sname] = {
+          headers: validRows[0].map(h => String(h||'').trim()),
+          rows:    validRows.slice(1).filter(r => r.some(c => String(c||'').trim() !== ''))
+        };
+      }
+      const sheets = Object.keys(_allSheetData);
+      if (!sheets.length) { toast('No usable data found in Excel file', 'err'); return; }
+
+      // Populate sheet selector
+      const sel = document.getElementById('imp-sheet-select');
+      sel.innerHTML = sheets.map(s => `<option value="${s}">${s} (${_allSheetData[s].rows.length} rows)</option>`).join('');
+      document.getElementById('imp-sheet-selector').style.display = sheets.length > 1 ? '' : 'none';
+
+      loadSheetForImport(sheets[0]);
+      openM('modal-import');
+    } catch(err) {
+      toast('Could not read Excel file: ' + err.message, 'err');
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function switchImportSheet() {
+  const s = document.getElementById('imp-sheet-select').value;
+  if (_allSheetData[s]) loadSheetForImport(s);
+}
+
+function loadSheetForImport(sheetName) {
+  const sd = _allSheetData[sheetName];
+  _importHeaders = sd.headers;
+  _importRows    = sd.rows;
+  buildImportModal();
+}
+
+function buildImportModal() {
+  // Build each section of dropdowns
+  for (const [section, fields] of Object.entries(IMPORT_FIELDS)) {
+    const grid = document.getElementById('col-map-' + section);
+    if (!grid) continue;
+    grid.innerHTML = fields.map(f => {
+      const guessed = guessColumn(_importHeaders, f.guesses);
+      const opts = ['<option value="-1">— Skip —</option>',
+        ..._importHeaders.map((h,i) => `<option value="${i}" ${i===guessed?'selected':''}>${h}</option>`)
+      ].join('');
+      return `<div class="fg" style="margin-bottom:0">
+        <label style="font-size:.6rem">${f.label}</label>
+        <select id="imap-${f.id}" onchange="updateImportPreview()" style="font-size:.75rem;padding:.42rem .6rem;">${opts}</select>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('imp-preview-label').textContent =
+    `Preview — ${_importRows.length} rows found in this sheet`;
+  updateImportPreview();
+}
+
+function getMapVal(fieldId) {
+  const sel = document.getElementById('imap-' + fieldId);
+  return sel ? parseInt(sel.value) : -1;
+}
+
+function cellVal(row, idx, fallback='') {
+  if (idx < 0 || idx >= row.length) return fallback;
+  const v = row[idx];
+  return v === null || v === undefined ? fallback : String(v).trim();
+}
+
+function cellNum(row, idx, fallback=0) {
+  const raw = cellVal(row, idx, '');
+  if (!raw) return fallback;
+  // handle "18%" → 18, "0.18" → handle below
+  const stripped = raw.replace(/[₹,%\s]/g,'');
+  return parseFloat(stripped) || fallback;
+}
+
+function cellDate(row, idx) {
+  const raw = cellVal(row, idx, '');
+  if (!raw) return today();
+  // Try to parse various date formats
+  const d = new Date(raw);
+  if (!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+  return raw.slice(0,10) || today();
+}
+
+function updateImportPreview() {
+  const defCat      = document.getElementById('imp-default-cat')?.value    || 'Raw Material';
+  const defGST      = parseFloat(document.getElementById('imp-default-gst')?.value)  || 18;
+  const defUnit     = document.getElementById('imp-default-unit')?.value   || 'KG';
+  const defImported = document.getElementById('imp-default-imported')?.value || 'auto';
+
+  // Column index map
+  const C = {};
+  for (const fields of Object.values(IMPORT_FIELDS))
+    for (const f of fields) C[f.id] = getMapVal(f.id);
+
+  _importMapped = [];
+  let skipped = 0;
+
+  for (const row of _importRows) {
+    const name = cellVal(row, C.name);
+    if (!name) { skipped++; continue; }
+
+    const rateRaw = cellNum(row, C.rate);
+    if (rateRaw <= 0) { skipped++; continue; }
+
+    const qty   = cellNum(row, C.qty, 1) || 1;
+    const unit  = cellVal(row, C.unit) || defUnit;
+
+    // GST: stored as decimal (0.18) or percent (18)
+    let gstRaw = cellNum(row, C.gst, defGST);
+    if (gstRaw <= 1 && gstRaw > 0) gstRaw = gstRaw * 100; // 0.18 → 18
+    const gst = gstRaw;
+
+    const supplier    = cellVal(row, C.supplier);
+    const purchaseDate= cellDate(row, C.purchaseDate);
+    const invoiceNo   = cellVal(row, C.invoiceNo);
+    const transport   = cellNum(row, C.transport, 0);
+    const transPerUnit= qty > 0 ? transport / qty : 0;
+
+    // Category — use mapped column if available, else default
+    const rawCat  = C.category >= 0 ? cellVal(row, C.category) : '';
+    const category = normCategory(rawCat) || defCat;
+
+    const gstAmt  = rateRaw * (gst / 100);
+
+    // Import fields
+    const exchangeRate = cellNum(row, C.exchangeRate, 0);
+    const dutyCharge   = cellNum(row, C.dutyCharge, 0);
+    const impFreight   = cellNum(row, C.impFreight, 0);
+    const igst         = cellNum(row, C.igst, 0);
+
+    const dutyPerUnit      = qty > 0 ? dutyCharge / qty : 0;
+    const impFreightPerUnit= qty > 0 ? impFreight / qty : 0;
+
+    // Determine if imported
+    let isImported = false;
+    if (defImported === 'yes') isImported = true;
+    else if (defImported === 'no') isImported = false;
+    else isImported = (dutyCharge > 0 || impFreight > 0 || exchangeRate > 0);
+
+    const effective = rateRaw + gstAmt + transPerUnit +
+                      (isImported ? dutyPerUnit + impFreightPerUnit : 0);
+
+    _importMapped.push({
+      id: uid(), name,
+      category,
+      rate: rateRaw, unit, gst, gstAmount: gstAmt,
+      transport, transportPerUnit: transPerUnit,
+      isImported,
+      customDuty: isImported ? dutyCharge : 0,
+      customDutyPerUnit: isImported ? dutyPerUnit : 0,
+      importTransport: isImported ? impFreight : 0,
+      importTransportPerUnit: isImported ? impFreightPerUnit : 0,
+      effectiveCost: effective,
+      supplier, notes: invoiceNo ? `Invoice: ${invoiceNo}` : '',
+      purchaseDate, updatedAt: today(), createdAt: today()
+    });
+  }
+
+  // Preview table
+  const preview = _importMapped.slice(0, 8);
+  const CAT = {'Raw Material':'bg', Product:'bo', Label:'bb', Tag:'bgold', 'Product Packing':'bg', 'Courier Packing':'bgray'};
+  const tb = document.getElementById('tbl-import-preview');
+  tb.innerHTML = !preview.length
+    ? `<tr><td colspan="12" style="text-align:center;padding:1.2rem;color:var(--ink3)">No valid rows — make sure Item Name and Rate columns are mapped correctly</td></tr>`
+    : preview.map(r => `<tr>
+        <td><div class="tn" style="font-size:.76rem">${r.name}</div></td>
+        <td style="color:var(--ink3);font-size:.72rem">${r.supplier||'—'}</td>
+        <td style="color:var(--ink3);font-size:.68rem">${r.purchaseDate||'—'}</td>
+        <td><span class="badge ${CAT[r.category]||'bgray'}" style="font-size:.6rem">${r.category}</span></td>
+        <td style="font-size:.72rem">${r.gstAmount>0?'(calc)':'1'} × ${r.unit}</td>
+        <td style="font-weight:500">${fmt(r.rate)}</td>
+        <td><span class="badge bgray">${r.gst}%</span></td>
+        <td style="color:var(--ink3)">${r.transport>0?fmt(r.transport):'—'}</td>
+        <td style="color:var(--blue)">${r.customDuty>0?fmt(r.customDuty):'—'}</td>
+        <td style="color:var(--orange)">${r.importTransport>0?fmt(r.importTransport):'—'}</td>
+        <td style="font-weight:700;color:var(--orange)">${fmt(r.effectiveCost)}</td>
+        <td><span class="badge ${r.isImported?'bb':'bg'}">${r.isImported?'🌍 Imp':'Local'}</span></td>
+      </tr>`).join('');
+
+  document.getElementById('imp-summary').innerHTML =
+    `✅ <strong>${_importMapped.length} items</strong> ready to import` +
+    (skipped ? ` &nbsp;·&nbsp; ⚠ <strong>${skipped}</strong> rows skipped (empty name or zero rate)` : '') +
+    ` &nbsp;·&nbsp; 🌍 ${_importMapped.filter(x=>x.isImported).length} imported &nbsp;·&nbsp; 🏠 ${_importMapped.filter(x=>!x.isImported).length} local`;
+
+  const btn = document.getElementById('btn-import-confirm');
+  if (btn) btn.textContent = `Import ${_importMapped.length} Items`;
+}
+
+function normCategory(raw) {
+  const r = raw.toLowerCase();
+  if (r.includes('courier'))  return 'Courier Packing';
+  if (r.includes('label'))    return 'Label';
+  if (r.includes('tag'))      return 'Tag';
+  if (r.includes('packing') || r.includes('pack')) return 'Product Packing';
+  if (r.includes('product') || r.includes('procure')) return 'Product';
+  return '';
+}
+
+async function confirmImport() {
+  if (!_importMapped.length) { toast('No valid rows to import', 'err'); return; }
+  if (!isSignedIn) { toast('Please sign in first', 'err'); return; }
+
+  const btn = document.getElementById('btn-import-confirm');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  setSyncStatus('syncing', `Importing ${_importMapped.length} items…`);
+  setLoading(10);
+
+  const rows = _importMapped.map(itemToRow);
+  const total = rows.length;
+  const batchSize = 20;
+  let saved = 0;
+
+  try {
+    for (let i = 0; i < rows.length; i += batchSize) {
+      const batch = rows.slice(i, i + batchSize);
+      await gapi.client.sheets.spreadsheets.values.append({
+        spreadsheetId: APP_CONFIG.SHEET_ID,
+        range: `${TAB_ITEMS}!A1`,
+        valueInputOption: 'RAW',
+        insertDataOption: 'INSERT_ROWS',
+        resource: { values: batch }
+      });
+      saved += batch.length;
+      setLoading(10 + Math.round((saved / total) * 85));
+    }
+    DB.items.push(..._importMapped);
+    _importMapped = [];
+    setLoading(100);
+    setTimeout(() => setLoading(0), 500);
+    setSyncStatus('ok', `Imported ${saved} items ✓`);
+    toast(`✅ ${saved} items imported to Google Sheets!`);
+    closeM('modal-import');
+    renderMaterials();
+    renderPurchases();
+  } catch(e) {
+    toast('Import failed: ' + e.message, 'err');
+    setSyncStatus('err', 'Import error');
+    setLoading(0);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = `Import ${_importMapped.length} Items`;
+  }
+}
+
+// Download a blank template Excel for the user to fill
+function downloadTemplate() {
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['Raw Material','Product used for','Party name','Invoice Number','UNITS','Purchase date','Kgs','Rate Per kg','Tax','Transport cost to bhilwara','Transport to factory','Payment mode','Payment amount','Payment date'],
+    ['Muslin Fabric 58 inch','Dry Sheets','Ramesh Fabrics','INV-001','METER','2025-10-01',100,95,0.05,500,200,'NEFT',10000,'2025-10-02'],
+    ['Courier Pouch 10x12','Packaging','ABC Packaging','INV-002','PCS','2025-10-05',500,2.45,0.18,0,0,'Cash',1450,'2025-10-05'],
+    ['Label Sticker','Nursing Pad','XYZ Labels','INV-003','PCS','2025-10-10',1000,1.79,0.18,0,0,'NEFT',2100,'2025-10-11'],
+  ]);
+  ws['!cols'] = [
+    {wch:28},{wch:18},{wch:20},{wch:14},{wch:8},{wch:14},
+    {wch:8},{wch:12},{wch:8},{wch:22},{wch:18},{wch:14},{wch:16},{wch:14}
+  ];
+  // Bold header
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    const cell = ws[XLSX.utils.encode_cell({r:0,c})];
+    if (cell) cell.s = { font:{bold:true}, fill:{fgColor:{rgb:'F0EDE5'}} };
+  }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'local purchases');
+
+  // Also add Export sheet template
+  const wsExp = XLSX.utils.aoa_to_sheet([
+    ['Product','Unit Price','qty','Exchange Rate','Duty charge','Courier charge','IGST','Product Rec date'],
+    ['Hair Brush Set',1.68,500,87.7,7594,16402,0.18,'2025-03-19'],
+  ]);
+  wsExp['!cols'] = [{wch:22},{wch:12},{wch:8},{wch:14},{wch:14},{wch:16},{wch:8},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, wsExp, 'Export');
+
+  XLSX.writeFile(wb, 'CostLink_Import_Template.xlsx');
+  toast('Template downloaded ✓');
+}
+
+
+
+// ══════════════════════════════════════════════════
+//  IN-HOUSE PRODUCTION MODULE
+// ══════════════════════════════════════════════════
+let editInhouseId = null;
+
+function renderInhousePage() {
+  // Ensure at least 1 fabric row exists
+  const wrap = document.getElementById('inh-fabrics-wrap');
+  if (wrap && wrap.children.length === 0) addFabricRow();
+  renderInhouseList();
+}
+
+let _fabricRowCount = 0;
+
+function addFabricRow(saved={}) {
+  const wrap = document.getElementById('inh-fabrics-wrap');
+  if (!wrap) return;
+  const idx = _fabricRowCount++;
+  const fabrics = DB.items.filter(i => ['Raw Material','Product','Other'].includes(i.category));
+  // dedup by name, latest date
+  const map = {};
+  fabrics.forEach(i => {
+    const k = i.name.toLowerCase().trim();
+    if (!map[k] || (i.purchaseDate||'') > (map[k].purchaseDate||'')) map[k] = i;
+  });
+  const opts = Object.values(map).sort((a,b)=>a.name.localeCompare(b.name))
+    .map(i=>`<option value="${i.id}" ${i.id===saved.fabricItemId?'selected':''}>${i.name} — ${fmt(i.effectiveCost)}/${i.unit}</option>`).join('');
+
+  const div = document.createElement('div');
+  div.id = `fab-row-${idx}`;
+  div.style.cssText = 'background:var(--bg2);border-radius:8px;padding:.7rem;margin-bottom:.5rem;';
+  div.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;">
+      <span style="font-size:.68rem;font-weight:600;color:var(--ink2)">Fabric / Material ${idx+1}</span>
+      <button onclick="removeFabricRow(${idx})" style="background:none;border:1px solid var(--red-line);border-radius:5px;color:var(--red);padding:2px 7px;cursor:pointer;font-size:.7rem;">✕ Remove</button>
+    </div>
+    <div class="fg" style="margin-bottom:.45rem">
+      <label>Select Item <span class="link-tag">from Item Master — latest price</span></label>
+      <select id="fab-item-${idx}" onchange="onFabricChange(${idx})" style="font-size:.78rem">
+        <option value="">— Select fabric / raw material —</option>
+        ${opts}
+      </select>
+    </div>
+    <div style="font-size:.68rem;color:var(--ink3);padding:.3rem .5rem;background:var(--bg);border-radius:5px;margin-bottom:.45rem;" id="fab-rate-${idx}">Rate: —</div>
+    <div class="fr3">
+      <div class="fg" style="margin-bottom:0"><label>Usage per unit</label>
+        <input type="number" id="fab-usage-${idx}" placeholder="0.00" min="0" step=".01" value="${saved.metersPerUnit||''}" oninput="calcInhouse()"/>
+      </div>
+      <div class="fg" style="margin-bottom:0"><label>Unit</label>
+        <input type="text" id="fab-unit-${idx}" readonly style="background:var(--bg2);color:var(--ink3);font-size:.78rem"/>
+      </div>
+      <div class="fg" style="margin-bottom:0"><label>Wastage %</label>
+        <input type="number" id="fab-waste-${idx}" placeholder="0" min="0" max="100" step=".1" value="${saved.wastagePct||0}" oninput="calcInhouse()"/>
+      </div>
+    </div>`;
+  wrap.appendChild(div);
+  onFabricChange(idx);
+}
+
+function removeFabricRow(idx) {
+  document.getElementById(`fab-row-${idx}`)?.remove();
+  calcInhouse();
+}
+
+function onFabricChange(idx) {
+  const itemId = document.getElementById(`fab-item-${idx}`)?.value;
+  const item = itemId ? DB.items.find(x=>x.id===itemId) : null;
+  const rateEl = document.getElementById(`fab-rate-${idx}`);
+  const unitEl = document.getElementById(`fab-unit-${idx}`);
+  if (item) {
+    if (rateEl) rateEl.textContent = `Rate: ${fmt(item.effectiveCost)} / ${item.unit}  (Base: ${fmt(item.rate)} + GST ${item.gst}%${item.transportPerUnit>0?' + Transport':''}${item.isImported?' + Import':''})`;
+    if (unitEl) unitEl.value = item.unit;
+  } else {
+    if (rateEl) rateEl.textContent = 'Rate: —';
+    if (unitEl) unitEl.value = '';
+  }
+  calcInhouse();
+}
+
+function getFabricRows() {
+  const wrap = document.getElementById('inh-fabrics-wrap');
+  if (!wrap) return [];
+  const rows = [];
+  wrap.querySelectorAll('[id^="fab-row-"]').forEach(div => {
+    const idx = div.id.replace('fab-row-','');
+    const itemId  = document.getElementById(`fab-item-${idx}`)?.value || '';
+    const usage   = parseFloat(document.getElementById(`fab-usage-${idx}`)?.value) || 0;
+    const waste   = parseFloat(document.getElementById(`fab-waste-${idx}`)?.value) || 0;
+    const item    = itemId ? DB.items.find(x=>x.id===itemId) : null;
+    if (!item && usage <= 0) return;
+    const usageWithWaste = usage * (1 + waste/100);
+    const cost = item ? usageWithWaste * item.effectiveCost : 0;
+    rows.push({ fabricItemId:itemId, fabricName:item?.name||'', unit:item?.unit||'',
+      metersPerUnit:usage, wastagePct:waste, usageWithWaste, fabricCostPerUnit:cost });
+  });
+  return rows;
+}
+
+function calcInhouse() {
+  const fabricRows = getFabricRows();
+  const totalFabricCost = fabricRows.reduce((s,r)=>s+r.fabricCostPerUnit, 0);
+
+  const stitch  = gf('inh-stitch');
+  const cut     = gf('inh-cut');
+  const finish  = gf('inh-finish');
+  const jobwork = gf('inh-jobwork');
+  const totalLabour = stitch + cut + finish + jobwork;
+  const totalCost   = totalFabricCost + totalLabour;
+
+  document.getElementById('inh-fab-cost').textContent   = fmt(totalFabricCost);
+  document.getElementById('inh-l-stitch').textContent   = fmt(stitch);
+  document.getElementById('inh-l-cut').textContent      = fmt(cut);
+  document.getElementById('inh-l-finish').textContent   = fmt(finish);
+  document.getElementById('inh-l-job').textContent      = fmt(jobwork);
+  document.getElementById('inh-labour-total').textContent = fmt(totalLabour);
+
+  const productName = gv('inh-product') || '—';
+  document.getElementById('inh-preview-body').innerHTML = `
+    <div style="margin-bottom:.8rem">
+      <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;padding-bottom:.3rem;border-bottom:1px solid var(--bg2)">Fabric Cost</div>
+      ${fabricRows.length ? fabricRows.map(r=>`
+        <div class="calc-row"><span style="color:var(--ink3)">${r.fabricName||'—'}</span><span></span></div>
+        <div class="calc-row" style="padding-left:.8rem"><span style="color:var(--ink3);font-size:.68rem">${r.metersPerUnit} ${r.unit} + ${r.wastagePct}% waste = ${r.usageWithWaste.toFixed(3)} ${r.unit}</span><span style="font-weight:500">${fmt(r.fabricCostPerUnit)}</span></div>
+      `).join('') : '<div class="calc-row"><span style="color:var(--ink3)">No fabric added</span><span>₹0.00</span></div>'}
+      <div class="calc-row" style="background:var(--bg);padding:.2rem .4rem;border-radius:4px;margin-top:.2rem"><span style="font-weight:600">Subtotal</span><span style="font-weight:600">${fmt(totalFabricCost)}</span></div>
+    </div>
+    <div style="margin-bottom:.8rem">
+      <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;padding-bottom:.3rem;border-bottom:1px solid var(--bg2)">Labour Cost</div>
+      ${stitch>0?`<div class="calc-row"><span style="color:var(--ink3)">Stitching</span><span>${fmt(stitch)}</span></div>`:''}
+      ${cut>0?`<div class="calc-row"><span style="color:var(--ink3)">Cutting</span><span>${fmt(cut)}</span></div>`:''}
+      ${finish>0?`<div class="calc-row"><span style="color:var(--ink3)">Finishing</span><span>${fmt(finish)}</span></div>`:''}
+      ${jobwork>0?`<div class="calc-row"><span style="color:var(--ink3)">Job Work</span><span>${fmt(jobwork)}</span></div>`:''}
+      ${totalLabour===0?'<div class="calc-row"><span style="color:var(--ink3)">No labour costs entered</span><span>₹0.00</span></div>':''}
+      <div class="calc-row" style="background:var(--bg);padding:.2rem .4rem;border-radius:4px;margin-top:.2rem"><span style="font-weight:600">Subtotal</span><span style="font-weight:600">${fmt(totalLabour)}</span></div>
+    </div>
+    <div style="background:var(--ink2);border-radius:8px;padding:.8rem 1rem;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:.65rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.1em">Total In-House Cost</div>
+        <div style="font-size:.68rem;color:rgba(255,255,255,.4);margin-top:2px">${productName}</div>
+      </div>
+      <span style="font-family:var(--font);font-size:1.4rem;font-weight:700;color:#fff">${fmt(totalCost)}</span>
+    </div>`;
+}
+
+function resetInhouseForm() {
+  editInhouseId = null;
+  _fabricRowCount = 0;
+  document.getElementById('inh-form-title').textContent = '🏭 New Production Cost';
+  sv('inh-product','');
+  ['inh-stitch','inh-cut','inh-finish','inh-jobwork'].forEach(id=>sv(id,'0'));
+  sv('inh-notes','');
+  // Clear fabric rows and add one fresh row
+  const wrap = document.getElementById('inh-fabrics-wrap');
+  if (wrap) wrap.innerHTML = '';
+  addFabricRow();
+}
+
+async function saveInhouse() {
+  if(!isSignedIn){toast('Please sign in first','err');return;}
+  const productName = gv('inh-product').trim();
+  if(!productName){toast('Enter product name','err');return;}
+
+  const fabricRows  = getFabricRows();
+  const stitch  = gf('inh-stitch');
+  const cut     = gf('inh-cut');
+  const finish  = gf('inh-finish');
+  const jobwork = gf('inh-jobwork');
+
+  const totalFabricCost = fabricRows.reduce((s,r)=>s+r.fabricCostPerUnit, 0);
+  const totalLabour     = stitch + cut + finish + jobwork;
+  const totalCost       = totalFabricCost + totalLabour;
+
+  // Primary fabric = first row (for backward compat with sheet columns)
+  const pf = fabricRows[0] || {};
+
+  const rec = {
+    id: editInhouseId||uid(),
+    productName,
+    fabricItemId: pf.fabricItemId||'',
+    fabricName: fabricRows.map(r=>r.fabricName).filter(Boolean).join(', ') || '',
+    metersPerUnit: pf.metersPerUnit||0,
+    wastagePct: pf.wastagePct||0,
+    fabricCostPerUnit: totalFabricCost,
+    fabricRows: JSON.stringify(fabricRows),
+    stitching:stitch, cutting:cut, finishing:finish, jobWork:jobwork,
+    totalLabour, totalInhouseCost:totalCost,
+    notes:gv('inh-notes'),
+    updatedAt:today(),
+    createdAt: editInhouseId?(DB.inhouse.find(x=>x.id===editInhouseId)?.createdAt||today()):today()
+  };
+
+  const btn = document.getElementById('btn-save-inh');
+  btn.textContent='Saving…'; btn.disabled=true;
+
+  try {
+    setSyncStatus('syncing','Saving…');
+    if(editInhouseId) {
+      const idx = DB.inhouse.findIndex(x=>x.id===editInhouseId);
+      if(idx>=0){ DB.inhouse[idx]=rec; await updateRow(TAB_INHOUSE,idx,inhouseToRow(rec)); }
+      toast(`"${productName}" updated — ${fmt(totalCost)}/pc`);
+    } else {
+      DB.inhouse.push(rec);
+      await appendRow(TAB_INHOUSE, inhouseToRow(rec));
+      toast(`"${productName}" saved — ${fmt(totalCost)}/pc`);
+    }
+    setSyncStatus('ok','Saved ✓');
+    resetInhouseForm();
+    renderInhouseList();
+  } catch(e) {
+    toast('Save failed: '+e.message,'err');
+    setSyncStatus('err','Error');
+  } finally {
+    btn.textContent='Save Production Cost'; btn.disabled=false;
+  }
+}
+
+function editInhouse(id) {
+  const r = DB.inhouse.find(x=>x.id===id);
+  if(!r) return;
+  editInhouseId = id;
+  _fabricRowCount = 0;
+  document.getElementById('inh-form-title').textContent = '✎ Edit Production Cost';
+  sv('inh-product', r.productName);
+  sv('inh-stitch',  r.stitching);
+  sv('inh-cut',     r.cutting);
+  sv('inh-finish',  r.finishing);
+  sv('inh-jobwork', r.jobWork);
+  sv('inh-notes',   r.notes||'');
+
+  // Restore fabric rows
+  const wrap = document.getElementById('inh-fabrics-wrap');
+  if (wrap) {
+    wrap.innerHTML = '';
+    let rows = [];
+    try { rows = r.fabricRows ? JSON.parse(r.fabricRows) : []; } catch(e){}
+    // Fall back to single fabric if no fabricRows stored
+    if (!rows.length && r.fabricItemId) {
+      rows = [{ fabricItemId:r.fabricItemId, metersPerUnit:r.metersPerUnit, wastagePct:r.wastagePct }];
+    }
+    if (!rows.length) rows = [{}];
+    rows.forEach(saved => addFabricRow(saved));
+  }
+  calcInhouse();
+  document.getElementById('page-inhouse').scrollTop = 0;
+}
+
+async function deleteInhouse(id) {
+  if(!confirm('Delete this production cost record?')) return;
+  const idx = DB.inhouse.findIndex(x=>x.id===id);
+  if(idx<0) return;
+  try {
+    setSyncStatus('syncing','Deleting…');
+    await deleteRow(TAB_INHOUSE, idx);
+    DB.inhouse.splice(idx,1);
+    setSyncStatus('ok','Deleted ✓');
+    toast('Deleted','warn');
+    renderInhouseList();
+  } catch(e){ toast('Error: '+e.message,'err'); }
+}
+
+function renderInhouseList() {
+  const tb    = document.getElementById('tbl-inhouse');
+  const count = document.getElementById('inh-list-count');
+  if(count) count.textContent = DB.inhouse.length + ' products';
+  if(!DB.inhouse.length) {
+    tb.innerHTML=`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🏭</div><div class="empty-p">No in-house production costs yet. Fill the form on the left to add one.</div></div></td></tr>`;
+    return;
+  }
+  tb.innerHTML = [...DB.inhouse].sort((a,b)=>a.productName.localeCompare(b.productName)).map(r=>{
+    let fabRows = [];
+    try { fabRows = r.fabricRows ? JSON.parse(r.fabricRows) : []; } catch(e){}
+    const fabricSummary = fabRows.length
+      ? fabRows.map(f=>`${f.fabricName||'?'} (${f.metersPerUnit||0}${f.unit||''} +${f.wastagePct||0}%)`).join(', ')
+      : (r.fabricName||'—');
+    return `<tr>
+      <td><div class="tn">${r.productName}</div></td>
+      <td style="color:var(--ink3);font-size:.72rem;max-width:180px;white-space:normal;line-height:1.4">${fabricSummary}</td>
+      <td style="font-weight:500;color:var(--blue)">${fmt(r.fabricCostPerUnit)}</td>
+      <td style="font-weight:500;color:var(--orange)">${fmt(r.totalLabour)}</td>
+      <td style="font-weight:700">${fmt(r.totalInhouseCost)}</td>
+      <td style="color:var(--ink3);font-size:.72rem">${r.updatedAt}</td>
+      <td style="white-space:nowrap">
+        <button class="act" onclick="editInhouse('${r.id}')">✎</button>
+        <button class="act del" onclick="deleteInhouse('${r.id}')" style="margin-left:3px">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+
+window.addEventListener('load', () => {
+  document.getElementById('sb-date').textContent = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+  // Pre-load Google API in background so Sign In button works instantly
+  preloadGAPI();
+  renderCostingForm();
+  goto('login');
+});
+</script>
+</body>
+</html>
