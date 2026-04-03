@@ -276,11 +276,19 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
         <div class="kpi"><div class="kl">In-House</div><div class="kv green" id="kv-inhouse">0</div><div class="ks">Own production</div></div>
         <div class="kpi"><div class="kl">Procured</div><div class="kv" id="kv-outside">0</div><div class="ks">From suppliers</div></div>
       </div>
-      <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;" id="board-filters">
+      <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center;" id="board-filters">
         <button class="btn btn-s" id="filt-all" onclick="setBF('all')" style="font-size:.72rem;padding:.35rem .75rem">All</button>
         <button class="btn btn-s" id="filt-changed" onclick="setBF('changed')" style="font-size:.72rem;padding:.35rem .75rem">🔥 Changed</button>
         <button class="btn btn-s" id="filt-inhouse" onclick="setBF('inhouse')" style="font-size:.72rem;padding:.35rem .75rem">In-House</button>
         <button class="btn btn-s" id="filt-outside" onclick="setBF('outside')" style="font-size:.72rem;padding:.35rem .75rem">Procured</button>
+        <div style="margin-left:auto;display:flex;gap:.5rem;">
+          <button class="btn btn-s" onclick="exportBoardExcel()" style="font-size:.72rem;padding:.35rem .8rem;display:flex;align-items:center;gap:.35rem;">
+            <span>📥</span> Export Excel
+          </button>
+          <button class="btn btn-s" onclick="printBoard()" style="font-size:.72rem;padding:.35rem .8rem;display:flex;align-items:center;gap:.35rem;">
+            <span>🖨</span> Print
+          </button>
+        </div>
       </div>
       <div class="board-grid" id="board-grid"></div>
     </div>
@@ -2491,6 +2499,141 @@ function renderInhouseList() {
   }).join('');
 }
 
+
+// ══════════════════════════════════════════════════
+//  PRODUCT BOARD — EXPORT & PRINT
+// ══════════════════════════════════════════════════
+function getBoardSheets() {
+  const q = (document.getElementById('gsearch')?.value||'').toLowerCase().trim();
+  let sheets = [...DB.costSheets];
+  if (q) sheets = sheets.filter(s =>
+    s.name.toLowerCase().includes(q) ||
+    (s.sku||'').toLowerCase().includes(q) ||
+    (s.category||'').toLowerCase().includes(q)
+  );
+  if (boardFilter==='changed') sheets = sheets.filter(s=>daysSince(s.costChangedAt)<=15&&s.prevFinalCost!=null);
+  if (boardFilter==='inhouse') sheets = sheets.filter(s=>s.productType==='inhouse');
+  if (boardFilter==='outside') sheets = sheets.filter(s=>s.productType==='outside');
+  return sheets;
+}
+
+function exportBoardExcel() {
+  const sheets = getBoardSheets();
+  if (!sheets.length) { toast('No products to export', 'warn'); return; }
+
+  const header = ['Product Name','SKU','Category','Type',
+    'Product Cost (₹)','Tag Cost (₹)','Packing Cost (₹)','Label Cost (₹)',
+    'Courier Packing (₹)','Courier Label (₹)','Other Costs (₹)',
+    'Final Cost (₹)','Previous Cost (₹)','Change (₹)','Change %',
+    'Last Updated','Cost Changed On'];
+
+  const rows = sheets.map(s => {
+    const diff    = s.prevFinalCost ? s.finalCost - s.prevFinalCost : '';
+    const diffPct = s.prevFinalCost > 0 ? +((diff / s.prevFinalCost) * 100).toFixed(2) : '';
+    return [
+      s.name, s.sku||'', s.category||'',
+      s.productType==='inhouse' ? 'In-House' : 'Procured',
+      s.productCost||0, s.tagCost||0,
+      s.prodPackCost||0, s.labelCost||0,
+      s.courierPackCost||0, s.courierLabelCost||0,
+      s.extraTotal||0, s.finalCost||0,
+      s.prevFinalCost||'', diff, diffPct,
+      s.updatedAt||'', s.costChangedAt||''
+    ];
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+  ws['!cols'] = [{wch:30},{wch:12},{wch:14},{wch:10},{wch:15},{wch:11},{wch:14},{wch:12},{wch:16},{wch:14},{wch:12},{wch:14},{wch:14},{wch:12},{wch:10},{wch:13},{wch:15}];
+
+  const wb = XLSX.utils.book_new();
+  const label = {all:'All',changed:'Changed',inhouse:'InHouse',outside:'Procured'}[boardFilter]||'All';
+  XLSX.utils.book_append_sheet(wb, ws, `Board-${label}`);
+  XLSX.writeFile(wb, `CostLink_ProductBoard_${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast(`✅ Exported ${sheets.length} products`);
+}
+
+function printBoard() {
+  const sheets = getBoardSheets();
+  if (!sheets.length) { toast('No products to print', 'warn'); return; }
+
+  const date   = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+  const label  = {all:'All Products',changed:'🔥 Recently Changed',inhouse:'In-House Products',outside:'Procured Products'}[boardFilter];
+  const fmtR   = n => '₹' + Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  const tableRows = sheets.map(s => {
+    const isC  = daysSince(s.costChangedAt)<=15 && s.prevFinalCost!=null;
+    const diff = isC ? s.finalCost - s.prevFinalCost : 0;
+    const dp   = isC && s.prevFinalCost>0 ? (diff/s.prevFinalCost*100).toFixed(1) : null;
+    return `<tr style="${isC?'background:#fff8f5':''}" >
+      <td>${s.name}${s.category?`<br><span class="sub">${s.category}</span>`:''}</td>
+      <td class="c">${s.sku||'—'}</td>
+      <td class="c">${s.productType==='inhouse'?'In-House':'Procured'}</td>
+      <td class="r">${fmtR(s.productCost)}</td>
+      <td class="r">${fmtR((s.prodPackCost||0)+(s.labelCost||0))}</td>
+      <td class="r">${fmtR((s.courierPackCost||0)+(s.courierLabelCost||0))}</td>
+      <td class="r">${(s.extraTotal||0)>0?fmtR(s.extraTotal):'—'}</td>
+      <td class="r bold orange">${fmtR(s.finalCost)}</td>
+      <td class="c">${dp?`<span style="color:${diff>=0?'#c00':'#090'}">${diff>=0?'▲':'▼'}${Math.abs(dp)}%</span>`:'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const total = sheets.reduce((a,s)=>a+(s.finalCost||0),0);
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>CostLink — Product Board</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;font-size:12px;color:#1a1a1a;padding:1.5cm}
+    .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.2rem;padding-bottom:.8rem;border-bottom:2px solid #1a1a1a}
+    h1{font-size:1rem;font-weight:700;margin-bottom:.2rem}
+    .meta{font-size:.7rem;color:#888}
+    table{width:100%;border-collapse:collapse;font-size:.75rem}
+    thead tr{background:#1a1a1a;color:#fff}
+    th{padding:.45rem .6rem;font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+    td{padding:.45rem .6rem;border-bottom:1px solid #eee;vertical-align:top}
+    tr:nth-child(even){background:#fafafa}
+    .r{text-align:right;font-variant-numeric:tabular-nums}
+    .c{text-align:center}
+    .bold{font-weight:700}
+    .orange{color:#c93a1a}
+    .sub{font-size:.65rem;color:#888;font-weight:400}
+    tfoot td{border-top:2px solid #1a1a1a;font-weight:700;padding:.5rem .6rem}
+    .print-btn{padding:.35rem .9rem;background:#1a1a1a;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:.75rem}
+    @media print{
+      .print-btn{display:none}
+      body{padding:.5cm}
+      @page{size:A4 landscape;margin:.8cm}
+    }
+  </style></head><body>
+  <div class="hdr">
+    <div>
+      <h1>📊 CostLink &mdash; Product Board</h1>
+      <div class="meta">Filter: ${label} &nbsp;·&nbsp; ${sheets.length} products &nbsp;·&nbsp; Generated: ${date}</div>
+    </div>
+    <button class="print-btn" onclick="window.print()">🖨 Print / Save PDF</button>
+  </div>
+  <table>
+    <thead><tr>
+      <th>Product Name</th><th>SKU</th><th>Type</th>
+      <th class="r">Product Cost</th><th class="r">Packing</th>
+      <th class="r">Courier</th><th class="r">Other</th>
+      <th class="r">Final Cost</th><th class="c">Change</th>
+    </tr></thead>
+    <tbody>${tableRows}</tbody>
+    <tfoot><tr>
+      <td colspan="7" style="text-align:right;color:#888;font-weight:400;font-size:.7rem">Total &mdash; ${sheets.length} products</td>
+      <td class="r orange">${fmtR(total)}</td>
+      <td></td>
+    </tr></tfoot>
+  </table>
+  </body></html>`;
+
+  const win = window.open('', '_blank');
+  if (!win) { toast('Allow popups to use Print', 'err'); return; }
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+}
 
 window.addEventListener('load', () => {
   document.getElementById('sb-date').textContent = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
