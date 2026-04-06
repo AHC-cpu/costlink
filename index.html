@@ -413,6 +413,18 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
 
               <div class="fg"><label>Notes</label><input type="text" id="inh-notes" placeholder="Optional"/></div>
 
+              <!-- OTHER COSTS SECTION -->
+              <div class="cost-section">
+                <div class="cs-title"><div class="dot" style="background:var(--gold)"></div>Other Costs</div>
+                <div id="inh-extras-wrap">
+                  <!-- dynamic rows added here -->
+                </div>
+                <button onclick="addInhouseExtra()" class="btn btn-s" style="width:100%;margin-top:.4rem;font-size:.76rem;padding:.4rem">+ Add Cost Item</button>
+                <div class="calc-preview" style="margin-top:.4rem">
+                  <div class="calc-row total"><span>Total Other Costs / pc</span><span id="inh-other-total">₹0.00</span></div>
+                </div>
+              </div>
+
               <div style="display:flex;gap:.6rem;margin-top:.3rem">
                 <button class="btn btn-p" onclick="saveInhouse()" style="flex:1" id="btn-save-inh">Save Production Cost</button>
                 <button class="btn btn-s" onclick="resetInhouseForm()">New</button>
@@ -1384,16 +1396,9 @@ function renderCostingForm(sheetId=null) {
           <div class="fg"><label>Description</label><input type="text" id="cs-id" placeholder="e.g. Fabric + Labour" value="${sheet?.inhouseDesc||''}"/></div>
         </div>
       </div>
-      <div class="fr2" style="margin-top:.5rem">
-        <div>
-          <div class="mini-label">Tag / Brochure Cost (optional)</div>
-          <div class="fg"><select id="cs-ti" onchange="calcCP()"><option value="">— No tag —</option>${opts('Tag',sheet?.tagItemId||'')}</select></div>
-        </div>
-        <div class="fg">
-          <label>Combo Qty <span style="color:var(--ink3);font-weight:400;font-size:.62rem">— pieces per unit sold</span></label>
-          <input type="number" id="cs-combo" placeholder="1" min="1" step="1" value="${sheet?.comboQty||1}" oninput="calcCP()" style="margin-top:0"/>
-          <div style="font-size:.62rem;color:var(--ink3);margin-top:.2rem">Product cost × qty = total A cost</div>
-        </div>
+      <div class="fg" style="margin-top:.5rem">
+        <label>Combo Qty <span style="color:var(--ink3);font-weight:400;font-size:.62rem">— pieces per unit sold (product cost × qty)</span></label>
+        <input type="number" id="cs-combo" placeholder="1" min="1" step="1" value="${sheet?.comboQty||1}" oninput="calcCP()" style="max-width:140px"/>
       </div>
     </div>
 
@@ -1421,17 +1426,13 @@ function renderCostingForm(sheetId=null) {
       </div>
       <div class="fr2" style="margin-top:.4rem">
         <div>
-          <div class="mini-label">Courier Label (optional)</div>
-          <div class="fg"><select id="cs-cli" onchange="calcCP()"><option value="">— No courier label —</option>${opts('Courier Label',sheet?.courierLabelItemId||'')}</select></div>
-        </div>
-        <div>
           <div class="mini-label">Tape Cost (optional)</div>
           <div class="fg"><select id="cs-tape" onchange="calcCP()"><option value="">— No tape —</option>${opts('Other',sheet?.tapeItemId||'')}</select></div>
         </div>
-      </div>
-      <div style="margin-top:.4rem">
-        <div class="mini-label">Sticker Cost (optional)</div>
-        <div class="fg"><select id="cs-sticker" onchange="calcCP()"><option value="">— No sticker —</option>${opts('Other',sheet?.stickerItemId||'')}</select></div>
+        <div>
+          <div class="mini-label">Sticker Cost (optional)</div>
+          <div class="fg"><select id="cs-sticker" onchange="calcCP()"><option value="">— No sticker —</option>${opts('Other',sheet?.stickerItemId||'')}</select></div>
+        </div>
       </div>
     </div>
 
@@ -1529,40 +1530,34 @@ function calcCP() {
     pcUnit=parseFloat(document.getElementById('cs-ic')?.value)||0;
     pl=document.getElementById('cs-id')?.value||'In-House';
   }
-  const pc = pcUnit * combo; // Fix 6: multiply by combo qty
+  const pc = pcUnit * combo;
 
-  const ti   = gi(gv('cs-ti'));
   const ppi  = gi(gv('cs-ppi'));
   const li   = gi(gv('cs-li'));
   const pbi  = gi(gv('cs-pbi'));
   const cpi  = gi(gv('cs-cpi'));
-  const cli  = gi(gv('cs-cli'));
   const tape = gi(gv('cs-tape'));
   const stk  = gi(gv('cs-sticker'));
 
-  const tc   = ti?.effectiveCost||0;
   const ppc  = ppi?.effectiveCost||0;
   const lc   = li?.effectiveCost||0;
   const pbc  = pbi?.effectiveCost||0;
   const cc   = cpi?.effectiveCost||0;
-  const clc  = cli?.effectiveCost||0;
   const tapc = tape?.effectiveCost||0;
   const stkc = stk?.effectiveCost||0;
 
   const extras    = getExtraItems();
   const extraTotal= extras.reduce((s,e)=>s+e.cost,0);
 
-  const tpc  = pc + tc;
+  const tpc  = pc;
   const tpp  = ppc + lc + pbc;
-  const tcp  = cc + clc + tapc + stkc;
+  const tcp  = cc + tapc + stkc;
   const grand= tpc + tpp + tcp + extraTotal;
 
   const sections = [
     { head:'A. Product Cost',
-      items:[
-        {l: combo>1?`${pl} × ${combo}`:pl, v:pc, s:pt==='outside'?'Procured':'In-House'},
-        ...(ti?[{l:ti.name,v:tc,s:'Tag/Brochure'}]:[])
-      ], total:tpc },
+      items:[{l: combo>1?`${pl} × ${combo}`:pl, v:pc, s:pt==='outside'?'Procured':'In-House'}],
+      total:tpc },
     { head:'B. Product Packing',
       items:[
         ...(ppi?[{l:ppi.name,v:ppc,s:'Packing'}]:[]),
@@ -1572,7 +1567,6 @@ function calcCP() {
     { head:'C. Courier Packing',
       items:[
         ...(cpi?[{l:cpi.name,v:cc,s:'Courier Pack'}]:[]),
-        ...(cli?[{l:cli.name,v:clc,s:'Courier Label'}]:[]),
         ...(tape?[{l:tape.name,v:tapc,s:'Tape'}]:[]),
         ...(stk?[{l:stk.name,v:stkc,s:'Sticker'}]:[])
       ], total:tcp },
@@ -1615,20 +1609,20 @@ async function saveCostSheet() {
   if(pt==='inhouse'&&(parseFloat(document.getElementById('cs-ic')?.value)||0)<=0){toast('Enter production cost','err');return;}
 
   const gi=id=>id?DB.items.find(x=>x.id===id):null;
-  const piId=gv('cs-pi'), tiId=gv('cs-ti'), ppiId=gv('cs-ppi'), liId=gv('cs-li'), pbiId=gv('cs-pbi');
-  const cpiId=gv('cs-cpi'), cliId=gv('cs-cli'), tapeId=gv('cs-tape'), stkId=gv('cs-sticker');
+  const piId=gv('cs-pi'), ppiId=gv('cs-ppi'), liId=gv('cs-li'), pbiId=gv('cs-pbi');
+  const cpiId=gv('cs-cpi'), tapeId=gv('cs-tape'), stkId=gv('cs-sticker');
   const combo=Math.max(1,parseFloat(document.getElementById('cs-combo')?.value)||1);
   const inhId=gv('cs-inh-sel');
-  const pi=gi(piId),ti=gi(tiId),ppi=gi(ppiId),li=gi(liId),pbi=gi(pbiId);
-  const cpi=gi(cpiId),cli=gi(cliId),tape=gi(tapeId),stk=gi(stkId);
+  const pi=gi(piId),ppi=gi(ppiId),li=gi(liId),pbi=gi(pbiId);
+  const cpi=gi(cpiId),tape=gi(tapeId),stk=gi(stkId);
   const ic=parseFloat(document.getElementById('cs-ic')?.value)||0;
   const pcUnit=pt==='outside'?(pi?.effectiveCost||0):ic;
   const pc=pcUnit*combo;
-  const tc=ti?.effectiveCost||0, ppc=ppi?.effectiveCost||0, lc=li?.effectiveCost||0, pbc=pbi?.effectiveCost||0;
-  const cc=cpi?.effectiveCost||0, clc=cli?.effectiveCost||0, tapc=tape?.effectiveCost||0, stkc=stk?.effectiveCost||0;
+  const ppc=ppi?.effectiveCost||0, lc=li?.effectiveCost||0, pbc=pbi?.effectiveCost||0;
+  const cc=cpi?.effectiveCost||0, tapc=tape?.effectiveCost||0, stkc=stk?.effectiveCost||0;
   const extras=getExtraItems();
   const extraTotal=extras.reduce((s,e)=>s+e.cost,0);
-  const finalCost=pc+tc+ppc+lc+pbc+cc+clc+tapc+stkc+extraTotal;
+  const finalCost=pc+ppc+lc+pbc+cc+tapc+stkc+extraTotal;
 
   const existing=editSheetId?DB.costSheets.find(x=>x.id===editSheetId):null;
   const oldCost=existing?.finalCost||0;
@@ -1639,10 +1633,10 @@ async function saveCostSheet() {
     productType:pt, productItemId:piId, inhouseCost:ic,
     inhouseDesc:document.getElementById('cs-id')?.value||'',
     inhouseId:inhId, comboQty:combo,
-    tagItemId:tiId, prodPackItemId:ppiId, labelItemId:liId, packBrochureItemId:pbiId,
-    courierPackItemId:cpiId, courierLabelItemId:cliId, tapeItemId:tapeId, stickerItemId:stkId,
-    productCost:pc, tagCost:tc, prodPackCost:ppc, labelCost:lc, packBrochureCost:pbc,
-    courierPackCost:cc, courierLabelCost:clc, tapeCost:tapc, stickerCost:stkc,
+    tagItemId:'', prodPackItemId:ppiId, labelItemId:liId, packBrochureItemId:pbiId,
+    courierPackItemId:cpiId, courierLabelItemId:'', tapeItemId:tapeId, stickerItemId:stkId,
+    productCost:pc, tagCost:0, prodPackCost:ppc, labelCost:lc, packBrochureCost:pbc,
+    courierPackCost:cc, courierLabelCost:0, tapeCost:tapc, stickerCost:stkc,
     extraItems:JSON.stringify(extras), extraTotal,
     finalCost, prevFinalCost:changed?oldCost:(existing?.prevFinalCost||null),
     costChangedAt:changed?today():(existing?.costChangedAt||today()),
@@ -2323,7 +2317,46 @@ function renderInhousePage() {
   renderInhouseList();
 }
 
-let _fabricRowCount = 0;
+let _inhExtraCount = 0;
+
+function addInhouseExtra(saved={}) {
+  const wrap = document.getElementById('inh-extras-wrap');
+  if (!wrap) return;
+  const i = _inhExtraCount++;
+  const div = document.createElement('div');
+  div.id = `inh-ex-${i}`;
+  div.style.cssText = 'display:grid;grid-template-columns:1fr auto auto;gap:.4rem;align-items:end;margin-bottom:.4rem;';
+  div.innerHTML = `
+    <div class="fg" style="margin-bottom:0">
+      <label style="font-size:.6rem">Description</label>
+      <input type="text" id="inh-ex-desc-${i}" placeholder="e.g. Packaging thread, Box" value="${saved.desc||''}" oninput="calcInhouse()"/>
+    </div>
+    <div class="fg" style="margin-bottom:0;width:110px">
+      <label style="font-size:.6rem">Cost (₹/pc)</label>
+      <input type="number" id="inh-ex-cost-${i}" placeholder="0.00" min="0" step=".01" value="${saved.cost||0}" oninput="calcInhouse()"/>
+    </div>
+    <button onclick="removeInhouseExtra(${i})" style="background:none;border:1px solid var(--red-line);border-radius:6px;color:var(--red);padding:.45rem .55rem;cursor:pointer;font-size:.78rem;height:36px;white-space:nowrap">✕</button>`;
+  wrap.appendChild(div);
+  calcInhouse();
+}
+
+function removeInhouseExtra(i) {
+  document.getElementById(`inh-ex-${i}`)?.remove();
+  calcInhouse();
+}
+
+function getInhouseExtras() {
+  const wrap = document.getElementById('inh-extras-wrap');
+  if (!wrap) return [];
+  const extras = [];
+  wrap.querySelectorAll('[id^="inh-ex-"]').forEach(div => {
+    const i = div.id.replace('inh-ex-','');
+    const desc = document.getElementById(`inh-ex-desc-${i}`)?.value?.trim() || '';
+    const cost = parseFloat(document.getElementById(`inh-ex-cost-${i}`)?.value) || 0;
+    if (desc || cost > 0) extras.push({ desc, cost });
+  });
+  return extras;
+}
 
 function addFabricRow(saved={}) {
   const wrap = document.getElementById('inh-fabrics-wrap');
@@ -2419,14 +2452,18 @@ function calcInhouse() {
   const finish  = gf('inh-finish');
   const jobwork = gf('inh-jobwork');
   const totalLabour = stitch + cut + finish + jobwork;
-  const totalCost   = totalFabricCost + totalLabour;
+  const extras      = getInhouseExtras();
+  const extraTotal  = extras.reduce((s,e)=>s+e.cost, 0);
+  const totalCost   = totalFabricCost + totalLabour + extraTotal;
 
-  document.getElementById('inh-fab-cost').textContent   = fmt(totalFabricCost);
-  document.getElementById('inh-l-stitch').textContent   = fmt(stitch);
-  document.getElementById('inh-l-cut').textContent      = fmt(cut);
-  document.getElementById('inh-l-finish').textContent   = fmt(finish);
-  document.getElementById('inh-l-job').textContent      = fmt(jobwork);
-  document.getElementById('inh-labour-total').textContent = fmt(totalLabour);
+  document.getElementById('inh-fab-cost').textContent      = fmt(totalFabricCost);
+  document.getElementById('inh-l-stitch').textContent      = fmt(stitch);
+  document.getElementById('inh-l-cut').textContent         = fmt(cut);
+  document.getElementById('inh-l-finish').textContent      = fmt(finish);
+  document.getElementById('inh-l-job').textContent         = fmt(jobwork);
+  document.getElementById('inh-labour-total').textContent  = fmt(totalLabour);
+  const otherEl = document.getElementById('inh-other-total');
+  if (otherEl) otherEl.textContent = fmt(extraTotal);
 
   const productName = gv('inh-product') || '—';
   document.getElementById('inh-preview-body').innerHTML = `
@@ -2447,6 +2484,11 @@ function calcInhouse() {
       ${totalLabour===0?'<div class="calc-row"><span style="color:var(--ink3)">No labour costs entered</span><span>₹0.00</span></div>':''}
       <div class="calc-row" style="background:var(--bg);padding:.2rem .4rem;border-radius:4px;margin-top:.2rem"><span style="font-weight:600">Subtotal</span><span style="font-weight:600">${fmt(totalLabour)}</span></div>
     </div>
+    ${extraTotal>0?`<div style="margin-bottom:.8rem">
+      <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;padding-bottom:.3rem;border-bottom:1px solid var(--bg2)">Other Costs</div>
+      ${extras.map(e=>`<div class="calc-row"><span style="color:var(--ink3)">${e.desc||'Other'}</span><span>${fmt(e.cost)}</span></div>`).join('')}
+      <div class="calc-row" style="background:var(--bg);padding:.2rem .4rem;border-radius:4px;margin-top:.2rem"><span style="font-weight:600">Subtotal</span><span style="font-weight:600">${fmt(extraTotal)}</span></div>
+    </div>`:''}
     <div style="background:var(--ink2);border-radius:8px;padding:.8rem 1rem;display:flex;justify-content:space-between;align-items:center">
       <div>
         <div style="font-size:.65rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.1em">Total In-House Cost</div>
@@ -2463,6 +2505,10 @@ function resetInhouseForm() {
   sv('inh-product','');
   ['inh-stitch','inh-cut','inh-finish','inh-jobwork'].forEach(id=>sv(id,'0'));
   sv('inh-notes','');
+  // Clear extras
+  _inhExtraCount = 0;
+  const ew = document.getElementById('inh-extras-wrap');
+  if (ew) ew.innerHTML = '';
   // Clear fabric rows and add one fresh row
   const wrap = document.getElementById('inh-fabrics-wrap');
   if (wrap) wrap.innerHTML = '';
@@ -2479,10 +2525,12 @@ async function saveInhouse() {
   const cut     = gf('inh-cut');
   const finish  = gf('inh-finish');
   const jobwork = gf('inh-jobwork');
+  const extras  = getInhouseExtras();
+  const extraTotal = extras.reduce((s,e)=>s+e.cost, 0);
 
   const totalFabricCost = fabricRows.reduce((s,r)=>s+r.fabricCostPerUnit, 0);
   const totalLabour     = stitch + cut + finish + jobwork;
-  const totalCost       = totalFabricCost + totalLabour;
+  const totalCost       = totalFabricCost + totalLabour + extraTotal;
 
   // Primary fabric = first row (for backward compat with sheet columns)
   const pf = fabricRows[0] || {};
@@ -2497,7 +2545,8 @@ async function saveInhouse() {
     fabricCostPerUnit: totalFabricCost,
     fabricRows: JSON.stringify(fabricRows),
     stitching:stitch, cutting:cut, finishing:finish, jobWork:jobwork,
-    totalLabour, totalInhouseCost:totalCost,
+    totalLabour, otherExtras:JSON.stringify(extras), extraTotal,
+    totalInhouseCost:totalCost,
     notes:gv('inh-notes'),
     updatedAt:today(),
     createdAt: editInhouseId?(DB.inhouse.find(x=>x.id===editInhouseId)?.createdAt||today()):today()
@@ -2553,6 +2602,15 @@ function editInhouse(id) {
     }
     if (!rows.length) rows = [{}];
     rows.forEach(saved => addFabricRow(saved));
+  }
+  // Restore extras
+  _inhExtraCount = 0;
+  const ew = document.getElementById('inh-extras-wrap');
+  if (ew) {
+    ew.innerHTML = '';
+    let savedExtras = [];
+    try { savedExtras = r.otherExtras ? JSON.parse(r.otherExtras) : []; } catch(e){}
+    savedExtras.forEach(e => addInhouseExtra(e));
   }
   calcInhouse();
   document.getElementById('page-inhouse').scrollTop = 0;
