@@ -300,10 +300,12 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
           <option value="">All Categories</option>
           <option value="Raw Material">Raw Material</option>
           <option value="Product">Product (Procured)</option>
-          <option value="Label">Label</option>
+          <option value="Product Label">Product Label</option>
           <option value="Tag">Tag</option>
           <option value="Product Packing">Product Packing</option>
           <option value="Courier Packing">Courier Packing</option>
+          <option value="Courier Label">Courier Label</option>
+          <option value="Other">Other</option>
         </select>
         <div style="margin-left:auto;font-size:.7rem;color:var(--ink3)" id="pur-count"></div>
       </div>
@@ -460,10 +462,11 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
           <select id="pi-cat" onchange="togglePurFields();populateNameSuggestions()">
             <option value="Raw Material">Raw Material</option>
             <option value="Product">Product (Procured)</option>
-            <option value="Label">Label</option>
+            <option value="Product Label">Product Label</option>
             <option value="Tag">Tag</option>
             <option value="Product Packing">Product Packing</option>
             <option value="Courier Packing">Courier Packing</option>
+            <option value="Courier Label">Courier Label</option>
             <option value="Other">Other</option>
           </select>
         </div>
@@ -596,10 +599,12 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
           <select id="imp-default-cat">
             <option value="Raw Material">Raw Material</option>
             <option value="Product">Product (Procured)</option>
-            <option value="Label">Label</option>
+            <option value="Product Label">Product Label</option>
             <option value="Tag">Tag</option>
             <option value="Product Packing">Product Packing</option>
             <option value="Courier Packing">Courier Packing</option>
+            <option value="Courier Label">Courier Label</option>
+            <option value="Other">Other</option>
           </select>
         </div>
         <div class="fg">
@@ -1079,12 +1084,6 @@ function itemToRow(i) {
 function inhouseToRow(r) {
   return [r.id,r.productName,r.fabricItemId||'',r.fabricName||'',r.metersPerUnit,r.wastagePct,r.fabricCostPerUnit,r.stitching,r.cutting,r.finishing,r.jobWork,r.totalLabour,r.totalInhouseCost,r.notes||'',r.updatedAt,r.createdAt];
 }
-function costToRow(s) {
-  return [s.id,s.name,s.sku||'',s.category||'',s.productType,s.productItemId||'',s.inhouseCost||0,s.inhouseDesc||'',
-    s.tagItemId||'',s.prodPackItemId||'',s.labelItemId||'',s.courierPackItemId||'',
-    s.productCost,s.tagCost,s.prodPackCost,s.labelCost,s.courierPackCost,s.finalCost,
-    s.prevFinalCost||'',s.costChangedAt||'',s.updatedAt,s.createdAt];
-}
 function histToRow(h) {
   return [h.id,h.sheetId,h.productName,h.sku||'',h.productType,h.oldCost,h.newCost,h.diff,h.diffPct,h.changedAt];
 }
@@ -1373,14 +1372,28 @@ function renderCostingForm(sheetId=null) {
         </div>
       </div>
       <div id="cs-inh" style="display:none">
-        <div class="fr2">
-          <div class="fg"><label>Production Cost (₹)</label><input type="number" id="cs-ic" placeholder="0.00" value="${sheet?.inhouseCost||''}" oninput="calcCP()"/></div>
+        <div class="fg">
+          <label>Select In-House Product <span class="link-tag">from In-House Production</span></label>
+          <select id="cs-inh-sel" onchange="fillInhouseCost()">
+            <option value="">— Select product —</option>
+            ${DB.inhouse.map(r=>`<option value="${r.id}" ${sheet?.inhouseId===r.id?'selected':''}>${r.productName} — ${fmt(r.totalInhouseCost)}/pc</option>`).join('')}
+          </select>
+        </div>
+        <div class="fr2" style="margin-top:.4rem">
+          <div class="fg"><label>Production Cost (₹/pc)</label><input type="number" id="cs-ic" placeholder="0.00" value="${sheet?.inhouseCost||''}" oninput="calcCP()"/></div>
           <div class="fg"><label>Description</label><input type="text" id="cs-id" placeholder="e.g. Fabric + Labour" value="${sheet?.inhouseDesc||''}"/></div>
         </div>
       </div>
-      <div style="margin-top:.5rem">
-        <div class="mini-label">Tag Cost (optional)</div>
-        <div class="fg"><select id="cs-ti" onchange="calcCP()"><option value="">— No tag —</option>${opts('Tag',sheet?.tagItemId||'')}</select></div>
+      <div class="fr2" style="margin-top:.5rem">
+        <div>
+          <div class="mini-label">Tag / Brochure Cost (optional)</div>
+          <div class="fg"><select id="cs-ti" onchange="calcCP()"><option value="">— No tag —</option>${opts('Tag',sheet?.tagItemId||'')}</select></div>
+        </div>
+        <div class="fg">
+          <label>Combo Qty <span style="color:var(--ink3);font-weight:400;font-size:.62rem">— pieces per unit sold</span></label>
+          <input type="number" id="cs-combo" placeholder="1" min="1" step="1" value="${sheet?.comboQty||1}" oninput="calcCP()" style="margin-top:0"/>
+          <div style="font-size:.62rem;color:var(--ink3);margin-top:.2rem">Product cost × qty = total A cost</div>
+        </div>
       </div>
     </div>
 
@@ -1389,9 +1402,15 @@ function renderCostingForm(sheetId=null) {
       <div class="fg"><label>Packing Item <span class="link-tag">from Purchase — latest price</span></label>
         <select id="cs-ppi" onchange="calcCP()"><option value="">— No packing —</option>${opts('Product Packing',sheet?.prodPackItemId||'')}</select>
       </div>
-      <div style="margin-top:.4rem">
-        <div class="mini-label">Label Cost (optional)</div>
-        <div class="fg"><select id="cs-li" onchange="calcCP()"><option value="">— No label —</option>${opts('Label',sheet?.labelItemId||'')}</select></div>
+      <div class="fr2" style="margin-top:.4rem">
+        <div>
+          <div class="mini-label">Product Label (optional)</div>
+          <div class="fg"><select id="cs-li" onchange="calcCP()"><option value="">— No label —</option>${opts('Product Label',sheet?.labelItemId||'')}</select></div>
+        </div>
+        <div>
+          <div class="mini-label">Tag / Brochure in Pack (optional)</div>
+          <div class="fg"><select id="cs-pbi" onchange="calcCP()"><option value="">— None —</option>${opts('Tag',sheet?.packBrochureItemId||'')}</select></div>
+        </div>
       </div>
     </div>
 
@@ -1400,9 +1419,19 @@ function renderCostingForm(sheetId=null) {
       <div class="fg"><label>Courier Packing <span class="link-tag">from Purchase — latest price</span></label>
         <select id="cs-cpi" onchange="calcCP()"><option value="">— No courier packing —</option>${opts('Courier Packing',sheet?.courierPackItemId||'')}</select>
       </div>
+      <div class="fr2" style="margin-top:.4rem">
+        <div>
+          <div class="mini-label">Courier Label (optional)</div>
+          <div class="fg"><select id="cs-cli" onchange="calcCP()"><option value="">— No courier label —</option>${opts('Courier Label',sheet?.courierLabelItemId||'')}</select></div>
+        </div>
+        <div>
+          <div class="mini-label">Tape Cost (optional)</div>
+          <div class="fg"><select id="cs-tape" onchange="calcCP()"><option value="">— No tape —</option>${opts('Other',sheet?.tapeItemId||'')}</select></div>
+        </div>
+      </div>
       <div style="margin-top:.4rem">
-        <div class="mini-label">Courier Label Cost (optional)</div>
-        <div class="fg"><select id="cs-cli" onchange="calcCP()"><option value="">— No courier label —</option>${opts('Label',sheet?.courierLabelItemId||'')}</select></div>
+        <div class="mini-label">Sticker Cost (optional)</div>
+        <div class="fg"><select id="cs-sticker" onchange="calcCP()"><option value="">— No sticker —</option>${opts('Other',sheet?.stickerItemId||'')}</select></div>
       </div>
     </div>
 
@@ -1465,6 +1494,13 @@ function removeExtraItem(i) {
 
 function resetCostForm() { editSheetId=null; renderCostingForm(); }
 
+// Fix 1: Navigate to costing tab and load the cost sheet for editing
+function editSheetFromBoard(id) {
+  goto('costing');
+  // Wait for page transition then render the form
+  setTimeout(() => renderCostingForm(id), 80);
+}
+
 function togglePT() {
   const t = gv('cs-pt');
   document.getElementById('cs-out').style.display = t==='outside' ? '' : 'none';
@@ -1472,27 +1508,77 @@ function togglePT() {
   calcCP();
 }
 
+function fillInhouseCost() {
+  const id = gv('cs-inh-sel');
+  const r  = DB.inhouse.find(x=>x.id===id);
+  if (!r) return;
+  sv('cs-ic', r.totalInhouseCost);
+  sv('cs-id', r.productName);
+  calcCP();
+}
+
 function calcCP() {
   const gi = id => id ? DB.items.find(x=>x.id===id) : null;
   const pt = gv('cs-pt');
-  let pc=0, pl='Product Cost';
-  if(pt==='outside'){ const i=gi(gv('cs-pi')); if(i){pc=i.effectiveCost;pl=i.name;} }
-  else { pc=parseFloat(document.getElementById('cs-ic')?.value)||0; pl=document.getElementById('cs-id')?.value||'In-House'; }
-  const ti=gi(gv('cs-ti')), ppi=gi(gv('cs-ppi')), li=gi(gv('cs-li')), cpi=gi(gv('cs-cpi')), cli=gi(gv('cs-cli'));
-  const tc=ti?.effectiveCost||0, ppc=ppi?.effectiveCost||0, lc=li?.effectiveCost||0, cc=cpi?.effectiveCost||0, clc=cli?.effectiveCost||0;
+  const combo = Math.max(1, parseFloat(document.getElementById('cs-combo')?.value)||1);
+  let pcUnit=0, pl='Product Cost';
+  if(pt==='outside'){
+    const i=gi(gv('cs-pi'));
+    if(i){ pcUnit=i.effectiveCost; pl=i.name; }
+  } else {
+    pcUnit=parseFloat(document.getElementById('cs-ic')?.value)||0;
+    pl=document.getElementById('cs-id')?.value||'In-House';
+  }
+  const pc = pcUnit * combo; // Fix 6: multiply by combo qty
 
-  // Collect D. Other Costs
-  const extras = getExtraItems();
-  const extraTotal = extras.reduce((s,e)=>s+e.cost,0);
+  const ti   = gi(gv('cs-ti'));
+  const ppi  = gi(gv('cs-ppi'));
+  const li   = gi(gv('cs-li'));
+  const pbi  = gi(gv('cs-pbi'));
+  const cpi  = gi(gv('cs-cpi'));
+  const cli  = gi(gv('cs-cli'));
+  const tape = gi(gv('cs-tape'));
+  const stk  = gi(gv('cs-sticker'));
 
-  const tpc=pc+tc, tpp=ppc+lc, tcp=cc+clc, grand=tpc+tpp+tcp+extraTotal;
+  const tc   = ti?.effectiveCost||0;
+  const ppc  = ppi?.effectiveCost||0;
+  const lc   = li?.effectiveCost||0;
+  const pbc  = pbi?.effectiveCost||0;
+  const cc   = cpi?.effectiveCost||0;
+  const clc  = cli?.effectiveCost||0;
+  const tapc = tape?.effectiveCost||0;
+  const stkc = stk?.effectiveCost||0;
 
-  const sections=[
-    {head:'A. Product Cost',items:[{l:pl,v:pc,s:pt==='outside'?'Procured':'In-House'},...(ti?[{l:ti.name,v:tc,s:'Tag'}]:[])],total:tpc},
-    {head:'B. Product Packing',items:[...(ppi?[{l:ppi.name,v:ppc,s:'Packing'}]:[]),...(li?[{l:li.name,v:lc,s:'Label'}]:[])],total:tpp},
-    {head:'C. Courier Packing',items:[...(cpi?[{l:cpi.name,v:cc,s:'Courier'}]:[]),...(cli?[{l:cli.name,v:clc,s:'Label'}]:[])],total:tcp},
-    {head:'D. Other Costs',items:extras.map(e=>({l:e.desc||'Other',v:e.cost,s:'Other'})),total:extraTotal},
+  const extras    = getExtraItems();
+  const extraTotal= extras.reduce((s,e)=>s+e.cost,0);
+
+  const tpc  = pc + tc;
+  const tpp  = ppc + lc + pbc;
+  const tcp  = cc + clc + tapc + stkc;
+  const grand= tpc + tpp + tcp + extraTotal;
+
+  const sections = [
+    { head:'A. Product Cost',
+      items:[
+        {l: combo>1?`${pl} × ${combo}`:pl, v:pc, s:pt==='outside'?'Procured':'In-House'},
+        ...(ti?[{l:ti.name,v:tc,s:'Tag/Brochure'}]:[])
+      ], total:tpc },
+    { head:'B. Product Packing',
+      items:[
+        ...(ppi?[{l:ppi.name,v:ppc,s:'Packing'}]:[]),
+        ...(li?[{l:li.name,v:lc,s:'Product Label'}]:[]),
+        ...(pbi?[{l:pbi.name,v:pbc,s:'Tag/Brochure'}]:[])
+      ], total:tpp },
+    { head:'C. Courier Packing',
+      items:[
+        ...(cpi?[{l:cpi.name,v:cc,s:'Courier Pack'}]:[]),
+        ...(cli?[{l:cli.name,v:clc,s:'Courier Label'}]:[]),
+        ...(tape?[{l:tape.name,v:tapc,s:'Tape'}]:[]),
+        ...(stk?[{l:stk.name,v:stkc,s:'Sticker'}]:[])
+      ], total:tcp },
+    { head:'D. Other Costs', items:extras.map(e=>({l:e.desc||'Other',v:e.cost,s:'Other'})), total:extraTotal },
   ];
+
   document.getElementById('cost-preview-body').innerHTML=`
     <div style="padding:.2rem">
       ${sections.map(s=>`<div style="margin-bottom:.8rem">
@@ -1505,6 +1591,7 @@ function calcCP() {
       <span style="font-size:.7rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.1em">Final Product Cost</span>
       <span style="font-family:var(--font);font-size:1.4rem;font-weight:700;color:#fff">${fmt(grand)}</span>
     </div>`;
+}
 }
 
 function getExtraItems() {
@@ -1529,15 +1616,20 @@ async function saveCostSheet() {
   if(pt==='inhouse'&&(parseFloat(document.getElementById('cs-ic')?.value)||0)<=0){toast('Enter production cost','err');return;}
 
   const gi=id=>id?DB.items.find(x=>x.id===id):null;
-  const piId=gv('cs-pi'),tiId=gv('cs-ti'),ppiId=gv('cs-ppi'),liId=gv('cs-li'),cpiId=gv('cs-cpi'),cliId=gv('cs-cli');
-  const pi=gi(piId),ti=gi(tiId),ppi=gi(ppiId),li=gi(liId),cpi=gi(cpiId),cli=gi(cliId);
+  const piId=gv('cs-pi'), tiId=gv('cs-ti'), ppiId=gv('cs-ppi'), liId=gv('cs-li'), pbiId=gv('cs-pbi');
+  const cpiId=gv('cs-cpi'), cliId=gv('cs-cli'), tapeId=gv('cs-tape'), stkId=gv('cs-sticker');
+  const combo=Math.max(1,parseFloat(document.getElementById('cs-combo')?.value)||1);
+  const inhId=gv('cs-inh-sel');
+  const pi=gi(piId),ti=gi(tiId),ppi=gi(ppiId),li=gi(liId),pbi=gi(pbiId);
+  const cpi=gi(cpiId),cli=gi(cliId),tape=gi(tapeId),stk=gi(stkId);
   const ic=parseFloat(document.getElementById('cs-ic')?.value)||0;
-  const pc=pt==='outside'?(pi?.effectiveCost||0):ic;
-  const tc=ti?.effectiveCost||0, ppc=ppi?.effectiveCost||0, lc=li?.effectiveCost||0;
-  const cc=cpi?.effectiveCost||0, clc=cli?.effectiveCost||0;
-  const extras = getExtraItems();
-  const extraTotal = extras.reduce((s,e)=>s+e.cost,0);
-  const finalCost=pc+tc+ppc+lc+cc+clc+extraTotal;
+  const pcUnit=pt==='outside'?(pi?.effectiveCost||0):ic;
+  const pc=pcUnit*combo;
+  const tc=ti?.effectiveCost||0, ppc=ppi?.effectiveCost||0, lc=li?.effectiveCost||0, pbc=pbi?.effectiveCost||0;
+  const cc=cpi?.effectiveCost||0, clc=cli?.effectiveCost||0, tapc=tape?.effectiveCost||0, stkc=stk?.effectiveCost||0;
+  const extras=getExtraItems();
+  const extraTotal=extras.reduce((s,e)=>s+e.cost,0);
+  const finalCost=pc+tc+ppc+lc+pbc+cc+clc+tapc+stkc+extraTotal;
 
   const existing=editSheetId?DB.costSheets.find(x=>x.id===editSheetId):null;
   const oldCost=existing?.finalCost||0;
@@ -1545,12 +1637,14 @@ async function saveCostSheet() {
 
   const rec={
     id:editSheetId||uid(), name, sku:gv('cs-sku'), category:gv('cs-cat'),
-    productType:pt, productItemId:piId, inhouseCost:ic, inhouseDesc:document.getElementById('cs-id')?.value||'',
-    tagItemId:tiId, prodPackItemId:ppiId, labelItemId:liId,
-    courierPackItemId:cpiId, courierLabelItemId:cliId,
-    productCost:pc, tagCost:tc, prodPackCost:ppc, labelCost:lc,
-    courierPackCost:cc, courierLabelCost:clc,
-    extraItems: JSON.stringify(extras), extraTotal,
+    productType:pt, productItemId:piId, inhouseCost:ic,
+    inhouseDesc:document.getElementById('cs-id')?.value||'',
+    inhouseId:inhId, comboQty:combo,
+    tagItemId:tiId, prodPackItemId:ppiId, labelItemId:liId, packBrochureItemId:pbiId,
+    courierPackItemId:cpiId, courierLabelItemId:cliId, tapeItemId:tapeId, stickerItemId:stkId,
+    productCost:pc, tagCost:tc, prodPackCost:ppc, labelCost:lc, packBrochureCost:pbc,
+    courierPackCost:cc, courierLabelCost:clc, tapeCost:tapc, stickerCost:stkc,
+    extraItems:JSON.stringify(extras), extraTotal,
     finalCost, prevFinalCost:changed?oldCost:(existing?.prevFinalCost||null),
     costChangedAt:changed?today():(existing?.costChangedAt||today()),
     updatedAt:today(), createdAt:existing?.createdAt||today()
@@ -1734,9 +1828,9 @@ function renderBoard() {
             <th style="padding:.6rem .9rem;text-align:left;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);white-space:nowrap;">Product</th>
             <th style="padding:.6rem .9rem;text-align:left;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">SKU</th>
             <th style="padding:.6rem .9rem;text-align:left;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">Type</th>
-            <th style="padding:.6rem .9rem;text-align:right;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">Product Cost</th>
-            <th style="padding:.6rem .9rem;text-align:right;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">Packing</th>
-            <th style="padding:.6rem .9rem;text-align:right;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">Courier</th>
+            <th style="padding:.6rem .9rem;text-align:right;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">Product</th>
+            <th style="padding:.6rem .9rem;text-align:right;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">Pack+Label</th>
+            <th style="padding:.6rem .9rem;text-align:right;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">Courier+Label</th>
             <th style="padding:.6rem .9rem;text-align:right;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">Other</th>
             <th style="padding:.6rem .9rem;text-align:right;font-size:.6rem;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">Final Cost</th>
             <th style="padding:.6rem .9rem;text-align:left;font-size:.6rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);">Change</th>
@@ -1750,8 +1844,13 @@ function renderBoard() {
             const dp   = isC && s.prevFinalCost>0 ? diff/s.prevFinalCost*100 : 0;
             const da   = isC ? daysSince(s.costChangedAt) : 0;
             const rowBg = isC ? 'background:rgba(201,58,26,.04);' : '';
-            const extraT = s.extraTotal||0;
-            return `<tr style="border-bottom:1px solid var(--bg2);transition:background .1s;${rowBg}" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='${isC?'rgba(201,58,26,.04)':''}'" >
+            const packTotal    = (s.prodPackCost||0)+(s.labelCost||0)+(s.packBrochureCost||0);
+            const courierTotal = (s.courierPackCost||0)+(s.courierLabelCost||0)+(s.tapeCost||0)+(s.stickerCost||0);
+            const extraT       = s.extraTotal||0;
+            // Fix 3: tooltip shows breakdown
+            const packTitle    = `Pack: ${fmt(s.prodPackCost||0)}&#10;Label: ${fmt(s.labelCost||0)}&#10;Tag/Brochure: ${fmt(s.packBrochureCost||0)}`;
+            const courierTitle = `Courier Pack: ${fmt(s.courierPackCost||0)}&#10;Courier Label: ${fmt(s.courierLabelCost||0)}&#10;Tape: ${fmt(s.tapeCost||0)}&#10;Sticker: ${fmt(s.stickerCost||0)}`;
+            return `<tr style="border-bottom:1px solid var(--bg2);${rowBg}" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='${isC?'rgba(201,58,26,.04)':''}'" >
               <td style="padding:.65rem .9rem;">
                 <div style="font-weight:600;color:var(--ink);font-size:.82rem;">${s.name}${isC?`<span class="change-pill" style="margin-left:.5rem;font-size:.58rem;">🔥 ${da===0?'Today':da+'d ago'}</span>`:''}</div>
                 ${s.category?`<div style="font-size:.62rem;color:var(--ink3);margin-top:1px">${s.category}</div>`:''}
@@ -1761,8 +1860,8 @@ function renderBoard() {
                 <span class="${s.productType==='inhouse'?'type-inhouse':'type-outside'}">${s.productType==='inhouse'?'In-House':'Procured'}</span>
               </td>
               <td style="padding:.65rem .9rem;text-align:right;font-size:.8rem;">${fmt(s.productCost)}</td>
-              <td style="padding:.65rem .9rem;text-align:right;font-size:.8rem;color:var(--ink3)">${fmt((s.prodPackCost||0)+(s.labelCost||0))}</td>
-              <td style="padding:.65rem .9rem;text-align:right;font-size:.8rem;color:var(--ink3)">${fmt((s.courierPackCost||0)+(s.courierLabelCost||0))}</td>
+              <td style="padding:.65rem .9rem;text-align:right;font-size:.8rem;color:var(--ink3);cursor:help" title="${packTitle}">${fmt(packTotal)}${(s.labelCost||0)>0?` <span style="font-size:.6rem;color:var(--blue)">+lbl</span>`:''}</td>
+              <td style="padding:.65rem .9rem;text-align:right;font-size:.8rem;color:var(--ink3);cursor:help" title="${courierTitle}">${fmt(courierTotal)}${(s.courierLabelCost||0)>0?` <span style="font-size:.6rem;color:var(--blue)">+lbl</span>`:''}</td>
               <td style="padding:.65rem .9rem;text-align:right;font-size:.8rem;color:var(--ink3)">${extraT>0?fmt(extraT):'—'}</td>
               <td style="padding:.65rem .9rem;text-align:right;">
                 <div style="font-family:var(--font);font-size:.95rem;font-weight:700;color:var(--orange)">${fmt(s.finalCost)}</div>
@@ -1772,7 +1871,7 @@ function renderBoard() {
                 ${isC ? `<span class="badge ${diff>=0?'br':'bg'}">${diff>=0?'▲':'▼'}${Math.abs(dp).toFixed(1)}%</span>` : '<span style="font-size:.7rem;color:var(--ink3)">—</span>'}
               </td>
               <td style="padding:.65rem .9rem;white-space:nowrap;">
-                <button class="act" onclick="goto('costing');setTimeout(()=>renderCostingForm('${s.id}'),50)">✎</button>
+                <button class="act" onclick="editSheetFromBoard('${s.id}')">✎ Edit</button>
                 <button class="act del" onclick="deleteCostSheet('${s.id}')" style="margin-left:3px">✕</button>
               </td>
             </tr>`;
@@ -1790,7 +1889,7 @@ function renderPurchases() {
   // sort by purchaseDate desc so latest is on top
   items.sort((a,b)=>(b.purchaseDate||'').localeCompare(a.purchaseDate||''));
   document.getElementById('pur-count').textContent=items.length+' items';
-  const CAT={'Raw Material':'bg', Product:'bo', Label:'bb', Tag:'bgold', 'Product Packing':'bg', 'Courier Packing':'bgray'};
+  const CAT={'Raw Material':'bg', Product:'bo', "Product Label":'bb','Courier Label':'bb',Label:'bb', Tag:'bgold', 'Product Packing':'bg', 'Courier Packing':'bgray'};
   const tb=document.getElementById('tbl-purchases');
   tb.innerHTML=!items.length?`<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">🛒</div><div class="empty-p">No items yet.</div></div></td></tr>`:
     items.map(i=>`<tr>
@@ -1818,7 +1917,7 @@ function renderMaterials() {
   const tb=document.getElementById('tbl-materials');
   const mc=document.getElementById('mat-count');
   if(mc) mc.textContent=DB.items.length+' items';
-  const CAT={Product:'bo',Label:'bb',Tag:'bgold','Product Packing':'bg','Courier Packing':'bgray'};
+  const CAT={Product:'bo',"Product Label":'bb','Courier Label':'bb',Label:'bb',Tag:'bgold','Product Packing':'bg','Courier Packing':'bgray'};
   tb.innerHTML=!DB.items.length?`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🗂</div><div class="empty-p">No items yet.</div></div></td></tr>`:
     DB.items.map(i=>{
       const used=DB.costSheets.filter(s=>[s.productItemId,s.tagItemId,s.prodPackItemId,s.labelItemId,s.courierPackItemId].includes(i.id)).map(s=>s.name);
@@ -2091,7 +2190,7 @@ function updateImportPreview() {
 
   // Preview table
   const preview = _importMapped.slice(0, 8);
-  const CAT = {'Raw Material':'bg', Product:'bo', Label:'bb', Tag:'bgold', 'Product Packing':'bg', 'Courier Packing':'bgray'};
+  const CAT = {'Raw Material':'bg', Product:'bo', "Product Label":'bb','Courier Label':'bb',Label:'bb', Tag:'bgold', 'Product Packing':'bg', 'Courier Packing':'bgray'};
   const tb = document.getElementById('tbl-import-preview');
   tb.innerHTML = !preview.length
     ? `<tr><td colspan="12" style="text-align:center;padding:1.2rem;color:var(--ink3)">No valid rows — make sure Item Name and Rate columns are mapped correctly</td></tr>`
@@ -2121,10 +2220,13 @@ function updateImportPreview() {
 
 function normCategory(raw) {
   const r = raw.toLowerCase();
+  if (r.includes('courier label') || r.includes('courier_label')) return 'Courier Label';
   if (r.includes('courier'))  return 'Courier Packing';
-  if (r.includes('label'))    return 'Label';
+  if (r.includes('product label') || r.includes('product_label')) return 'Product Label';
+  if (r.includes('label'))    return 'Product Label';
   if (r.includes('tag'))      return 'Tag';
   if (r.includes('packing') || r.includes('pack')) return 'Product Packing';
+  if (r.includes('raw') || r.includes('material')) return 'Raw Material';
   if (r.includes('product') || r.includes('procure')) return 'Product';
   return '';
 }
@@ -2254,16 +2356,17 @@ function addFabricRow(saved={}) {
       </select>
     </div>
     <div style="font-size:.68rem;color:var(--ink3);padding:.3rem .5rem;background:var(--bg);border-radius:5px;margin-bottom:.45rem;" id="fab-rate-${idx}">Rate: —</div>
-    <div class="fr3">
+    <div class="fr2" style="margin-bottom:.4rem">
       <div class="fg" style="margin-bottom:0"><label>Usage per unit</label>
         <input type="number" id="fab-usage-${idx}" placeholder="0.00" min="0" step=".01" value="${saved.metersPerUnit||''}" oninput="calcInhouse()"/>
       </div>
-      <div class="fg" style="margin-bottom:0"><label>Unit</label>
+      <div class="fg" style="margin-bottom:0"><label>Unit (auto)</label>
         <input type="text" id="fab-unit-${idx}" readonly style="background:var(--bg2);color:var(--ink3);font-size:.78rem"/>
       </div>
-      <div class="fg" style="margin-bottom:0"><label>Wastage %</label>
-        <input type="number" id="fab-waste-${idx}" placeholder="0" min="0" max="100" step=".1" value="${saved.wastagePct||0}" oninput="calcInhouse()"/>
-      </div>
+    </div>
+    <div class="fg" style="margin-bottom:0">
+      <label>Wastage % <span style="color:var(--ink3);font-weight:400;font-size:.62rem">— extra fabric added for cutting waste</span></label>
+      <input type="number" id="fab-waste-${idx}" placeholder="0" min="0" max="100" step=".1" value="${saved.wastagePct||0}" oninput="calcInhouse()" style="max-width:160px"/>
     </div>`;
   wrap.appendChild(div);
   onFabricChange(idx);
