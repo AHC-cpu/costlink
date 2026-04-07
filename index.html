@@ -295,7 +295,7 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
 
     <!-- PURCHASES -->
     <div class="page" id="page-purchases">
-      <div style="display:flex;gap:.6rem;margin-bottom:.9rem;align-items:center;">
+      <div style="display:flex;gap:.6rem;margin-bottom:.9rem;align-items:center;flex-wrap:wrap;">
         <select id="pur-cat-filter" onchange="renderPurchases()" style="background:#fff;border:1px solid var(--line2);border-radius:7px;padding:.4rem .7rem;color:var(--ink);font-family:var(--mono);font-size:.74rem;outline:none;">
           <option value="">All Categories</option>
           <option value="Raw Material">Raw Material</option>
@@ -307,11 +307,12 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
           <option value="Courier Label">Courier Label</option>
           <option value="Other">Other</option>
         </select>
+        <div class="t-search"><span class="si">⌕</span><input type="text" id="pur-search" placeholder="Search items…" oninput="renderPurchases()"/></div>
         <div style="margin-left:auto;font-size:.7rem;color:var(--ink3)" id="pur-count"></div>
       </div>
       <div class="panel"><div class="tw">
         <table>
-          <thead><tr><th>Item Name</th><th>Category</th><th>Rate</th><th>Unit</th><th>GST%</th><th>Transport</th><th>Effective Cost</th><th>Purchase Date</th><th></th></tr></thead>
+          <thead><tr><th>Item Name</th><th>Category</th><th>Rate</th><th>Qty</th><th>Unit</th><th>GST%</th><th>Transport</th><th>Effective Cost</th><th>Purchase Date</th><th></th></tr></thead>
           <tbody id="tbl-purchases"></tbody>
         </table>
       </div></div>
@@ -328,6 +329,7 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
         <button class="btn btn-s" onclick="downloadTemplate()" style="display:flex;align-items:center;gap:.5rem;">
           <span>📄</span> Download Template
         </button>
+        <div class="t-search"><span class="si">⌕</span><input type="text" id="mat-search" placeholder="Search items…" oninput="renderMaterials()"/></div>
         <div style="margin-left:auto;font-size:.78rem;color:var(--ink3)" id="mat-count"></div>
       </div>
       <div class="panel"><div class="tw">
@@ -1877,11 +1879,16 @@ function renderBoard() {
 }
 
 function renderPurchases() {
-  const cf=gv('pur-cat-filter');
-  const items=DB.items.filter(x=>!cf||x.category===cf);
-  // sort by purchaseDate desc so latest is on top
+  const cf = gv('pur-cat-filter');
+  const q  = (document.getElementById('pur-search')?.value||'').toLowerCase().trim();
+  let items = DB.items.filter(x => !cf || x.category===cf);
+  if (q) items = items.filter(i =>
+    i.name.toLowerCase().includes(q) ||
+    (i.supplier||'').toLowerCase().includes(q) ||
+    (i.itemCode||'').toLowerCase().includes(q)
+  );
   items.sort((a,b)=>(b.purchaseDate||'').localeCompare(a.purchaseDate||''));
-  document.getElementById('pur-count').textContent=items.length+' items';
+  document.getElementById('pur-count').textContent = items.length + ' items';
   const CAT={'Raw Material':'bg', Product:'bo', "Product Label":'bb','Courier Label':'bb',Label:'bb', Tag:'bgold', 'Product Packing':'bg', 'Courier Packing':'bgray'};
   const tb=document.getElementById('tbl-purchases');
   tb.innerHTML=!items.length?`<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">🛒</div><div class="empty-p">No items yet.</div></div></td></tr>`:
@@ -1892,6 +1899,7 @@ function renderPurchases() {
       </td>
       <td><span class="badge ${CAT[i.category]||'bgray'}">${i.category}</span></td>
       <td style="font-weight:500">${fmt(i.rate)}</td>
+      <td style="color:var(--ink3)">${i.qty||1}</td>
       <td style="color:var(--ink3)">${i.unit}</td>
       <td><span class="badge bgray">${i.gst}%</span></td>
       <td style="color:var(--ink3);font-size:.72rem;line-height:1.6;">
@@ -1907,12 +1915,20 @@ function renderPurchases() {
 }
 
 function renderMaterials() {
-  const tb=document.getElementById('tbl-materials');
-  const mc=document.getElementById('mat-count');
-  if(mc) mc.textContent=DB.items.length+' items';
+  const tb  = document.getElementById('tbl-materials');
+  const mc  = document.getElementById('mat-count');
+  const q   = (document.getElementById('mat-search')?.value||'').toLowerCase().trim();
+  let items = DB.items;
+  if (q) items = items.filter(i =>
+    i.name.toLowerCase().includes(q) ||
+    (i.category||'').toLowerCase().includes(q) ||
+    (i.itemCode||'').toLowerCase().includes(q) ||
+    (i.supplier||'').toLowerCase().includes(q)
+  );
+  if (mc) mc.textContent = items.length + ' items';
   const CAT={Product:'bo',"Product Label":'bb','Courier Label':'bb',Label:'bb',Tag:'bgold','Product Packing':'bg','Courier Packing':'bgray'};
-  tb.innerHTML=!DB.items.length?`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🗂</div><div class="empty-p">No items yet.</div></div></td></tr>`:
-    DB.items.map(i=>{
+  tb.innerHTML=!items.length?`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🗂</div><div class="empty-p">${q?'No items match your search.':'No items yet.'}</div></div></td></tr>`:
+    items.map(i=>{
       const used=DB.costSheets.filter(s=>[s.productItemId,s.tagItemId,s.prodPackItemId,s.labelItemId,s.courierPackItemId].includes(i.id)).map(s=>s.name);
       return `<tr>
         <td><div class="tn">${i.name}</div></td>
@@ -2311,9 +2327,33 @@ function downloadTemplate() {
 let editInhouseId = null;
 
 function renderInhousePage() {
-  // Ensure at least 1 fabric row exists
   const wrap = document.getElementById('inh-fabrics-wrap');
-  if (wrap && wrap.children.length === 0) addFabricRow();
+  if (!wrap) return;
+  if (wrap.children.length === 0) {
+    // First visit — add a blank row
+    addFabricRow();
+  } else {
+    // Already has rows — refresh dropdowns in case new items were added
+    wrap.querySelectorAll('[id^="fab-row-"]').forEach(div => {
+      const idx = div.id.replace('fab-row-','');
+      const sel = document.getElementById(`fab-item-${idx}`);
+      if (!sel) return;
+      const curVal = sel.value;
+      const fabrics = DB.items.filter(i => ['Raw Material','Product','Other'].includes(i.category));
+      const map = {};
+      fabrics.forEach(i => {
+        const k = i.name.toLowerCase().trim();
+        if (!map[k] || (i.purchaseDate||'') > (map[k].purchaseDate||'')) map[k] = i;
+      });
+      const newOpts = '<option value="">— Select fabric / raw material —</option>' +
+        Object.values(map).sort((a,b)=>a.name.localeCompare(b.name))
+          .map(i=>`<option value="${i.id}" ${i.id===curVal?'selected':''}>${i.name} — ${fmt(i.effectiveCost)}/${i.unit}</option>`)
+          .join('');
+      sel.innerHTML = newOpts;
+      sel.value = curVal;
+      onFabricChange(idx);
+    });
+  }
   renderInhouseList();
 }
 
