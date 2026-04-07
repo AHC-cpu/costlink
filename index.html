@@ -2358,6 +2358,7 @@ function renderInhousePage() {
 }
 
 let _inhExtraCount = 0;
+let _fabricRowCount = 0;
 
 function addInhouseExtra(saved={}) {
   const wrap = document.getElementById('inh-extras-wrap');
@@ -2402,46 +2403,79 @@ function addFabricRow(saved={}) {
   const wrap = document.getElementById('inh-fabrics-wrap');
   if (!wrap) return;
   const idx = _fabricRowCount++;
+
+  // Build dropdown from items
   const fabrics = DB.items.filter(i => ['Raw Material','Product','Other'].includes(i.category));
-  // dedup by name, latest date
   const map = {};
   fabrics.forEach(i => {
     const k = i.name.toLowerCase().trim();
     if (!map[k] || (i.purchaseDate||'') > (map[k].purchaseDate||'')) map[k] = i;
   });
-  const opts = Object.values(map).sort((a,b)=>a.name.localeCompare(b.name))
-    .map(i=>`<option value="${i.id}" ${i.id===saved.fabricItemId?'selected':''}>${i.name} — ${fmt(i.effectiveCost)}/${i.unit}</option>`).join('');
+  const ddOpts = '<option value="">— Pick from Item Master —</option>' +
+    Object.values(map).sort((a,b)=>a.name.localeCompare(b.name))
+      .map(i=>`<option value="${i.id}" ${i.id===saved.fabricItemId?'selected':''}>${i.name} — ${fmt(i.effectiveCost)}/${i.unit}</option>`)
+      .join('');
 
   const div = document.createElement('div');
   div.id = `fab-row-${idx}`;
-  div.style.cssText = 'background:var(--bg2);border-radius:8px;padding:.7rem;margin-bottom:.5rem;';
+  div.style.cssText = 'background:var(--bg2);border-radius:8px;padding:.75rem;margin-bottom:.55rem;border:1px solid var(--line);';
   div.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;">
-      <span style="font-size:.68rem;font-weight:600;color:var(--ink2)">Fabric / Material ${idx+1}</span>
-      <button onclick="removeFabricRow(${idx})" style="background:none;border:1px solid var(--red-line);border-radius:5px;color:var(--red);padding:2px 7px;cursor:pointer;font-size:.7rem;">✕ Remove</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;">
+      <span style="font-size:.72rem;font-weight:700;color:var(--ink2)">🧵 Fabric / Material ${idx+1}</span>
+      <button onclick="removeFabricRow(${idx})" style="background:none;border:1px solid var(--red-line);border-radius:5px;color:var(--red);padding:2px 8px;cursor:pointer;font-size:.7rem;">✕ Remove</button>
     </div>
-    <div class="fg" style="margin-bottom:.45rem">
-      <label>Select Item <span class="link-tag">from Item Master — latest price</span></label>
-      <select id="fab-item-${idx}" onchange="onFabricChange(${idx})" style="font-size:.78rem">
-        <option value="">— Select fabric / raw material —</option>
-        ${opts}
+
+    <div class="fg" style="margin-bottom:.5rem">
+      <label>Fabric Name *</label>
+      <input type="text" id="fab-name-${idx}" placeholder="e.g. Muslin Fabric, Cotton 60x60"
+        value="${saved.fabricName||''}" oninput="onFabricNameInput(${idx})"/>
+    </div>
+
+    <div class="fg" style="margin-bottom:.5rem">
+      <label>Or select from Item Master <span style="color:var(--ink3);font-weight:400;font-size:.62rem">— auto-fills rate</span></label>
+      <select id="fab-item-${idx}" onchange="onFabricChange(${idx})" style="font-size:.8rem">
+        ${ddOpts}
       </select>
     </div>
-    <div style="font-size:.68rem;color:var(--ink3);padding:.3rem .5rem;background:var(--bg);border-radius:5px;margin-bottom:.45rem;" id="fab-rate-${idx}">Rate: —</div>
-    <div class="fr2" style="margin-bottom:.4rem">
-      <div class="fg" style="margin-bottom:0"><label>Usage per unit</label>
-        <input type="number" id="fab-usage-${idx}" placeholder="0.00" min="0" step=".01" value="${saved.metersPerUnit||''}" oninput="calcInhouse()"/>
+
+    <div style="font-size:.7rem;color:var(--ink3);padding:.35rem .6rem;background:var(--bg);border-radius:5px;margin-bottom:.5rem;" id="fab-rate-${idx}">Rate: —</div>
+
+    <div style="display:grid;grid-template-columns:1fr 80px 1fr;gap:.5rem;">
+      <div class="fg" style="margin-bottom:0">
+        <label>Rate (₹ / unit) *</label>
+        <input type="number" id="fab-rate-val-${idx}" placeholder="0.00" min="0" step=".01"
+          value="${saved.rateOverride||''}" oninput="calcInhouse()"/>
       </div>
-      <div class="fg" style="margin-bottom:0"><label>Unit (auto)</label>
-        <input type="text" id="fab-unit-${idx}" readonly style="background:var(--bg2);color:var(--ink3);font-size:.78rem"/>
+      <div class="fg" style="margin-bottom:0">
+        <label>Unit</label>
+        <input type="text" id="fab-unit-${idx}" placeholder="KG" style="background:var(--bg2);color:var(--ink3);"
+          value="${saved.unit||''}" oninput="calcInhouse()"/>
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label>Usage / pc</label>
+        <input type="number" id="fab-usage-${idx}" placeholder="0.00" min="0" step=".01"
+          value="${saved.metersPerUnit||''}" oninput="calcInhouse()"/>
       </div>
     </div>
-    <div class="fg" style="margin-bottom:0">
-      <label>Wastage % <span style="color:var(--ink3);font-weight:400;font-size:.62rem">— extra fabric added for cutting waste</span></label>
-      <input type="number" id="fab-waste-${idx}" placeholder="0" min="0" max="100" step=".1" value="${saved.wastagePct||0}" oninput="calcInhouse()" style="max-width:160px"/>
+
+    <div class="fg" style="margin-bottom:0;margin-top:.5rem">
+      <label>Wastage % <span style="color:var(--ink3);font-weight:400;font-size:.62rem">— extra added for cutting waste</span></label>
+      <input type="number" id="fab-waste-${idx}" placeholder="0" min="0" max="100" step=".1"
+        value="${saved.wastagePct||0}" oninput="calcInhouse()" style="max-width:140px"/>
     </div>`;
+
   wrap.appendChild(div);
-  onFabricChange(idx);
+
+  // If saved data had a fabricItemId, select it and populate
+  if (saved.fabricItemId) {
+    const sel = document.getElementById(`fab-item-${idx}`);
+    if (sel) { sel.value = saved.fabricItemId; onFabricChange(idx); }
+  } else if (saved.rateOverride) {
+    // Manual entry — show rate info
+    const rateEl = document.getElementById(`fab-rate-${idx}`);
+    if (rateEl) rateEl.textContent = `Manual rate: ${fmt(saved.rateOverride)} / ${saved.unit||'unit'}`;
+  }
+  calcInhouse();
 }
 
 function removeFabricRow(idx) {
@@ -2449,17 +2483,29 @@ function removeFabricRow(idx) {
   calcInhouse();
 }
 
+function onFabricNameInput(idx) {
+  // When user types manually, clear the dropdown selection
+  const sel = document.getElementById(`fab-item-${idx}`);
+  if (sel) sel.value = '';
+  const rateEl = document.getElementById(`fab-rate-${idx}`);
+  if (rateEl) rateEl.textContent = 'Rate: enter manually below';
+  calcInhouse();
+}
+
 function onFabricChange(idx) {
   const itemId = document.getElementById(`fab-item-${idx}`)?.value;
-  const item = itemId ? DB.items.find(x=>x.id===itemId) : null;
+  const item   = itemId ? DB.items.find(x=>x.id===itemId) : null;
   const rateEl = document.getElementById(`fab-rate-${idx}`);
   const unitEl = document.getElementById(`fab-unit-${idx}`);
+  const rateValEl = document.getElementById(`fab-rate-val-${idx}`);
+  const nameEl = document.getElementById(`fab-name-${idx}`);
   if (item) {
-    if (rateEl) rateEl.textContent = `Rate: ${fmt(item.effectiveCost)} / ${item.unit}  (Base: ${fmt(item.rate)} + GST ${item.gst}%${item.transportPerUnit>0?' + Transport':''}${item.isImported?' + Import':''})`;
+    if (rateEl) rateEl.textContent = `Rate: ${fmt(item.effectiveCost)} / ${item.unit}  (Base ${fmt(item.rate)} + GST ${item.gst}%${item.transportPerUnit>0?` + Transport`:''}${item.isImported?' + Import':''})`;
     if (unitEl) unitEl.value = item.unit;
+    if (rateValEl) rateValEl.value = item.effectiveCost;
+    if (nameEl && !nameEl.value) nameEl.value = item.name;
   } else {
     if (rateEl) rateEl.textContent = 'Rate: —';
-    if (unitEl) unitEl.value = '';
   }
   calcInhouse();
 }
@@ -2469,16 +2515,34 @@ function getFabricRows() {
   if (!wrap) return [];
   const rows = [];
   wrap.querySelectorAll('[id^="fab-row-"]').forEach(div => {
-    const idx = div.id.replace('fab-row-','');
+    const idx     = div.id.replace('fab-row-','');
     const itemId  = document.getElementById(`fab-item-${idx}`)?.value || '';
+    const nameVal = document.getElementById(`fab-name-${idx}`)?.value?.trim() || '';
+    const rateVal = parseFloat(document.getElementById(`fab-rate-val-${idx}`)?.value) || 0;
+    const unit    = document.getElementById(`fab-unit-${idx}`)?.value?.trim() || '';
     const usage   = parseFloat(document.getElementById(`fab-usage-${idx}`)?.value) || 0;
     const waste   = parseFloat(document.getElementById(`fab-waste-${idx}`)?.value) || 0;
+
+    // Resolve rate: item master rate takes priority, else manual entry
     const item    = itemId ? DB.items.find(x=>x.id===itemId) : null;
-    if (!item && usage <= 0) return;
+    const rate    = item ? item.effectiveCost : rateVal;
+    const fabricName = item ? item.name : nameVal;
+
+    if (!fabricName && rate <= 0) return; // skip blank rows
+
     const usageWithWaste = usage * (1 + waste/100);
-    const cost = item ? usageWithWaste * item.effectiveCost : 0;
-    rows.push({ fabricItemId:itemId, fabricName:item?.name||'', unit:item?.unit||'',
-      metersPerUnit:usage, wastagePct:waste, usageWithWaste, fabricCostPerUnit:cost });
+    const cost = rate * usageWithWaste;
+
+    rows.push({
+      fabricItemId: itemId,
+      fabricName,
+      unit: item ? item.unit : unit,
+      rateOverride: item ? 0 : rateVal,
+      metersPerUnit: usage,
+      wastagePct: waste,
+      usageWithWaste,
+      fabricCostPerUnit: cost
+    });
   });
   return rows;
 }
