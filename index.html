@@ -931,22 +931,13 @@ async function ensureSheetTabs() {
     });
   }
 
-  // Write headers + bold + freeze row 1 for each tab
+  // Write/update headers + bold + freeze row 1 for each tab
   const metaAfter = await gapi.client.sheets.spreadsheets.get({ spreadsheetId: APP_CONFIG.SHEET_ID });
   for (const tab of tabs) {
     const sheetMeta = metaAfter.result.sheets.find(s => s.properties.title === tab.name);
     const sheetId2  = sheetMeta.properties.sheetId;
 
-    // Check if header already written
-    try {
-      const existing_hdr = await gapi.client.sheets.spreadsheets.values.get({
-        spreadsheetId: APP_CONFIG.SHEET_ID,
-        range: `${tab.name}!A1:A1`
-      });
-      if (existing_hdr.result.values && existing_hdr.result.values.length) continue; // already has header
-    } catch {}
-
-    // Write header row
+    // Always write current headers to row 1 — ensures schema is up to date
     await gapi.client.sheets.spreadsheets.values.update({
       spreadsheetId: APP_CONFIG.SHEET_ID,
       range: `${tab.name}!A1`,
@@ -984,12 +975,19 @@ async function loadAllFromSheet() {
 
 async function readTab(tab, headers, mapper) {
   try {
+    // Read from row 1 so we get actual headers AND data
     const r = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId: APP_CONFIG.SHEET_ID,
-      range: `${tab}!A2:ZZ`
+      range: `${tab}!A1:ZZ`
     });
-    const rows = r.result.values || [];
-    return rows.filter(r => r[0]).map(row => mapper(row, headers));
+    const allRows = r.result.values || [];
+    if (allRows.length < 2) return [];
+
+    // Use the ACTUAL headers from row 1 of the sheet
+    // This ensures old sheets with fewer columns still map correctly by name
+    const actualHeaders = allRows[0].map(h => String(h||'').trim());
+    const dataRows = allRows.slice(1).filter(r => r[0]);
+    return dataRows.map(row => mapper(row, actualHeaders));
   } catch(e) { console.warn('read error', tab, e); return []; }
 }
 
