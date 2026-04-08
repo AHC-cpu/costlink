@@ -700,7 +700,7 @@ const TAB_INHOUSE = 'InhouseProduction';
 
 // Headers for each tab
 const HDR_ITEMS   = ['ID','ItemCode','Name','Category','Rate','Qty','Unit','GST','GSTAmount','Transport','TransportPerUnit','IsImported','CustomDuty','CustomDutyPerUnit','ImportTransport','ImportTransportPerUnit','EffectiveCost','Supplier','Notes','PurchaseDate','UpdatedAt','CreatedAt'];
-const HDR_COSTS   = ['ID','Name','SKU','Category','ProductType','ProductItemID','InhouseID','ComboQty','InhouseCost','InhouseDesc','TagItemID','ProdPackItemID','LabelItemID','PackBrochureItemID','CourierPackItemID','CourierLabelItemID','TapeItemID','StickerItemID','ProductCost','TagCost','ProdPackCost','LabelCost','PackBrochureCost','CourierPackCost','CourierLabelCost','TapeCost','StickerCost','ExtraItems','ExtraTotal','FinalCost','PrevFinalCost','CostChangedAt','UpdatedAt','CreatedAt'];
+const HDR_COSTS   = ['ID','Name','SKU','Category','ProductType','ProductItemID','InhouseCost','InhouseDesc','TagItemID','ProdPackItemID','LabelItemID','CourierPackItemID','CourierLabelItemID','ProductCost','TagCost','ProdPackCost','LabelCost','CourierPackCost','CourierLabelCost','ExtraItems','ExtraTotal','FinalCost','PrevFinalCost','CostChangedAt','UpdatedAt','CreatedAt','InhouseID','ComboQty','PackBrochureItemID','TapeItemID','StickerItemID','PackBrochureCost','TapeCost','StickerCost'];
 const HDR_HISTORY = ['ID','SheetID','ProductName','SKU','ProductType','OldCost','NewCost','Diff','DiffPct','ChangedAt'];
 const HDR_INHOUSE = ['ID','ProductName','FabricItemID','FabricName','MetersPerUnit','WastagePct','FabricCostPerUnit','Stitching','Cutting','Finishing','JobWork','TotalLabour','TotalInhouseCost','Notes','UpdatedAt','CreatedAt'];
 
@@ -1024,37 +1024,44 @@ function rowToInhouse(row, h) {
 
 function rowToCost(row, h) {
   const o = rowToObj(row, h);
-  return { id:o.ID, name:o.Name, sku:o.SKU, category:o.Category, productType:o.ProductType,
-    productItemId:o.ProductItemID, inhouseId:o.InhouseID||'', comboQty:+o.ComboQty||1,
-    inhouseCost:+o.InhouseCost, inhouseDesc:o.InhouseDesc,
+  return {
+    id:o.ID, name:o.Name, sku:o.SKU, category:o.Category, productType:o.ProductType,
+    productItemId:o.ProductItemID||'',
+    inhouseCost:+o.InhouseCost||0, inhouseDesc:o.InhouseDesc||'',
     tagItemId:o.TagItemID||'', prodPackItemId:o.ProdPackItemID||'', labelItemId:o.LabelItemID||'',
-    packBrochureItemId:o.PackBrochureItemID||'',
     courierPackItemId:o.CourierPackItemID||'', courierLabelItemId:o.CourierLabelItemID||'',
-    tapeItemId:o.TapeItemID||'', stickerItemId:o.StickerItemID||'',
-    productCost:+o.ProductCost, tagCost:+o.TagCost||0,
-    prodPackCost:+o.ProdPackCost, labelCost:+o.LabelCost,
-    packBrochureCost:+o.PackBrochureCost||0,
-    courierPackCost:+o.CourierPackCost, courierLabelCost:+o.CourierLabelCost||0,
-    tapeCost:+o.TapeCost||0, stickerCost:+o.StickerCost||0,
+    productCost:+o.ProductCost||0, tagCost:+o.TagCost||0,
+    prodPackCost:+o.ProdPackCost||0, labelCost:+o.LabelCost||0,
+    courierPackCost:+o.CourierPackCost||0, courierLabelCost:+o.CourierLabelCost||0,
     extraItems:o.ExtraItems||'[]', extraTotal:+o.ExtraTotal||0,
-    finalCost:+o.FinalCost, prevFinalCost:o.PrevFinalCost?+o.PrevFinalCost:null,
-    costChangedAt:o.CostChangedAt, updatedAt:o.UpdatedAt, createdAt:o.CreatedAt };
+    finalCost:+o.FinalCost||0, prevFinalCost:o.PrevFinalCost?+o.PrevFinalCost:null,
+    costChangedAt:o.CostChangedAt||'', updatedAt:o.UpdatedAt, createdAt:o.CreatedAt,
+    // New fields at end — default safely for old rows
+    inhouseId:o.InhouseID||'', comboQty:+o.ComboQty||1,
+    packBrochureItemId:o.PackBrochureItemID||'',
+    tapeItemId:o.TapeItemID||'', stickerItemId:o.StickerItemID||'',
+    packBrochureCost:+o.PackBrochureCost||0,
+    tapeCost:+o.TapeCost||0, stickerCost:+o.StickerCost||0
+  };
 }
 
 function costToRow(s) {
-  return [s.id, s.name, s.sku||'', s.category||'', s.productType,
-    s.productItemId||'', s.inhouseId||'', s.comboQty||1,
-    s.inhouseCost||0, s.inhouseDesc||'',
+  // Columns must match HDR_COSTS order EXACTLY
+  // Original 26 columns first (backward compat), then new fields at end
+  return [
+    s.id, s.name, s.sku||'', s.category||'', s.productType,
+    s.productItemId||'', s.inhouseCost||0, s.inhouseDesc||'',
     s.tagItemId||'', s.prodPackItemId||'', s.labelItemId||'',
-    s.packBrochureItemId||'',
     s.courierPackItemId||'', s.courierLabelItemId||'',
-    s.tapeItemId||'', s.stickerItemId||'',
-    s.productCost, s.tagCost||0, s.prodPackCost, s.labelCost,
-    s.packBrochureCost||0,
-    s.courierPackCost, s.courierLabelCost||0,
-    s.tapeCost||0, s.stickerCost||0,
+    s.productCost||0, s.tagCost||0, s.prodPackCost||0, s.labelCost||0,
+    s.courierPackCost||0, s.courierLabelCost||0,
     s.extraItems||'[]', s.extraTotal||0,
-    s.finalCost, s.prevFinalCost||'', s.costChangedAt||'', s.updatedAt, s.createdAt];
+    s.finalCost||0, s.prevFinalCost||'', s.costChangedAt||'', s.updatedAt, s.createdAt,
+    // New fields at end — safe for old rows (just empty)
+    s.inhouseId||'', s.comboQty||1,
+    s.packBrochureItemId||'', s.tapeItemId||'', s.stickerItemId||'',
+    s.packBrochureCost||0, s.tapeCost||0, s.stickerCost||0
+  ];
 }
 
 function rowToHistory(row, h) {
