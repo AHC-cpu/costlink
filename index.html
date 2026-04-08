@@ -279,6 +279,8 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
       <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center;" id="board-filters">
         <button class="btn btn-s" id="filt-all" onclick="setBF('all')" style="font-size:.72rem;padding:.35rem .75rem">All</button>
         <button class="btn btn-s" id="filt-changed" onclick="setBF('changed')" style="font-size:.72rem;padding:.35rem .75rem">🔥 Changed</button>
+        <button class="btn btn-s" id="filt-increased" onclick="setBF('increased')" style="font-size:.72rem;padding:.35rem .75rem">▲ Increased</button>
+        <button class="btn btn-s" id="filt-decreased" onclick="setBF('decreased')" style="font-size:.72rem;padding:.35rem .75rem">▼ Decreased</button>
         <button class="btn btn-s" id="filt-inhouse" onclick="setBF('inhouse')" style="font-size:.72rem;padding:.35rem .75rem">In-House</button>
         <button class="btn btn-s" id="filt-outside" onclick="setBF('outside')" style="font-size:.72rem;padding:.35rem .75rem">Procured</button>
         <div style="margin-left:auto;display:flex;gap:.5rem;">
@@ -698,7 +700,7 @@ const TAB_INHOUSE = 'InhouseProduction';
 
 // Headers for each tab
 const HDR_ITEMS   = ['ID','ItemCode','Name','Category','Rate','Qty','Unit','GST','GSTAmount','Transport','TransportPerUnit','IsImported','CustomDuty','CustomDutyPerUnit','ImportTransport','ImportTransportPerUnit','EffectiveCost','Supplier','Notes','PurchaseDate','UpdatedAt','CreatedAt'];
-const HDR_COSTS   = ['ID','Name','SKU','Category','ProductType','ProductItemID','InhouseCost','InhouseDesc','TagItemID','ProdPackItemID','LabelItemID','CourierPackItemID','CourierLabelItemID','ProductCost','TagCost','ProdPackCost','LabelCost','CourierPackCost','CourierLabelCost','ExtraItems','ExtraTotal','FinalCost','PrevFinalCost','CostChangedAt','UpdatedAt','CreatedAt'];
+const HDR_COSTS   = ['ID','Name','SKU','Category','ProductType','ProductItemID','InhouseID','ComboQty','InhouseCost','InhouseDesc','TagItemID','ProdPackItemID','LabelItemID','PackBrochureItemID','CourierPackItemID','CourierLabelItemID','TapeItemID','StickerItemID','ProductCost','TagCost','ProdPackCost','LabelCost','PackBrochureCost','CourierPackCost','CourierLabelCost','TapeCost','StickerCost','ExtraItems','ExtraTotal','FinalCost','PrevFinalCost','CostChangedAt','UpdatedAt','CreatedAt'];
 const HDR_HISTORY = ['ID','SheetID','ProductName','SKU','ProductType','OldCost','NewCost','Diff','DiffPct','ChangedAt'];
 const HDR_INHOUSE = ['ID','ProductName','FabricItemID','FabricName','MetersPerUnit','WastagePct','FabricCostPerUnit','Stitching','Cutting','Finishing','JobWork','TotalLabour','TotalInhouseCost','Notes','UpdatedAt','CreatedAt'];
 
@@ -1023,11 +1025,17 @@ function rowToInhouse(row, h) {
 function rowToCost(row, h) {
   const o = rowToObj(row, h);
   return { id:o.ID, name:o.Name, sku:o.SKU, category:o.Category, productType:o.ProductType,
-    productItemId:o.ProductItemID, inhouseCost:+o.InhouseCost, inhouseDesc:o.InhouseDesc,
-    tagItemId:o.TagItemID, prodPackItemId:o.ProdPackItemID, labelItemId:o.LabelItemID,
-    courierPackItemId:o.CourierPackItemID, courierLabelItemId:o.CourierLabelItemID||'',
-    productCost:+o.ProductCost, tagCost:+o.TagCost, prodPackCost:+o.ProdPackCost,
-    labelCost:+o.LabelCost, courierPackCost:+o.CourierPackCost, courierLabelCost:+o.CourierLabelCost||0,
+    productItemId:o.ProductItemID, inhouseId:o.InhouseID||'', comboQty:+o.ComboQty||1,
+    inhouseCost:+o.InhouseCost, inhouseDesc:o.InhouseDesc,
+    tagItemId:o.TagItemID||'', prodPackItemId:o.ProdPackItemID||'', labelItemId:o.LabelItemID||'',
+    packBrochureItemId:o.PackBrochureItemID||'',
+    courierPackItemId:o.CourierPackItemID||'', courierLabelItemId:o.CourierLabelItemID||'',
+    tapeItemId:o.TapeItemID||'', stickerItemId:o.StickerItemID||'',
+    productCost:+o.ProductCost, tagCost:+o.TagCost||0,
+    prodPackCost:+o.ProdPackCost, labelCost:+o.LabelCost,
+    packBrochureCost:+o.PackBrochureCost||0,
+    courierPackCost:+o.CourierPackCost, courierLabelCost:+o.CourierLabelCost||0,
+    tapeCost:+o.TapeCost||0, stickerCost:+o.StickerCost||0,
     extraItems:o.ExtraItems||'[]', extraTotal:+o.ExtraTotal||0,
     finalCost:+o.FinalCost, prevFinalCost:o.PrevFinalCost?+o.PrevFinalCost:null,
     costChangedAt:o.CostChangedAt, updatedAt:o.UpdatedAt, createdAt:o.CreatedAt };
@@ -1035,11 +1043,16 @@ function rowToCost(row, h) {
 
 function costToRow(s) {
   return [s.id, s.name, s.sku||'', s.category||'', s.productType,
-    s.productItemId||'', s.inhouseCost||0, s.inhouseDesc||'',
+    s.productItemId||'', s.inhouseId||'', s.comboQty||1,
+    s.inhouseCost||0, s.inhouseDesc||'',
     s.tagItemId||'', s.prodPackItemId||'', s.labelItemId||'',
+    s.packBrochureItemId||'',
     s.courierPackItemId||'', s.courierLabelItemId||'',
-    s.productCost, s.tagCost, s.prodPackCost, s.labelCost,
+    s.tapeItemId||'', s.stickerItemId||'',
+    s.productCost, s.tagCost||0, s.prodPackCost, s.labelCost,
+    s.packBrochureCost||0,
     s.courierPackCost, s.courierLabelCost||0,
+    s.tapeCost||0, s.stickerCost||0,
     s.extraItems||'[]', s.extraTotal||0,
     s.finalCost, s.prevFinalCost||'', s.costChangedAt||'', s.updatedAt, s.createdAt];
 }
@@ -1499,9 +1512,21 @@ function resetCostForm() { editSheetId=null; renderCostingForm(); }
 
 // Fix 1: Navigate to costing tab and load the cost sheet for editing
 function editSheetFromBoard(id) {
-  goto('costing');
-  // Wait for page transition then render the form
-  setTimeout(() => renderCostingForm(id), 80);
+  // Set editSheetId BEFORE calling goto so the costing page
+  // renders with the correct sheet data immediately — no reset, no race condition
+  editSheetId = id;
+  // Navigate to costing page but skip the default renderCostingForm() call
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-costing')?.classList.add('active');
+  document.getElementById('nav-costing')?.classList.add('active');
+  const m = PAGE_META['costing'] || {};
+  document.getElementById('pg-title').textContent = m.title||'';
+  document.getElementById('pg-sub').textContent   = m.sub||'';
+  document.getElementById('btn-main').textContent = m.main||'';
+  document.getElementById('btn-main').style.display = m.main ? '' : 'none';
+  // Now render with the sheet ID — comboQty, all fields preserved
+  renderCostingForm(id);
 }
 
 function togglePT() {
@@ -1793,9 +1818,11 @@ function renderBoard() {
   );
 
   // Apply filter
-  if (boardFilter==='changed') sheets = sheets.filter(s=>daysSince(s.costChangedAt)<=15&&s.prevFinalCost!=null);
-  if (boardFilter==='inhouse') sheets = sheets.filter(s=>s.productType==='inhouse');
-  if (boardFilter==='outside') sheets = sheets.filter(s=>s.productType==='outside');
+  if (boardFilter==="changed")   sheets = sheets.filter(s=>daysSince(s.costChangedAt)<=15&&s.prevFinalCost!=null);
+  if (boardFilter==="increased") sheets = sheets.filter(s=>s.prevFinalCost!=null&&s.finalCost>s.prevFinalCost);
+  if (boardFilter==="decreased") sheets = sheets.filter(s=>s.prevFinalCost!=null&&s.finalCost<s.prevFinalCost);
+  if (boardFilter==="inhouse")   sheets = sheets.filter(s=>s.productType==="inhouse");
+  if (boardFilter==="outside")   sheets = sheets.filter(s=>s.productType==="outside");
 
   // Update KPIs (always based on full data)
   const ch = DB.costSheets.filter(s=>daysSince(s.costChangedAt)<=15&&s.prevFinalCost!=null).length;
@@ -2775,9 +2802,11 @@ function getBoardSheets() {
     (s.sku||'').toLowerCase().includes(q) ||
     (s.category||'').toLowerCase().includes(q)
   );
-  if (boardFilter==='changed') sheets = sheets.filter(s=>daysSince(s.costChangedAt)<=15&&s.prevFinalCost!=null);
-  if (boardFilter==='inhouse') sheets = sheets.filter(s=>s.productType==='inhouse');
-  if (boardFilter==='outside') sheets = sheets.filter(s=>s.productType==='outside');
+  if (boardFilter==="changed")   sheets = sheets.filter(s=>daysSince(s.costChangedAt)<=15&&s.prevFinalCost!=null);
+  if (boardFilter==="increased") sheets = sheets.filter(s=>s.prevFinalCost!=null&&s.finalCost>s.prevFinalCost);
+  if (boardFilter==="decreased") sheets = sheets.filter(s=>s.prevFinalCost!=null&&s.finalCost<s.prevFinalCost);
+  if (boardFilter==="inhouse")   sheets = sheets.filter(s=>s.productType==="inhouse");
+  if (boardFilter==="outside")   sheets = sheets.filter(s=>s.productType==="outside");
   return sheets;
 }
 
