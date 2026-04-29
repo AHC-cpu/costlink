@@ -303,32 +303,33 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
       <!-- SETTINGS BAR -->
       <div class="panel" style="margin-bottom:1rem">
         <div class="panel-hd" style="cursor:pointer" onclick="togglePnlSettings()">
-          <div class="panel-title">⚙ Platform Settings <span style="font-size:.65rem;font-weight:400;color:var(--ink3)">(click to edit commission rates)</span></div>
+          <div class="panel-title">⚙ Platform Settings <span style="font-size:.65rem;font-weight:400;color:var(--ink3)">(click to edit default rates)</span></div>
           <span style="font-size:.72rem;color:var(--ink3)" id="pnl-settings-toggle">▼ Show</span>
         </div>
         <div id="pnl-settings-body" style="display:none;padding:1rem;border-top:1px solid var(--line)">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1.2rem;">
             <div>
-              <div style="font-size:.68rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem;">🛒 Amazon</div>
-              <div class="fg">
-                <label>Fixed Handling Cost per Order (₹)</label>
-                <input type="number" id="amz-handling" placeholder="85" min="0" step="1" value="85" oninput="savePnlSettings()"/>
-                <div style="font-size:.65rem;color:var(--ink3);margin-top:.2rem">Deducted from every Amazon order. Commission entered per product.</div>
-              </div>
+              <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;">🛒 Amazon</div>
+              <div class="fg"><label>Courier (₹/order)</label><input type="number" id="amz-courier" value="70" min="0" step="1" oninput="savePnlSettings()"/></div>
+              <div style="font-size:.62rem;color:var(--ink3)">+Closing fee auto from price slab. Referral % by category.</div>
             </div>
             <div>
-              <div style="font-size:.68rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem;">🛍 Firstcry</div>
-              <div class="fr2">
-                <div class="fg">
-                  <label>Healthcare Commission %</label>
-                  <input type="number" id="fc-health-pct" placeholder="37" min="0" max="100" step=".1" value="37" oninput="savePnlSettings()"/>
-                </div>
-                <div class="fg">
-                  <label>Fashion Commission %</label>
-                  <input type="number" id="fc-fashion-pct" placeholder="45" min="0" max="100" step=".1" value="45" oninput="savePnlSettings()"/>
-                </div>
+              <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;">🛍 Firstcry</div>
+              <div class="fr2" style="gap:.4rem">
+                <div class="fg"><label>Healthcare %</label><input type="number" id="fc-health-pct" value="37" min="0" max="100" step=".1" oninput="savePnlSettings()"/></div>
+                <div class="fg"><label>Fashion %</label><input type="number" id="fc-fashion-pct" value="45" min="0" max="100" step=".1" oninput="savePnlSettings()"/></div>
               </div>
-              <div style="font-size:.65rem;color:var(--ink3);margin-top:.4rem">18% GST on commission auto-applied for both platforms.</div>
+              <div style="font-size:.62rem;color:var(--ink3)">18% GST on commission auto-applied.</div>
+            </div>
+            <div>
+              <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;">🏪 Myntra</div>
+              <div class="fg"><label>Courier (₹/order)</label><input type="number" id="myn-courier" value="80" min="0" step="1" oninput="savePnlSettings()"/></div>
+              <div style="font-size:.62rem;color:var(--ink3)">Commission % + Fixed Fee auto from category & price slab.</div>
+            </div>
+            <div>
+              <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;">🛒 Shopify</div>
+              <div class="fg"><label>Courier (₹/order)</label><input type="number" id="shy-courier" value="85" min="0" step="1" oninput="savePnlSettings()"/></div>
+              <div style="font-size:.62rem;color:var(--ink3)">No commission. Only courier charges deducted.</div>
             </div>
           </div>
         </div>
@@ -341,52 +342,48 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
         <button class="btn btn-s" id="pnl-filt-profit"   onclick="setPnlFilter('profit')"   style="font-size:.72rem;padding:.35rem .75rem">🟢 Profitable</button>
         <button class="btn btn-s" id="pnl-filt-amazon"   onclick="setPnlFilter('amazon')"   style="font-size:.72rem;padding:.35rem .75rem">Amazon</button>
         <button class="btn btn-s" id="pnl-filt-firstcry" onclick="setPnlFilter('firstcry')" style="font-size:.72rem;padding:.35rem .75rem">Firstcry</button>
-        <div class="t-search"><span class="si">⌕</span><input type="text" id="pnl-search" placeholder="Search…" oninput="renderPnl()"/></div>
-        <div style="margin-left:auto">
-          <button class="btn btn-s" onclick="exportPnlExcel()" style="font-size:.72rem;padding:.35rem .8rem">📥 Export Excel</button>
-        </div>
+        <button class="btn btn-s" id="pnl-filt-myntra"   onclick="setPnlFilter('myntra')"   style="font-size:.72rem;padding:.35rem .75rem">Myntra</button>
+        <button class="btn btn-s" id="pnl-filt-shopify"  onclick="setPnlFilter('shopify')"  style="font-size:.72rem;padding:.35rem .75rem">Shopify</button>
+        <div class="t-search"><span class="si">⌕</span><input type="text" id="pnl-search" placeholder="Search..." oninput="renderPnl()"/></div>
+        <div style="margin-left:auto"><button class="btn btn-s" onclick="exportPnlExcel()" style="font-size:.72rem;padding:.35rem .8rem">📥 Export Excel</button></div>
       </div>
 
       <!-- KPI CARDS -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1rem;">
-        <div class="panel" style="margin-bottom:0;padding:.8rem 1rem">
-          <div style="font-size:.58rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em">Total Products</div>
-          <div style="font-size:1.6rem;font-weight:800;color:var(--ink);margin-top:.15rem" id="pnl-kv-total">—</div>
-        </div>
-        <div class="panel" style="margin-bottom:0;padding:.8rem 1rem">
-          <div style="font-size:.58rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em">In Loss — Amazon</div>
-          <div style="font-size:1.6rem;font-weight:800;color:#c93a1a;margin-top:.15rem" id="pnl-kv-amz-loss">—</div>
-        </div>
-        <div class="panel" style="margin-bottom:0;padding:.8rem 1rem">
-          <div style="font-size:.58rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em">In Loss — Firstcry</div>
-          <div style="font-size:1.6rem;font-weight:800;color:#c93a1a;margin-top:.15rem" id="pnl-kv-fc-loss">—</div>
-        </div>
-        <div class="panel" style="margin-bottom:0;padding:.8rem 1rem">
-          <div style="font-size:.58rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em">Configured Products</div>
-          <div style="font-size:1.6rem;font-weight:800;color:var(--blue);margin-top:.15rem" id="pnl-kv-configured">—</div>
-        </div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.65rem;margin-bottom:1rem;">
+        <div class="panel" style="margin-bottom:0;padding:.75rem .85rem"><div style="font-size:.55rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em">Total Products</div><div style="font-size:1.5rem;font-weight:800;color:var(--ink);margin-top:.1rem" id="pnl-kv-total">—</div></div>
+        <div class="panel" style="margin-bottom:0;padding:.75rem .85rem"><div style="font-size:.55rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em">Loss — Amazon</div><div style="font-size:1.5rem;font-weight:800;color:#c93a1a;margin-top:.1rem" id="pnl-kv-amz-loss">—</div></div>
+        <div class="panel" style="margin-bottom:0;padding:.75rem .85rem"><div style="font-size:.55rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em">Loss — Firstcry</div><div style="font-size:1.5rem;font-weight:800;color:#c93a1a;margin-top:.1rem" id="pnl-kv-fc-loss">—</div></div>
+        <div class="panel" style="margin-bottom:0;padding:.75rem .85rem"><div style="font-size:.55rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em">Loss — Myntra</div><div style="font-size:1.5rem;font-weight:800;color:#c93a1a;margin-top:.1rem" id="pnl-kv-myn-loss">—</div></div>
+        <div class="panel" style="margin-bottom:0;padding:.75rem .85rem"><div style="font-size:.55rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em">Configured</div><div style="font-size:1.5rem;font-weight:800;color:var(--blue);margin-top:.1rem" id="pnl-kv-configured">—</div></div>
       </div>
 
       <!-- MAIN TABLE -->
       <div class="panel">
         <div class="tw" style="overflow-x:auto">
-          <table id="tbl-pnl" style="min-width:880px">
+          <table id="tbl-pnl" style="min-width:1000px">
             <thead>
               <tr>
-                <th>Product</th>
-                <th style="text-align:right">Your Cost</th>
-                <th style="text-align:center;background:#FFF3E0;border-left:2px solid #FFB74D">🛒 Amazon SP</th>
-                <th style="text-align:right;background:#FFF3E0">Deductions</th>
-                <th style="text-align:right;background:#FFF3E0">P / L</th>
-                <th style="text-align:center;background:#E8F5E9;border-left:2px solid #81C784">🛍 Firstcry SP</th>
-                <th style="text-align:right;background:#E8F5E9">Dept.</th>
-                <th style="text-align:right;background:#E8F5E9">Deductions</th>
-                <th style="text-align:right;background:#E8F5E9">P / L</th>
-                <th></th>
+                <th rowspan="2" style="vertical-align:middle;min-width:160px">Product</th>
+                <th rowspan="2" style="vertical-align:middle;text-align:right">Your Cost</th>
+                <th colspan="2" style="text-align:center;background:#FFF3E0;border-left:2px solid #FFB74D">🛒 Amazon</th>
+                <th colspan="2" style="text-align:center;background:#E8F5E9;border-left:2px solid #81C784">🛍 Firstcry</th>
+                <th colspan="2" style="text-align:center;background:#FCE4EC;border-left:2px solid #F48FB1">🏪 Myntra</th>
+                <th colspan="2" style="text-align:center;background:#F3E5F5;border-left:2px solid #CE93D8">🛒 Shopify</th>
+                <th rowspan="2" style="vertical-align:middle"></th>
+              </tr>
+              <tr>
+                <th style="background:#FFF8F0;text-align:right;font-size:.62rem">SP</th>
+                <th style="background:#FFF8F0;text-align:right;font-weight:700;font-size:.62rem">P/L</th>
+                <th style="background:#F1F8E9;text-align:right;font-size:.62rem">SP</th>
+                <th style="background:#F1F8E9;text-align:right;font-weight:700;font-size:.62rem">P/L</th>
+                <th style="background:#FCE4EC;text-align:right;font-size:.62rem">SP</th>
+                <th style="background:#FCE4EC;text-align:right;font-weight:700;font-size:.62rem">P/L</th>
+                <th style="background:#F3E5F5;text-align:right;font-size:.62rem">SP</th>
+                <th style="background:#F3E5F5;text-align:right;font-weight:700;font-size:.62rem">P/L</th>
               </tr>
             </thead>
             <tbody id="tbl-pnl-body">
-              <tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--ink3)">
+              <tr><td colspan="11" style="text-align:center;padding:2rem;color:var(--ink3)">
                 <div style="font-size:1.5rem;opacity:.3;margin-bottom:.5rem">📊</div>
                 Sign in to load your products
               </td></tr>
@@ -398,56 +395,84 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
 
     <!-- P&L ENTRY MODAL -->
     <div class="mbg" id="modal-pnl">
-      <div class="modal">
+      <div class="modal modal-lg">
         <div class="mhd">
-          <div class="mtitle" id="pnl-modal-title">📊 Enter P&L Data</div>
+          <div class="mtitle" id="pnl-modal-title">📊 P&L Data</div>
           <button class="mclose" onclick="closeM('modal-pnl')">✕</button>
         </div>
         <div class="mbody">
-          <div style="background:var(--bg);border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center">
-            <span style="font-size:.78rem;font-weight:600;color:var(--ink)" id="pnl-modal-product">Product</span>
-            <span style="font-size:.82rem;font-weight:700;color:var(--orange)" id="pnl-modal-cost"></span>
+          <div style="background:var(--bg);border-radius:8px;padding:.7rem 1rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line)">
+            <span style="font-size:.82rem;font-weight:600;color:var(--ink)" id="pnl-modal-product">Product</span>
+            <span style="font-size:.88rem;font-weight:700;color:var(--orange)" id="pnl-modal-cost"></span>
           </div>
-
-          <!-- AMAZON SECTION -->
-          <div class="cost-section" style="background:#FFF8F0;border-color:#FFB74D">
-            <div class="cs-title"><div class="dot" style="background:#FF9800"></div>Amazon</div>
-            <div class="fr2">
-              <div class="fg">
-                <label>Selling Price on Amazon (₹)</label>
-                <input type="number" id="pnl-amz-sp" placeholder="0.00" min="0" step=".01" oninput="calcPnlPreview()"/>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">
+            <div class="cost-section" style="background:#FFF8F0;border-color:#FFB74D;margin-bottom:0">
+              <div class="cs-title"><div class="dot" style="background:#FF9800"></div>🛒 Amazon</div>
+              <div class="fg"><label>Selling Price (₹)</label><input type="number" id="pnl-amz-sp" placeholder="0.00" min="0" step=".01" oninput="calcPnlPreview()"/></div>
+              <div class="fg"><label>Amazon Category</label>
+                <select id="pnl-amz-cat" onchange="calcPnlPreview()" style="font-size:.76rem">
+                  <option value="apparel_baby">Apparel - Baby (7%)</option>
+                  <option value="apparel_other">Apparel - Other (4.5-19%)</option>
+                  <option value="apparel_innerwear">Apparel - Innerwear (7-18.5%)</option>
+                  <option value="apparel_shorts">Apparel - Shorts (2-24%)</option>
+                  <option value="apparel_sleepwear">Apparel - Sleepwear (5-19%)</option>
+                  <option value="baby_hardlines">Baby Hardlines (0-10%)</option>
+                  <option value="baby_other">Baby - Other Products (6.5-8%)</option>
+                  <option value="baby_diapers">Baby - Diapers (5-9.5%)</option>
+                  <option value="handbags">Handbags (6.5-12%)</option>
+                  <option value="luggage_travel">Luggage - Travel Accessories (9-12%)</option>
+                  <option value="luggage_suitcase">Luggage - Suitcase and Trolleys (1.5-6.5%)</option>
+                  <option value="beauty_haircare">Beauty - Haircare Bath Shower (5-8%)</option>
+                  <option value="beauty_other">Beauty - Other Products (7-9%)</option>
+                  <option value="feminine_hygiene">Feminine Hygiene and Care (2-8%)</option>
+                  <option value="health_medical">Health - Medical Equipment (8%)</option>
+                  <option value="health_other">Health and Household - Other (11.5%)</option>
+                  <option value="bedsheets">Bedsheets Blankets Covers (7-8.5%)</option>
+                  <option value="home_other">Home - Other Products (5-18%)</option>
+                  <option value="sports_other">Sports - Other Products (9-13%)</option>
+                </select>
               </div>
-              <div class="fg">
-                <label>Amazon Commission (₹) <span style="color:var(--ink3);font-weight:400;font-size:.62rem">exact ₹ value</span></label>
-                <input type="number" id="pnl-amz-comm" placeholder="0.00" min="0" step=".01" oninput="calcPnlPreview()"/>
+              <div class="calc-preview" style="margin-top:.3rem" id="amz-preview">
+                <div class="calc-row"><span style="color:var(--ink3)">Enter selling price to calculate</span><span></span></div>
               </div>
             </div>
-            <div class="calc-preview" style="margin-top:.4rem" id="amz-preview">
-              <div class="calc-row"><span style="color:var(--ink3)">Enter selling price & commission to see calculation</span><span></span></div>
-            </div>
-          </div>
-
-          <!-- FIRSTCRY SECTION -->
-          <div class="cost-section" style="background:#F1F8E9;border-color:#81C784">
-            <div class="cs-title"><div class="dot" style="background:#4CAF50"></div>Firstcry</div>
-            <div class="fr2">
-              <div class="fg">
-                <label>Selling Price on Firstcry (₹)</label>
-                <input type="number" id="pnl-fc-sp" placeholder="0.00" min="0" step=".01" oninput="calcPnlPreview()"/>
-              </div>
-              <div class="fg">
-                <label>Department</label>
+            <div class="cost-section" style="background:#F1F8E9;border-color:#81C784;margin-bottom:0">
+              <div class="cs-title"><div class="dot" style="background:#4CAF50"></div>🛍 Firstcry</div>
+              <div class="fg"><label>Selling Price (₹)</label><input type="number" id="pnl-fc-sp" placeholder="0.00" min="0" step=".01" oninput="calcPnlPreview()"/></div>
+              <div class="fg"><label>Department</label>
                 <select id="pnl-fc-dept" onchange="calcPnlPreview()">
                   <option value="healthcare">Healthcare (37%)</option>
                   <option value="fashion">Fashion (45%)</option>
                 </select>
               </div>
+              <div class="calc-preview" style="margin-top:.3rem" id="fc-preview">
+                <div class="calc-row"><span style="color:var(--ink3)">Enter selling price to calculate</span><span></span></div>
+              </div>
             </div>
-            <div class="calc-preview" style="margin-top:.4rem" id="fc-preview">
-              <div class="calc-row"><span style="color:var(--ink3)">Enter selling price to see calculation</span><span></span></div>
+            <div class="cost-section" style="background:#FCE4EC;border-color:#F48FB1;margin-bottom:0">
+              <div class="cs-title"><div class="dot" style="background:#E91E63"></div>🏪 Myntra</div>
+              <div class="fg"><label>Selling Price (₹)</label><input type="number" id="pnl-myn-sp" placeholder="0.00" min="0" step=".01" oninput="calcPnlPreview()"/></div>
+              <div class="fg"><label>Master Category</label>
+                <select id="pnl-myn-cat" onchange="calcPnlPreview()">
+                  <option value="ACCESSORIES">ACCESSORIES</option>
+                  <option value="PERSONAL_CARE">PERSONAL_CARE</option>
+                  <option value="APPAREL">APPAREL</option>
+                  <option value="HOME">HOME</option>
+                </select>
+              </div>
+              <div class="calc-preview" style="margin-top:.3rem" id="myn-preview">
+                <div class="calc-row"><span style="color:var(--ink3)">Enter selling price to calculate</span><span></span></div>
+              </div>
+            </div>
+            <div class="cost-section" style="background:#F3E5F5;border-color:#CE93D8;margin-bottom:0">
+              <div class="cs-title"><div class="dot" style="background:#9C27B0"></div>🛒 Shopify</div>
+              <div class="fg"><label>Selling Price (₹)</label><input type="number" id="pnl-shy-sp" placeholder="0.00" min="0" step=".01" oninput="calcPnlPreview()"/></div>
+              <div style="font-size:.68rem;color:var(--ink3);margin-bottom:.5rem">No commission — only courier charges deducted</div>
+              <div class="calc-preview" style="margin-top:.3rem" id="shy-preview">
+                <div class="calc-row"><span style="color:var(--ink3)">Enter selling price to calculate</span><span></span></div>
+              </div>
             </div>
           </div>
-
         </div>
         <div class="mfoot">
           <button class="btn-cancel" onclick="closeM('modal-pnl')">Cancel</button>
@@ -951,7 +976,7 @@ const HDR_COSTS   = ['ID','Name','SKU','Category','ProductType','ProductItemID',
 const HDR_HISTORY = ['ID','SheetID','ProductName','SKU','ProductType','OldCost','NewCost','Diff','DiffPct','ChangedAt'];
 const HDR_INHOUSE = ['ID','ProductName','FabricItemID','FabricName','MetersPerUnit','WastagePct','FabricCostPerUnit','Stitching','Cutting','Finishing','JobWork','TotalLabour','TotalInhouseCost','Notes','UpdatedAt','CreatedAt'];
 const HDR_COMBOS  = ['ID','ComboName','SKU','Notes','Items','ExtraCosts','TotalCost','MarginPct','SellPrice','UpdatedAt','CreatedAt'];
-const HDR_PNL     = ['SheetID','AmzSellPrice','AmzCommission','FcSellPrice','FcDept','UpdatedAt'];
+const HDR_PNL     = ['SheetID','AmzSellPrice','AmzCat','FcSellPrice','FcDept','MynSellPrice','MynCat','ShySellPrice','UpdatedAt'];
 
 // ══════════════════════════════════════════════════
 //  LOCAL DB (mirror of sheet)
@@ -1316,17 +1341,21 @@ function rowToCombo(row, h) {
 function rowToPnl(row, h) {
   const o = rowToObj(row, h);
   return {
-    sheetId:     o.SheetID||'',
-    amzSellPrice:+o.AmzSellPrice||0,
-    amzCommission:+o.AmzCommission||0,
-    fcSellPrice: +o.FcSellPrice||0,
-    fcDept:      o.FcDept||'healthcare',
-    updatedAt:   o.UpdatedAt||''
+    sheetId:      o.SheetID||'',
+    amzSellPrice: +o.AmzSellPrice||0,
+    amzCat:       o.AmzCat||'apparel_baby',
+    fcSellPrice:  +o.FcSellPrice||0,
+    fcDept:       o.FcDept||'healthcare',
+    mynSellPrice: +o.MynSellPrice||0,
+    mynCat:       o.MynCat||'ACCESSORIES',
+    shySellPrice: +o.ShySellPrice||0,
+    updatedAt:    o.UpdatedAt||''
   };
 }
 
 function pnlToRow(p) {
-  return [p.sheetId, p.amzSellPrice, p.amzCommission, p.fcSellPrice, p.fcDept, p.updatedAt];
+  return [p.sheetId, p.amzSellPrice, p.amzCat, p.fcSellPrice, p.fcDept,
+          p.mynSellPrice, p.mynCat, p.shySellPrice, p.updatedAt];
 }
 
 function comboToRow(c) {
@@ -3555,24 +3584,30 @@ function renderComboList() {
 // ══════════════════════════════════════════════════
 //  P&L DASHBOARD MODULE
 // ══════════════════════════════════════════════════
-let _pnlFilter = 'all';
+//  P&L DASHBOARD MODULE
+// ══════════════════════════════════════════════════
+let _pnlFilter    = 'all';
+let _pnlEditSheetId = null;
 
-// Settings stored in localStorage for instant restore
 function loadPnlSettings() {
   try {
     const s = JSON.parse(localStorage.getItem('pnl_settings')||'{}');
-    document.getElementById('amz-handling').value   = s.amzHandling   ?? 85;
-    document.getElementById('fc-health-pct').value  = s.fcHealthPct   ?? 37;
-    document.getElementById('fc-fashion-pct').value = s.fcFashionPct  ?? 45;
+    document.getElementById('amz-courier').value   = s.amzCourier  ?? 70;
+    document.getElementById('fc-health-pct').value = s.fcHealthPct ?? 37;
+    document.getElementById('fc-fashion-pct').value= s.fcFashionPct?? 45;
+    document.getElementById('myn-courier').value   = s.mynCourier  ?? 80;
+    document.getElementById('shy-courier').value   = s.shyCourier  ?? 85;
   } catch(e){}
 }
 
 function savePnlSettings() {
   try {
     localStorage.setItem('pnl_settings', JSON.stringify({
-      amzHandling:  parseFloat(document.getElementById('amz-handling')?.value)  || 85,
-      fcHealthPct:  parseFloat(document.getElementById('fc-health-pct')?.value) || 37,
-      fcFashionPct: parseFloat(document.getElementById('fc-fashion-pct')?.value)|| 45,
+      amzCourier:   parseFloat(document.getElementById('amz-courier')?.value)    || 70,
+      fcHealthPct:  parseFloat(document.getElementById('fc-health-pct')?.value)  || 37,
+      fcFashionPct: parseFloat(document.getElementById('fc-fashion-pct')?.value) || 45,
+      mynCourier:   parseFloat(document.getElementById('myn-courier')?.value)    || 80,
+      shyCourier:   parseFloat(document.getElementById('shy-courier')?.value)    || 85,
     }));
     renderPnl();
   } catch(e){}
@@ -3582,19 +3617,21 @@ function getPnlSettings() {
   try {
     const s = JSON.parse(localStorage.getItem('pnl_settings')||'{}');
     return {
-      amzHandling:  s.amzHandling  ?? 85,
+      amzCourier:   s.amzCourier   ?? 70,
       fcHealthPct:  s.fcHealthPct  ?? 37,
       fcFashionPct: s.fcFashionPct ?? 45,
+      mynCourier:   s.mynCourier   ?? 80,
+      shyCourier:   s.shyCourier   ?? 85,
     };
-  } catch(e) { return { amzHandling:85, fcHealthPct:37, fcFashionPct:45 }; }
+  } catch(e) { return { amzCourier:70, fcHealthPct:37, fcFashionPct:45, mynCourier:80, shyCourier:85 }; }
 }
 
 function togglePnlSettings() {
   const body   = document.getElementById('pnl-settings-body');
   const toggle = document.getElementById('pnl-settings-toggle');
   const open   = body.style.display === 'none';
-  body.style.display  = open ? '' : 'none';
-  toggle.textContent  = open ? '▲ Hide' : '▼ Show';
+  body.style.display = open ? '' : 'none';
+  toggle.textContent = open ? '▲ Hide' : '▼ Show';
 }
 
 function setPnlFilter(f) {
@@ -3605,27 +3642,108 @@ function setPnlFilter(f) {
   renderPnl();
 }
 
-// Calculate P&L for one product on Amazon
-function calcAmzPnl(cost, sellPrice, commission, settings) {
-  if (!sellPrice) return null;
-  const gstOnComm   = commission * 0.18;
-  const handling    = settings.amzHandling;
-  const totalDeduct = commission + gstOnComm + handling + cost;
-  const profit      = sellPrice - totalDeduct;
-  return { sellPrice, commission, gstOnComm, handling, totalDeduct, profit,
-    margin: sellPrice > 0 ? (profit/sellPrice*100) : 0 };
+// Amazon referral % by category + price slab
+function getAmzReferralPct(cat, price) {
+  const rules = {
+    apparel_baby:     [[300,0],[Infinity,7]],
+    apparel_other:    [[300,0],[500,4.5],[1000,11],[Infinity,19]],
+    apparel_innerwear:[[300,0],[500,7],[1000,16.5],[Infinity,18.5]],
+    apparel_shorts:   [[300,0],[500,2],[1000,19.5],[Infinity,24]],
+    apparel_sleepwear:[[300,0],[500,5],[1000,13],[Infinity,19]],
+    baby_hardlines:   [[300,0],[500,10],[1000,9],[Infinity,6.5]],
+    baby_other:       [[300,0],[500,6.5],[1000,8],[Infinity,7.5]],
+    baby_diapers:     [[300,5],[500,5.5],[Infinity,9.5]],
+    handbags:         [[300,0],[500,6.5],[1000,11],[Infinity,12]],
+    luggage_travel:   [[300,0],[500,9],[1000,10],[Infinity,12]],
+    luggage_suitcase: [[300,0],[500,1.5],[1000,6.5],[Infinity,5.5]],
+    beauty_haircare:  [[300,0],[500,5],[Infinity,8]],
+    beauty_other:     [[300,0],[500,7],[Infinity,9]],
+    feminine_hygiene: [[300,0],[500,2],[1000,7.5],[Infinity,8]],
+    health_medical:   [[300,0],[Infinity,8]],
+    health_other:     [[300,0],[Infinity,11.5]],
+    bedsheets:        [[500,0],[1000,7],[Infinity,8.5]],
+    home_other:       [[300,0],[500,5],[1000,13],[Infinity,18]],
+    sports_other:     [[300,0],[500,9],[Infinity,13]],
+  };
+  const slabs = rules[cat] || [[300,0],[Infinity,8]];
+  for (const [limit, pct] of slabs) {
+    if (price <= limit) return pct;
+  }
+  return slabs[slabs.length-1][1];
 }
 
-// Calculate P&L for one product on Firstcry
+// Amazon closing fee (Easy Ship, effective Mar 16 2026)
+function getAmzClosingFee(price) {
+  if (price <= 300)  return 1;
+  if (price <= 500)  return 22;
+  if (price <= 1000) return 45;
+  return 76;
+}
+
+function calcAmzPnl(cost, sellPrice, cat, settings) {
+  if (!sellPrice) return null;
+  const refPct     = getAmzReferralPct(cat, sellPrice);
+  const refFee     = sellPrice * (refPct / 100);
+  const closingFee = getAmzClosingFee(sellPrice);
+  const courier    = settings.amzCourier;
+  const totalDeduct= refFee + closingFee + courier + cost;
+  const profit     = sellPrice - totalDeduct;
+  return { sellPrice, refPct, refFee, closingFee, courier, totalDeduct, profit,
+    margin: sellPrice>0 ? (profit/sellPrice*100) : 0 };
+}
+
 function calcFcPnl(cost, sellPrice, dept, settings) {
   if (!sellPrice) return null;
-  const commPct     = dept === 'fashion' ? settings.fcFashionPct : settings.fcHealthPct;
-  const commission  = sellPrice * (commPct / 100);
-  const gstOnComm   = commission * 0.18;
-  const totalDeduct = commission + gstOnComm + cost;
-  const profit      = sellPrice - totalDeduct;
+  const commPct    = dept==='fashion' ? settings.fcFashionPct : settings.fcHealthPct;
+  const commission = sellPrice * (commPct/100);
+  const gstOnComm  = commission * 0.18;
+  const totalDeduct= commission + gstOnComm + cost;
+  const profit     = sellPrice - totalDeduct;
   return { sellPrice, commPct, commission, gstOnComm, totalDeduct, profit,
-    margin: sellPrice > 0 ? (profit/sellPrice*100) : 0 };
+    margin: sellPrice>0 ? (profit/sellPrice*100) : 0 };
+}
+
+// Myntra commission % by master category + price slab (ZIKKU brand)
+function getMynCommPct(cat, price) {
+  if (cat === 'APPAREL') {
+    if (price <= 500)  return 1;
+    if (price <= 800)  return 6;
+    return 18;
+  }
+  // ACCESSORIES, PERSONAL_CARE, HOME
+  if (price <= 500) return 8;
+  return 15;
+}
+
+// Myntra fixed fee by master category + price slab
+function getMynFixedFee(cat, price) {
+  const isAccessories = cat === 'ACCESSORIES';
+  if (price <= 300)  return isAccessories ? 29 : 27;
+  if (price <= 500)  return isAccessories ? 30 : 27;
+  if (price <= 1000) return isAccessories ? 31 : 27;
+  if (price <= 2000) return isAccessories ? 49 : 45;
+  return isAccessories ? 65 : 61;
+}
+
+function calcMynPnl(cost, sellPrice, cat, settings) {
+  if (!sellPrice) return null;
+  const commPct    = getMynCommPct(cat, sellPrice);
+  const commission = sellPrice * (commPct/100);
+  const fixedFee   = getMynFixedFee(cat, sellPrice);
+  const courier    = settings.mynCourier;
+  const totalDeduct= commission + fixedFee + courier + cost;
+  const profit     = sellPrice - totalDeduct;
+  return { sellPrice, commPct, commission, fixedFee, courier, totalDeduct, profit,
+    margin: sellPrice>0 ? (profit/sellPrice*100) : 0 };
+}
+
+function calcShyPnl(cost, sellPrice, settings) {
+  if (!sellPrice) return null;
+  const courier    = settings.shyCourier;
+  const totalDeduct= courier + cost;
+  const profit     = sellPrice - totalDeduct;
+  return { sellPrice, courier, totalDeduct, profit,
+    margin: sellPrice>0 ? (profit/sellPrice*100) : 0 };
 }
 
 function renderPnl() {
@@ -3633,103 +3751,88 @@ function renderPnl() {
   const settings = getPnlSettings();
   const q = (document.getElementById('pnl-search')?.value||'').toLowerCase();
 
-  // Build rows — join costSheets with pnlData
   let rows = DB.costSheets.map(s => {
     const pnl = DB.pnlData.find(p=>p.sheetId===s.id) || {};
-    const amz = calcAmzPnl(s.finalCost, pnl.amzSellPrice||0, pnl.amzCommission||0, settings);
-    const fc  = calcFcPnl(s.finalCost,  pnl.fcSellPrice||0, pnl.fcDept||'healthcare', settings);
-    return { sheet:s, pnl, amz, fc };
+    const amz = calcAmzPnl(s.finalCost, pnl.amzSellPrice||0, pnl.amzCat||'apparel_baby', settings);
+    const fc  = calcFcPnl(s.finalCost,  pnl.fcSellPrice||0,  pnl.fcDept||'healthcare',   settings);
+    const myn = calcMynPnl(s.finalCost, pnl.mynSellPrice||0, pnl.mynCat||'ACCESSORIES',   settings);
+    const shy = calcShyPnl(s.finalCost, pnl.shySellPrice||0,                              settings);
+    return { sheet:s, pnl, amz, fc, myn, shy };
   });
 
-  // Filter
   if (q) rows = rows.filter(r => r.sheet.name.toLowerCase().includes(q) || (r.sheet.sku||'').toLowerCase().includes(q));
-  if (_pnlFilter === 'loss')     rows = rows.filter(r => (r.amz&&r.amz.profit<0) || (r.fc&&r.fc.profit<0));
-  if (_pnlFilter === 'profit')   rows = rows.filter(r => (r.amz&&r.amz.profit>=0) || (r.fc&&r.fc.profit>=0));
-  if (_pnlFilter === 'amazon')   rows = rows.filter(r => r.pnl.amzSellPrice > 0);
-  if (_pnlFilter === 'firstcry') rows = rows.filter(r => r.pnl.fcSellPrice  > 0);
+  if (_pnlFilter==='loss')     rows = rows.filter(r=>(r.amz&&r.amz.profit<0)||(r.fc&&r.fc.profit<0)||(r.myn&&r.myn.profit<0)||(r.shy&&r.shy.profit<0));
+  if (_pnlFilter==='profit')   rows = rows.filter(r=>(r.amz&&r.amz.profit>=0)||(r.fc&&r.fc.profit>=0)||(r.myn&&r.myn.profit>=0)||(r.shy&&r.shy.profit>=0));
+  if (_pnlFilter==='amazon')   rows = rows.filter(r=>r.pnl.amzSellPrice>0);
+  if (_pnlFilter==='firstcry') rows = rows.filter(r=>r.pnl.fcSellPrice>0);
+  if (_pnlFilter==='myntra')   rows = rows.filter(r=>r.pnl.mynSellPrice>0);
+  if (_pnlFilter==='shopify')  rows = rows.filter(r=>r.pnl.shySellPrice>0);
 
-  // Sort: losses first (most negative profit first), then by name
-  rows.sort((a,b) => {
-    const aMin = Math.min(a.amz?.profit ?? Infinity, a.fc?.profit ?? Infinity);
-    const bMin = Math.min(b.amz?.profit ?? Infinity, b.fc?.profit ?? Infinity);
-    if (aMin < 0 && bMin >= 0) return -1;
-    if (bMin < 0 && aMin >= 0) return  1;
-    if (aMin < 0 && bMin < 0)  return aMin - bMin; // most negative first
+  rows.sort((a,b)=>{
+    const aMin = Math.min(a.amz?.profit??Infinity,a.fc?.profit??Infinity,a.myn?.profit??Infinity,a.shy?.profit??Infinity);
+    const bMin = Math.min(b.amz?.profit??Infinity,b.fc?.profit??Infinity,b.myn?.profit??Infinity,b.shy?.profit??Infinity);
+    if (aMin<0&&bMin>=0) return -1;
+    if (bMin<0&&aMin>=0) return 1;
+    if (aMin<0&&bMin<0)  return aMin-bMin;
     return a.sheet.name.localeCompare(b.sheet.name);
   });
 
   // KPIs
-  const all = DB.costSheets.map(s => {
-    const pnl = DB.pnlData.find(p=>p.sheetId===s.id)||{};
+  const all = DB.costSheets.map(s=>{
+    const p=DB.pnlData.find(x=>x.sheetId===s.id)||{};
     return {
-      amz: calcAmzPnl(s.finalCost, pnl.amzSellPrice||0, pnl.amzCommission||0, settings),
-      fc:  calcFcPnl(s.finalCost,  pnl.fcSellPrice||0,  pnl.fcDept||'healthcare', settings),
-      configured: pnl.amzSellPrice>0 || pnl.fcSellPrice>0
+      amz:  calcAmzPnl(s.finalCost, p.amzSellPrice||0, p.amzCat||'apparel_baby', settings),
+      fc:   calcFcPnl(s.finalCost,  p.fcSellPrice||0,  p.fcDept||'healthcare',   settings),
+      myn:  calcMynPnl(s.finalCost, p.mynSellPrice||0, p.mynCat||'ACCESSORIES',   settings),
+      configured: (p.amzSellPrice||p.fcSellPrice||p.mynSellPrice||p.shySellPrice)>0
     };
   });
-  document.getElementById('pnl-kv-total').textContent        = DB.costSheets.length;
-  document.getElementById('pnl-kv-amz-loss').textContent     = all.filter(r=>r.amz&&r.amz.profit<0).length;
-  document.getElementById('pnl-kv-fc-loss').textContent      = all.filter(r=>r.fc&&r.fc.profit<0).length;
-  document.getElementById('pnl-kv-configured').textContent   = all.filter(r=>r.configured).length;
+  document.getElementById('pnl-kv-total').textContent       = DB.costSheets.length;
+  document.getElementById('pnl-kv-amz-loss').textContent    = all.filter(r=>r.amz&&r.amz.profit<0).length;
+  document.getElementById('pnl-kv-fc-loss').textContent     = all.filter(r=>r.fc&&r.fc.profit<0).length;
+  document.getElementById('pnl-kv-myn-loss').textContent    = all.filter(r=>r.myn&&r.myn.profit<0).length;
+  document.getElementById('pnl-kv-configured').textContent  = all.filter(r=>r.configured).length;
 
-  const fmtPL = (v) => {
-    if (v===null||v===undefined) return '<span style="color:var(--ink3)">—</span>';
-    const cls = v >= 0 ? 'color:#2e7d32;font-weight:700' : 'color:#c93a1a;font-weight:700';
-    const sym = v >= 0 ? '▲' : '▼';
-    return `<span style="${cls}">${sym} ${fmt(Math.abs(v))}</span>`;
+  const plCell = (result, bgClass) => {
+    if (!result) return `<td style="text-align:center;color:var(--ink3);font-size:.72rem;padding:.55rem .7rem;${bgClass}">—</td>`;
+    const col = result.profit>=0 ? '#2e7d32' : '#c93a1a';
+    const sym = result.profit>=0 ? '▲' : '▼';
+    return `<td style="text-align:right;padding:.55rem .7rem;${bgClass}">
+      <div style="font-weight:700;color:${col};font-size:.82rem">${sym} ${fmt(Math.abs(result.profit))}</div>
+      <div style="font-size:.6rem;color:${col}">${result.margin>=0?'+':''}${result.margin.toFixed(1)}%</div>
+    </td>`;
   };
 
-  const fmtPct = (v) => {
-    if (v===null||v===undefined) return '';
-    const cls = v >= 0 ? 'color:#2e7d32' : 'color:#c93a1a';
-    return `<span style="font-size:.65rem;${cls}">${v>=0?'+':''}${v.toFixed(1)}%</span>`;
+  const spCell = (result, pnlSP, bgClass) => {
+    if (!pnlSP) return `<td style="text-align:center;color:var(--ink3);font-size:.7rem;padding:.55rem .7rem;${bgClass}">Not set</td>`;
+    return `<td style="text-align:right;padding:.55rem .7rem;font-weight:500;${bgClass}">${fmt(pnlSP)}</td>`;
   };
 
   const tbody = document.getElementById('tbl-pnl-body');
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:2.5rem;color:var(--ink3)">
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:2.5rem;color:var(--ink3)">
       <div style="font-size:1.5rem;opacity:.3;margin-bottom:.5rem">📊</div>
-      <div style="font-size:.82rem">${q?`No products match "${q}"`:'Click ✎ Edit on any product to enter selling prices'}</div>
+      <div>${q?`No products match`:'Click ✎ Edit on any product to enter selling prices'}</div>
     </td></tr>`;
   } else {
-    const plCell = (result) => {
-      if (!result) return `<td style="text-align:center;color:var(--ink3);font-size:.72rem;padding:.6rem .8rem">—</td>`;
-      const col = result.profit>=0 ? '#2e7d32' : '#c93a1a';
-      const sym = result.profit>=0 ? '▲' : '▼';
-      return `<td style="text-align:right;padding:.6rem .8rem">
-        <div style="font-weight:700;color:${col};font-size:.88rem">${sym} ${fmt(Math.abs(result.profit))}</div>
-        <div style="font-size:.62rem;color:${col}">${result.margin>=0?'+':''}${result.margin.toFixed(1)}%</div>
-      </td>`;
-    };
-
-    tbody.innerHTML = rows.map(({sheet, pnl, amz, fc}) => {
-      const isLoss = (amz&&amz.profit<0) || (fc&&fc.profit<0);
-      const rowBg  = isLoss ? 'background:rgba(201,58,26,.03)' : '';
+    tbody.innerHTML = rows.map(({sheet,pnl,amz,fc,myn,shy})=>{
+      const isLoss=(amz&&amz.profit<0)||(fc&&fc.profit<0)||(myn&&myn.profit<0)||(shy&&shy.profit<0);
+      const rowBg=isLoss?'background:rgba(201,58,26,.03)':'';
       return `<tr style="border-bottom:1px solid var(--bg2);${rowBg}" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='${isLoss?'rgba(201,58,26,.03)':''}'" >
-        <td style="padding:.65rem .9rem">
-          <div style="font-weight:600;font-size:.82rem">${sheet.name}${isLoss?' <span style="font-size:.58rem;color:#c93a1a;font-weight:700">● LOSS</span>':''}</div>
+        <td style="padding:.6rem .85rem">
+          <div style="font-weight:600;font-size:.82rem">${sheet.name}${isLoss?' <span style="font-size:.58rem;color:#c93a1a;font-weight:700">●LOSS</span>':''}</div>
           ${sheet.sku?`<div style="font-size:.62rem;color:var(--ink3)">${sheet.sku}</div>`:''}
         </td>
-        <td style="padding:.65rem .9rem;text-align:right;font-weight:600">${fmt(sheet.finalCost)}</td>
-        <td style="padding:.65rem .9rem;text-align:center;background:#FFF8F0;border-left:2px solid #FFE0B2">
-          ${pnl.amzSellPrice>0
-            ? `<div style="font-weight:600">${fmt(pnl.amzSellPrice)}</div><div style="font-size:.62rem;color:var(--ink3)">Comm: ₹${pnl.amzCommission||0}</div>`
-            : '<span style="color:var(--ink3);font-size:.72rem">Not set</span>'}
-        </td>
-        <td style="padding:.6rem .8rem;background:#FFF8F0;text-align:right;font-size:.7rem;color:var(--ink3)">
-          ${amz ? `${fmt(amz.gstOnComm)} GST<br>+ ${fmt(amz.handling)} hdl` : '—'}
-        </td>
-        ${plCell(amz)}
-        <td style="padding:.65rem .9rem;text-align:center;background:#F1F8E9;border-left:2px solid #C8E6C9">
-          ${pnl.fcSellPrice>0
-            ? `<div style="font-weight:600">${fmt(pnl.fcSellPrice)}</div><div style="font-size:.62rem;color:var(--ink3)">${pnl.fcDept==='fashion'?'Fashion':'Healthcare'}</div>`
-            : '<span style="color:var(--ink3);font-size:.72rem">Not set</span>'}
-        </td>
-        <td style="padding:.6rem .8rem;background:#F1F8E9;text-align:right;font-size:.7rem;color:var(--ink3)">
-          ${fc ? `${fmt(fc.commission)} comm<br>+ ${fmt(fc.gstOnComm)} GST` : '—'}
-        </td>
-        ${plCell(fc)}
-        <td style="padding:.65rem .9rem;text-align:center">
+        <td style="padding:.6rem .85rem;text-align:right;font-weight:600">${fmt(sheet.finalCost)}</td>
+        ${spCell(amz, pnl.amzSellPrice||0, 'background:#FFF8F0;border-left:2px solid #FFE0B2;')}
+        ${plCell(amz, 'background:#FFF8F0;')}
+        ${spCell(fc, pnl.fcSellPrice||0, 'background:#F1F8E9;border-left:2px solid #C8E6C9;')}
+        ${plCell(fc, 'background:#F1F8E9;')}
+        ${spCell(myn, pnl.mynSellPrice||0, 'background:#FCE4EC;border-left:2px solid #F8BBD9;')}
+        ${plCell(myn, 'background:#FCE4EC;')}
+        ${spCell(shy, pnl.shySellPrice||0, 'background:#F3E5F5;border-left:2px solid #E1BEE7;')}
+        ${plCell(shy, 'background:#F3E5F5;')}
+        <td style="padding:.6rem .85rem;text-align:center">
           <button class="act" onclick="openPnlModal('${sheet.id}')">✎ Edit</button>
         </td>
       </tr>`;
@@ -3742,25 +3845,25 @@ function renderPnl() {
   if (el2) { el2.style.background='var(--ink2)'; el2.style.color='#fff'; }
 }
 
-// ─── P&L MODAL ──────────────────────────────────
-let _pnlEditSheetId = null;
-
 function openPnlModal(sheetId) {
   _pnlEditSheetId = sheetId;
-  const sheet   = DB.costSheets.find(x=>x.id===sheetId);
-  const pnl     = DB.pnlData.find(p=>p.sheetId===sheetId) || {};
-  const settings= getPnlSettings();
+  const sheet = DB.costSheets.find(x=>x.id===sheetId);
+  const pnl   = DB.pnlData.find(p=>p.sheetId===sheetId) || {};
+  const settings = getPnlSettings();
 
-  document.getElementById('pnl-modal-title').textContent   = '📊 ' + (sheet?.name||'P&L Data');
-  document.getElementById('pnl-modal-product').textContent  = sheet?.name||'';
-  document.getElementById('pnl-modal-cost').textContent     = 'Your Cost: ' + fmt(sheet?.finalCost||0);
+  document.getElementById('pnl-modal-title').textContent  = '📊 ' + (sheet?.name||'P&L Data');
+  document.getElementById('pnl-modal-product').textContent = sheet?.name||'';
+  document.getElementById('pnl-modal-cost').textContent    = 'Your Cost: ' + fmt(sheet?.finalCost||0);
 
   sv('pnl-amz-sp',   pnl.amzSellPrice  || '');
-  sv('pnl-amz-comm', pnl.amzCommission || '');
+  sv('pnl-amz-cat',  pnl.amzCat        || 'apparel_baby');
   sv('pnl-fc-sp',    pnl.fcSellPrice   || '');
-  sv('pnl-fc-dept',  pnl.fcDept || 'healthcare');
+  sv('pnl-fc-dept',  pnl.fcDept        || 'healthcare');
+  sv('pnl-myn-sp',   pnl.mynSellPrice  || '');
+  sv('pnl-myn-cat',  pnl.mynCat        || 'ACCESSORIES');
+  sv('pnl-shy-sp',   pnl.shySellPrice  || '');
 
-  // Update dept label with current rates
+  // Update Firstcry dept label with current rates
   const deptSel = document.getElementById('pnl-fc-dept');
   if (deptSel) {
     deptSel.innerHTML = `
@@ -3777,44 +3880,65 @@ function calcPnlPreview() {
   const cost     = sheet?.finalCost || 0;
   const settings = getPnlSettings();
 
-  // AMAZON preview
-  const amzSP   = parseFloat(document.getElementById('pnl-amz-sp')?.value)   || 0;
-  const amzComm = parseFloat(document.getElementById('pnl-amz-comm')?.value) || 0;
-  const amzPrev = document.getElementById('amz-preview');
-  if (amzPrev) {
-    if (amzSP > 0) {
-      const amz = calcAmzPnl(cost, amzSP, amzComm, settings);
-      const col  = amz.profit>=0 ? '#2e7d32' : '#c93a1a';
-      amzPrev.innerHTML = `
-        <div class="calc-row"><span>Selling Price</span><span style="font-weight:600">${fmt(amzSP)}</span></div>
-        <div class="calc-row"><span style="color:var(--ink3)">− Commission</span><span>−${fmt(amzComm)}</span></div>
-        <div class="calc-row"><span style="color:var(--ink3)">− GST on Commission (18%)</span><span>−${fmt(amz.gstOnComm)}</span></div>
-        <div class="calc-row"><span style="color:var(--ink3)">− Handling (₹${settings.amzHandling})</span><span>−${fmt(amz.handling)}</span></div>
-        <div class="calc-row"><span style="color:var(--ink3)">− Your Product Cost</span><span>−${fmt(cost)}</span></div>
-        <div class="calc-row total" style="color:${col}"><span>Net Profit / Loss</span><span>${amz.profit>=0?'▲ +':'▼ −'}${fmt(Math.abs(amz.profit))} (${amz.margin.toFixed(1)}%)</span></div>`;
-    } else {
-      amzPrev.innerHTML = `<div class="calc-row"><span style="color:var(--ink3)">Enter selling price to see calculation</span><span></span></div>`;
-    }
-  }
+  const showPreview = (elId, lines, profitVal, marginVal) => {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (!lines) { el.innerHTML = `<div class="calc-row"><span style="color:var(--ink3)">Enter selling price to calculate</span><span></span></div>`; return; }
+    const col = profitVal>=0?'#2e7d32':'#c93a1a';
+    el.innerHTML = lines + `<div class="calc-row total" style="color:${col}"><span>Net Profit / Loss</span><span>${profitVal>=0?'▲ +':'▼ '}${fmt(Math.abs(profitVal))} (${marginVal.toFixed(1)}%)</span></div>`;
+  };
 
-  // FIRSTCRY preview
-  const fcSP   = parseFloat(document.getElementById('pnl-fc-sp')?.value) || 0;
-  const fcDept = document.getElementById('pnl-fc-dept')?.value || 'healthcare';
-  const fcPrev = document.getElementById('fc-preview');
-  if (fcPrev) {
-    if (fcSP > 0) {
-      const fc  = calcFcPnl(cost, fcSP, fcDept, settings);
-      const col = fc.profit>=0 ? '#2e7d32' : '#c93a1a';
-      fcPrev.innerHTML = `
-        <div class="calc-row"><span>Selling Price</span><span style="font-weight:600">${fmt(fcSP)}</span></div>
-        <div class="calc-row"><span style="color:var(--ink3)">− Commission (${fc.commPct}%)</span><span>−${fmt(fc.commission)}</span></div>
-        <div class="calc-row"><span style="color:var(--ink3)">− GST on Commission (18%)</span><span>−${fmt(fc.gstOnComm)}</span></div>
-        <div class="calc-row"><span style="color:var(--ink3)">− Your Product Cost</span><span>−${fmt(cost)}</span></div>
-        <div class="calc-row total" style="color:${col}"><span>Net Profit / Loss</span><span>${fc.profit>=0?'▲ +':'▼ −'}${fmt(Math.abs(fc.profit))} (${fc.margin.toFixed(1)}%)</span></div>`;
-    } else {
-      fcPrev.innerHTML = `<div class="calc-row"><span style="color:var(--ink3)">Enter selling price to see calculation</span><span></span></div>`;
-    }
-  }
+  // AMAZON
+  const amzSP  = parseFloat(document.getElementById('pnl-amz-sp')?.value)||0;
+  const amzCat = document.getElementById('pnl-amz-cat')?.value||'apparel_baby';
+  if (amzSP>0) {
+    const a = calcAmzPnl(cost, amzSP, amzCat, settings);
+    showPreview('amz-preview', `
+      <div class="calc-row"><span>Selling Price</span><span style="font-weight:600">${fmt(amzSP)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− Referral Fee (${a.refPct}%)</span><span>−${fmt(a.refFee)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− Closing Fee</span><span>−${fmt(a.closingFee)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− Courier (₹${settings.amzCourier})</span><span>−${fmt(a.courier)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− Your Cost</span><span>−${fmt(cost)}</span></div>`,
+      a.profit, a.margin);
+  } else showPreview('amz-preview', null);
+
+  // FIRSTCRY
+  const fcSP   = parseFloat(document.getElementById('pnl-fc-sp')?.value)||0;
+  const fcDept = document.getElementById('pnl-fc-dept')?.value||'healthcare';
+  if (fcSP>0) {
+    const f = calcFcPnl(cost, fcSP, fcDept, settings);
+    showPreview('fc-preview', `
+      <div class="calc-row"><span>Selling Price</span><span style="font-weight:600">${fmt(fcSP)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− Commission (${f.commPct}%)</span><span>−${fmt(f.commission)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− GST on Comm (18%)</span><span>−${fmt(f.gstOnComm)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− Your Cost</span><span>−${fmt(cost)}</span></div>`,
+      f.profit, f.margin);
+  } else showPreview('fc-preview', null);
+
+  // MYNTRA
+  const mynSP  = parseFloat(document.getElementById('pnl-myn-sp')?.value)||0;
+  const mynCat = document.getElementById('pnl-myn-cat')?.value||'ACCESSORIES';
+  if (mynSP>0) {
+    const m = calcMynPnl(cost, mynSP, mynCat, settings);
+    showPreview('myn-preview', `
+      <div class="calc-row"><span>Selling Price</span><span style="font-weight:600">${fmt(mynSP)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− Commission (${m.commPct}%)</span><span>−${fmt(m.commission)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− Fixed Fee</span><span>−${fmt(m.fixedFee)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− Courier (₹${settings.mynCourier})</span><span>−${fmt(m.courier)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− Your Cost</span><span>−${fmt(cost)}</span></div>`,
+      m.profit, m.margin);
+  } else showPreview('myn-preview', null);
+
+  // SHOPIFY
+  const shySP = parseFloat(document.getElementById('pnl-shy-sp')?.value)||0;
+  if (shySP>0) {
+    const sh = calcShyPnl(cost, shySP, settings);
+    showPreview('shy-preview', `
+      <div class="calc-row"><span>Selling Price</span><span style="font-weight:600">${fmt(shySP)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− Courier (₹${settings.shyCourier})</span><span>−${fmt(sh.courier)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− Your Cost</span><span>−${fmt(cost)}</span></div>`,
+      sh.profit, sh.margin);
+  } else showPreview('shy-preview', null);
 }
 
 async function savePnlModal() {
@@ -3825,25 +3949,29 @@ async function savePnlModal() {
   let rec = DB.pnlData.find(p=>p.sheetId===sheetId);
   const isNew = !rec;
   if (!rec) {
-    rec = { sheetId, amzSellPrice:0, amzCommission:0, fcSellPrice:0, fcDept:'healthcare', updatedAt:today() };
+    rec = { sheetId, amzSellPrice:0, amzCat:'apparel_baby', fcSellPrice:0, fcDept:'healthcare',
+            mynSellPrice:0, mynCat:'ACCESSORIES', shySellPrice:0, updatedAt:today() };
     DB.pnlData.push(rec);
   }
-  rec.amzSellPrice  = parseFloat(document.getElementById('pnl-amz-sp')?.value)  || 0;
-  rec.amzCommission = parseFloat(document.getElementById('pnl-amz-comm')?.value)|| 0;
-  rec.fcSellPrice   = parseFloat(document.getElementById('pnl-fc-sp')?.value)   || 0;
-  rec.fcDept        = document.getElementById('pnl-fc-dept')?.value || 'healthcare';
-  rec.updatedAt     = today();
+  rec.amzSellPrice = parseFloat(document.getElementById('pnl-amz-sp')?.value)  || 0;
+  rec.amzCat       = document.getElementById('pnl-amz-cat')?.value  || 'apparel_baby';
+  rec.fcSellPrice  = parseFloat(document.getElementById('pnl-fc-sp')?.value)   || 0;
+  rec.fcDept       = document.getElementById('pnl-fc-dept')?.value  || 'healthcare';
+  rec.mynSellPrice = parseFloat(document.getElementById('pnl-myn-sp')?.value)  || 0;
+  rec.mynCat       = document.getElementById('pnl-myn-cat')?.value  || 'ACCESSORIES';
+  rec.shySellPrice = parseFloat(document.getElementById('pnl-shy-sp')?.value)  || 0;
+  rec.updatedAt    = today();
 
   try {
-    setSyncStatus('syncing','Saving…');
+    setSyncStatus('syncing','Saving...');
     if (isNew) {
       await appendRow(TAB_PNL, pnlToRow(rec));
     } else {
       const idx = DB.pnlData.findIndex(p=>p.sheetId===sheetId);
       await updateRow(TAB_PNL, idx, pnlToRow(rec));
     }
-    setSyncStatus('ok','Saved ✓');
-    toast('P&L data saved ✓');
+    setSyncStatus('ok','Saved');
+    toast('P&L data saved');
     closeM('modal-pnl');
     renderPnl();
   } catch(e) {
@@ -3854,31 +3982,34 @@ async function savePnlModal() {
 
 function exportPnlExcel() {
   const settings = getPnlSettings();
-  const header = ['Product','SKU','Your Cost',
-    'Amazon SP','Amazon Comm','GST on Comm','Handling','Amazon Net','Amazon P/L','Amazon Margin%',
-    'Firstcry SP','Firstcry Dept','FC Comm%','FC Comm','GST on FC Comm','Firstcry Net','Firstcry P/L','Firstcry Margin%'];
+  const header = ['Product','SKU','Your Cost (Rs)',
+    'Amazon SP','Amazon Ref%','Amazon Ref Fee','Amazon Closing','Amazon Courier','Amazon P/L','Amazon Margin%',
+    'Firstcry SP','Firstcry Dept','FC Comm%','FC Comm','FC GST on Comm','Firstcry P/L','Firstcry Margin%',
+    'Myntra SP','Myntra Cat','Myntra Comm%','Myntra Comm','Myntra Fixed Fee','Myntra Courier','Myntra P/L','Myntra Margin%',
+    'Shopify SP','Shopify Courier','Shopify P/L','Shopify Margin%'];
 
   const rows = DB.costSheets.map(s => {
     const pnl = DB.pnlData.find(p=>p.sheetId===s.id)||{};
-    const amz = calcAmzPnl(s.finalCost, pnl.amzSellPrice||0, pnl.amzCommission||0, settings);
-    const fc  = calcFcPnl(s.finalCost,  pnl.fcSellPrice||0,  pnl.fcDept||'healthcare', settings);
+    const amz = calcAmzPnl(s.finalCost, pnl.amzSellPrice||0, pnl.amzCat||'apparel_baby', settings);
+    const fc  = calcFcPnl(s.finalCost,  pnl.fcSellPrice||0,  pnl.fcDept||'healthcare',   settings);
+    const myn = calcMynPnl(s.finalCost, pnl.mynSellPrice||0, pnl.mynCat||'ACCESSORIES',   settings);
+    const shy = calcShyPnl(s.finalCost, pnl.shySellPrice||0,                              settings);
     return [
       s.name, s.sku||'', s.finalCost,
-      amz?.sellPrice||'', pnl.amzCommission||'', amz?+(amz.gstOnComm.toFixed(2)):'', amz?settings.amzHandling:'',
-      amz?+(amz.totalDeduct.toFixed(2)):'', amz?+(amz.profit.toFixed(2)):'', amz?+(amz.margin.toFixed(1)):'',
-      fc?.sellPrice||'', pnl.fcDept==='fashion'?'Fashion':'Healthcare',
-      fc?.commPct||'', fc?+(fc.commission.toFixed(2)):'', fc?+(fc.gstOnComm.toFixed(2)):'',
-      fc?+(fc.totalDeduct.toFixed(2)):'', fc?+(fc.profit.toFixed(2)):'', fc?+(fc.margin.toFixed(1)):''
+      amz?.sellPrice||'', amz?.refPct||'', amz?+amz.refFee.toFixed(2):'', amz?+amz.closingFee:'', amz?+amz.courier:'', amz?+amz.profit.toFixed(2):'', amz?+amz.margin.toFixed(1):'',
+      fc?.sellPrice||'', pnl.fcDept==='fashion'?'Fashion':'Healthcare', fc?.commPct||'', fc?+fc.commission.toFixed(2):'', fc?+fc.gstOnComm.toFixed(2):'', fc?+fc.profit.toFixed(2):'', fc?+fc.margin.toFixed(1):'',
+      myn?.sellPrice||'', pnl.mynCat||'', myn?.commPct||'', myn?+myn.commission.toFixed(2):'', myn?+myn.fixedFee:'', myn?+myn.courier:'', myn?+myn.profit.toFixed(2):'', myn?+myn.margin.toFixed(1):'',
+      shy?.sellPrice||'', shy?+shy.courier:'', shy?+shy.profit.toFixed(2):'', shy?+shy.margin.toFixed(1):''
     ];
   });
 
   const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
-  ws['!cols'] = [{wch:28},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:10},{wch:12},{wch:12},{wch:12},
-                 {wch:10},{wch:12},{wch:10},{wch:12},{wch:14},{wch:12},{wch:12},{wch:14}];
+  ws['!cols'] = Array(29).fill({wch:12});
+  ws['!cols'][0] = {wch:28}; ws['!cols'][1] = {wch:10};
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'P&L Dashboard');
   XLSX.writeFile(wb, `CostLink_PnL_${new Date().toISOString().slice(0,10)}.xlsx`);
-  toast('✅ P&L exported');
+  toast('P&L exported');
 }
 
 // ══════════════════════════════════════════════════
