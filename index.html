@@ -401,9 +401,18 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
           <button class="mclose" onclick="closeM('modal-pnl')">✕</button>
         </div>
         <div class="mbody">
-          <div style="background:var(--bg);border-radius:8px;padding:.7rem 1rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line)">
-            <span style="font-size:.82rem;font-weight:600;color:var(--ink)" id="pnl-modal-product">Product</span>
-            <span style="font-size:.88rem;font-weight:700;color:var(--orange)" id="pnl-modal-cost"></span>
+          <div style="background:var(--bg);border-radius:8px;padding:.7rem 1rem;margin-bottom:1rem;border:1px solid var(--line)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+              <span style="font-size:.82rem;font-weight:600;color:var(--ink)" id="pnl-modal-product">Product</span>
+              <span style="font-size:.88rem;font-weight:700;color:var(--orange)" id="pnl-modal-cost"></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:.75rem;padding:.5rem .7rem;background:var(--blue-bg);border-radius:6px;border:1px solid rgba(44,95,168,.15)">
+              <span style="font-size:.7rem;font-weight:600;color:var(--blue)">🏷 Product GST %</span>
+              <select id="pnl-gst-override" style="font-size:.75rem;flex:1;border:1px solid var(--line2);border-radius:5px;padding:.3rem .5rem;background:#fff" onchange="calcPnlPreview()">
+                <option value="auto_18">Auto-detected: 18%</option>
+              </select>
+              <span style="font-size:.65rem;color:var(--ink3)">SP ÷ (1 + GST) = net revenue</span>
+            </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">
             <div class="cost-section" style="background:#FFF8F0;border-color:#FFB74D;margin-bottom:0">
@@ -3642,7 +3651,77 @@ function setPnlFilter(f) {
   renderPnl();
 }
 
-// Amazon referral % by category + price slab
+// Get GST % for a cost sheet — pulled from linked purchase item, fallback to pnlRec override
+function getProductGst(sheet, pnlRec) {
+  // 1. Try to pull from the product item linked to the cost sheet
+  if (sheet?.productItemId) {
+    const item = DB.items.find(x=>x.id===sheet.productItemId);
+    if (item && item.gst > 0) return item.gst;
+  }
+  // 2. Try any linked item (packing etc)
+  if (sheet) {
+    for (const fld of ['prodPackItemId','labelItemId','tagItemId','courierPackItemId']) {
+      const item = DB.items.find(x=>x.id===sheet[fld]);
+      if (item && item.gst > 0) return item.gst;
+    }
+  }
+  // 3. Fall back to user-selected override in pnl record
+  return pnlRec?.gstOverride || 18;
+}
+
+function calcAmzPnl(cost, sellPrice, cat, settings, gstPct) {
+  if (!sellPrice) return null;
+  // Selling price includes GST — divide it out
+  const netSP      = sellPrice / (1 + gstPct/100);
+  const refPct     = getAmzReferralPct(cat, sellPrice);
+  const refFee     = sellPrice * (refPct/100);
+  const gstOnRef   = refFee * 0.18;
+  const closingFee = getAmzClosingFee(sellPrice);
+  const gstOnClose = closingFee * 0.18;
+  const netCourier = settings.amzCourier / 1.18;   // courier quoted incl GST
+  const totalDeduct= refFee + gstOnRef + closingFee + gstOnClose + netCourier + cost;
+  const profit     = netSP - totalDeduct;
+  return { sellPrice, netSP, gstPct, refPct, refFee, gstOnRef, closingFee, gstOnClose,
+    courier: settings.amzCourier, netCourier, totalDeduct, profit,
+    margin: netSP>0 ? (profit/netSP*100) : 0 };
+}
+
+function calcFcPnl(cost, sellPrice, dept, settings, gstPct) {
+  if (!sellPrice) return null;
+  const netSP     = sellPrice / (1 + gstPct/100);
+  const commPct   = dept==='fashion' ? settings.fcFashionPct : settings.fcHealthPct;
+  const commission= sellPrice * (commPct/100);
+  const gstOnComm = commission * 0.18;
+  const totalDeduct= commission + gstOnComm + cost;
+  const profit    = netSP - totalDeduct;
+  return { sellPrice, netSP, gstPct, commPct, commission, gstOnComm, totalDeduct, profit,
+    margin: netSP>0 ? (profit/netSP*100) : 0 };
+}
+
+function calcMynPnl(cost, sellPrice, cat, settings, gstPct) {
+  if (!sellPrice) return null;
+  const netSP     = sellPrice / (1 + gstPct/100);
+  const commPct   = getMynCommPct(cat, sellPrice);
+  const commission= sellPrice * (commPct/100);
+  const fixedFee  = getMynFixedFee(cat, sellPrice);
+  const gstOnFees = (commission + fixedFee) * 0.18;
+  const netCourier= settings.mynCourier / 1.18;
+  const totalDeduct= commission + fixedFee + gstOnFees + netCourier + cost;
+  const profit    = netSP - totalDeduct;
+  return { sellPrice, netSP, gstPct, commPct, commission, fixedFee, gstOnFees,
+    courier: settings.mynCourier, netCourier, totalDeduct, profit,
+    margin: netSP>0 ? (profit/netSP*100) : 0 };
+}
+
+function calcShyPnl(cost, sellPrice, settings, gstPct) {
+  if (!sellPrice) return null;
+  const netSP     = sellPrice / (1 + gstPct/100);
+  const netCourier= settings.shyCourier / 1.18;
+  const totalDeduct= netCourier + cost;
+  const profit    = netSP - totalDeduct;
+  return { sellPrice, netSP, gstPct, courier: settings.shyCourier, netCourier, totalDeduct, profit,
+    margin: netSP>0 ? (profit/netSP*100) : 0 };
+}
 function getAmzReferralPct(cat, price) {
   const rules = {
     apparel_baby:     [[300,0],[Infinity,7]],
@@ -3680,71 +3759,6 @@ function getAmzClosingFee(price) {
   return 76;
 }
 
-function calcAmzPnl(cost, sellPrice, cat, settings) {
-  if (!sellPrice) return null;
-  const refPct     = getAmzReferralPct(cat, sellPrice);
-  const refFee     = sellPrice * (refPct / 100);
-  const closingFee = getAmzClosingFee(sellPrice);
-  const courier    = settings.amzCourier;
-  const totalDeduct= refFee + closingFee + courier + cost;
-  const profit     = sellPrice - totalDeduct;
-  return { sellPrice, refPct, refFee, closingFee, courier, totalDeduct, profit,
-    margin: sellPrice>0 ? (profit/sellPrice*100) : 0 };
-}
-
-function calcFcPnl(cost, sellPrice, dept, settings) {
-  if (!sellPrice) return null;
-  const commPct    = dept==='fashion' ? settings.fcFashionPct : settings.fcHealthPct;
-  const commission = sellPrice * (commPct/100);
-  const gstOnComm  = commission * 0.18;
-  const totalDeduct= commission + gstOnComm + cost;
-  const profit     = sellPrice - totalDeduct;
-  return { sellPrice, commPct, commission, gstOnComm, totalDeduct, profit,
-    margin: sellPrice>0 ? (profit/sellPrice*100) : 0 };
-}
-
-// Myntra commission % by master category + price slab (ZIKKU brand)
-function getMynCommPct(cat, price) {
-  if (cat === 'APPAREL') {
-    if (price <= 500)  return 1;
-    if (price <= 800)  return 6;
-    return 18;
-  }
-  // ACCESSORIES, PERSONAL_CARE, HOME
-  if (price <= 500) return 8;
-  return 15;
-}
-
-// Myntra fixed fee by master category + price slab
-function getMynFixedFee(cat, price) {
-  const isAccessories = cat === 'ACCESSORIES';
-  if (price <= 300)  return isAccessories ? 29 : 27;
-  if (price <= 500)  return isAccessories ? 30 : 27;
-  if (price <= 1000) return isAccessories ? 31 : 27;
-  if (price <= 2000) return isAccessories ? 49 : 45;
-  return isAccessories ? 65 : 61;
-}
-
-function calcMynPnl(cost, sellPrice, cat, settings) {
-  if (!sellPrice) return null;
-  const commPct    = getMynCommPct(cat, sellPrice);
-  const commission = sellPrice * (commPct/100);
-  const fixedFee   = getMynFixedFee(cat, sellPrice);
-  const courier    = settings.mynCourier;
-  const totalDeduct= commission + fixedFee + courier + cost;
-  const profit     = sellPrice - totalDeduct;
-  return { sellPrice, commPct, commission, fixedFee, courier, totalDeduct, profit,
-    margin: sellPrice>0 ? (profit/sellPrice*100) : 0 };
-}
-
-function calcShyPnl(cost, sellPrice, settings) {
-  if (!sellPrice) return null;
-  const courier    = settings.shyCourier;
-  const totalDeduct= courier + cost;
-  const profit     = sellPrice - totalDeduct;
-  return { sellPrice, courier, totalDeduct, profit,
-    margin: sellPrice>0 ? (profit/sellPrice*100) : 0 };
-}
 
 function renderPnl() {
   loadPnlSettings();
@@ -3752,12 +3766,13 @@ function renderPnl() {
   const q = (document.getElementById('pnl-search')?.value||'').toLowerCase();
 
   let rows = DB.costSheets.map(s => {
-    const pnl = DB.pnlData.find(p=>p.sheetId===s.id) || {};
-    const amz = calcAmzPnl(s.finalCost, pnl.amzSellPrice||0, pnl.amzCat||'apparel_baby', settings);
-    const fc  = calcFcPnl(s.finalCost,  pnl.fcSellPrice||0,  pnl.fcDept||'healthcare',   settings);
-    const myn = calcMynPnl(s.finalCost, pnl.mynSellPrice||0, pnl.mynCat||'ACCESSORIES',   settings);
-    const shy = calcShyPnl(s.finalCost, pnl.shySellPrice||0,                              settings);
-    return { sheet:s, pnl, amz, fc, myn, shy };
+    const pnl  = DB.pnlData.find(p=>p.sheetId===s.id) || {};
+    const gst  = getProductGst(s, pnl);
+    const amz  = calcAmzPnl(s.finalCost, pnl.amzSellPrice||0, pnl.amzCat||'apparel_baby', settings, gst);
+    const fc   = calcFcPnl(s.finalCost,  pnl.fcSellPrice||0,  pnl.fcDept||'healthcare',   settings, gst);
+    const myn  = calcMynPnl(s.finalCost, pnl.mynSellPrice||0, pnl.mynCat||'ACCESSORIES',   settings, gst);
+    const shy  = calcShyPnl(s.finalCost, pnl.shySellPrice||0,                              settings, gst);
+    return { sheet:s, pnl, amz, fc, myn, shy, gst };
   });
 
   if (q) rows = rows.filter(r => r.sheet.name.toLowerCase().includes(q) || (r.sheet.sku||'').toLowerCase().includes(q));
@@ -3779,11 +3794,12 @@ function renderPnl() {
 
   // KPIs
   const all = DB.costSheets.map(s=>{
-    const p=DB.pnlData.find(x=>x.sheetId===s.id)||{};
+    const p   = DB.pnlData.find(x=>x.sheetId===s.id)||{};
+    const gst = getProductGst(s, p);
     return {
-      amz:  calcAmzPnl(s.finalCost, p.amzSellPrice||0, p.amzCat||'apparel_baby', settings),
-      fc:   calcFcPnl(s.finalCost,  p.fcSellPrice||0,  p.fcDept||'healthcare',   settings),
-      myn:  calcMynPnl(s.finalCost, p.mynSellPrice||0, p.mynCat||'ACCESSORIES',   settings),
+      amz:  calcAmzPnl(s.finalCost, p.amzSellPrice||0, p.amzCat||'apparel_baby', settings, gst),
+      fc:   calcFcPnl(s.finalCost,  p.fcSellPrice||0,  p.fcDept||'healthcare',   settings, gst),
+      myn:  calcMynPnl(s.finalCost, p.mynSellPrice||0, p.mynCat||'ACCESSORIES',   settings, gst),
       configured: (p.amzSellPrice||p.fcSellPrice||p.mynSellPrice||p.shySellPrice)>0
     };
   });
@@ -3847,23 +3863,53 @@ function renderPnl() {
 
 function openPnlModal(sheetId) {
   _pnlEditSheetId = sheetId;
-  const sheet = DB.costSheets.find(x=>x.id===sheetId);
-  const pnl   = DB.pnlData.find(p=>p.sheetId===sheetId) || {};
+  const sheet    = DB.costSheets.find(x=>x.id===sheetId);
+  const pnl      = DB.pnlData.find(p=>p.sheetId===sheetId) || {};
   const settings = getPnlSettings();
 
-  document.getElementById('pnl-modal-title').textContent  = '📊 ' + (sheet?.name||'P&L Data');
-  document.getElementById('pnl-modal-product').textContent = sheet?.name||'';
-  document.getElementById('pnl-modal-cost').textContent    = 'Your Cost: ' + fmt(sheet?.finalCost||0);
+  document.getElementById('pnl-modal-title').textContent   = '📊 ' + (sheet?.name||'P&L Data');
+  document.getElementById('pnl-modal-product').textContent  = sheet?.name||'';
+  document.getElementById('pnl-modal-cost').textContent     = 'Your Cost: ' + fmt(sheet?.finalCost||0);
 
-  sv('pnl-amz-sp',   pnl.amzSellPrice  || '');
-  sv('pnl-amz-cat',  pnl.amzCat        || 'apparel_baby');
-  sv('pnl-fc-sp',    pnl.fcSellPrice   || '');
-  sv('pnl-fc-dept',  pnl.fcDept        || 'healthcare');
-  sv('pnl-myn-sp',   pnl.mynSellPrice  || '');
-  sv('pnl-myn-cat',  pnl.mynCat        || 'ACCESSORIES');
-  sv('pnl-shy-sp',   pnl.shySellPrice  || '');
+  // Detect GST from purchase item
+  const detectedGst = getProductGst(sheet, pnl);
+  const gstSel = document.getElementById('pnl-gst-override');
+  if (gstSel) {
+    // Check if it was auto-detected or manually overridden
+    const itemGst = (() => {
+      if (sheet?.productItemId) {
+        const item = DB.items.find(x=>x.id===sheet.productItemId);
+        if (item && item.gst>0) return item.gst;
+      }
+      return null;
+    })();
+    gstSel.innerHTML = `
+      <option value="auto_${detectedGst}" ${!pnl.gstOverride?'selected':''}>Auto-detected: ${detectedGst}% ${itemGst?'(from item)':'(fallback)'}</option>
+      <option value="5"  ${pnl.gstOverride===5?'selected':''}>5% (manual)</option>
+      <option value="12" ${pnl.gstOverride===12?'selected':''}>12% (manual)</option>
+      <option value="18" ${pnl.gstOverride===18?'selected':''}>18% (manual)</option>
+      <option value="28" ${pnl.gstOverride===28?'selected':''}>28% (manual)</option>`;
+    gstSel.onchange = () => {
+      const v = gstSel.value;
+      if (v.startsWith('auto_')) {
+        const p2 = DB.pnlData.find(p=>p.sheetId===sheetId);
+        if (p2) delete p2.gstOverride;
+      } else {
+        const p2 = DB.pnlData.find(p=>p.sheetId===sheetId);
+        if (p2) p2.gstOverride = parseFloat(v);
+      }
+      calcPnlPreview();
+    };
+  }
 
-  // Update Firstcry dept label with current rates
+  sv('pnl-amz-sp',  pnl.amzSellPrice  || '');
+  sv('pnl-amz-cat', pnl.amzCat        || 'apparel_baby');
+  sv('pnl-fc-sp',   pnl.fcSellPrice   || '');
+  sv('pnl-fc-dept', pnl.fcDept        || 'healthcare');
+  sv('pnl-myn-sp',  pnl.mynSellPrice  || '');
+  sv('pnl-myn-cat', pnl.mynCat        || 'ACCESSORIES');
+  sv('pnl-shy-sp',  pnl.shySellPrice  || '');
+
   const deptSel = document.getElementById('pnl-fc-dept');
   if (deptSel) {
     deptSel.innerHTML = `
@@ -3877,8 +3923,12 @@ function openPnlModal(sheetId) {
 
 function calcPnlPreview() {
   const sheet    = _pnlEditSheetId ? DB.costSheets.find(x=>x.id===_pnlEditSheetId) : null;
+  const pnlRec   = _pnlEditSheetId ? (DB.pnlData.find(p=>p.sheetId===_pnlEditSheetId)||{}) : {};
   const cost     = sheet?.finalCost || 0;
   const settings = getPnlSettings();
+  // Read GST from the dropdown (may be auto or manual)
+  const gstRaw   = document.getElementById('pnl-gst-override')?.value || 'auto_18';
+  const gstPct   = gstRaw.startsWith('auto_') ? parseFloat(gstRaw.replace('auto_','')) : parseFloat(gstRaw);
 
   const showPreview = (elId, lines, profitVal, marginVal) => {
     const el = document.getElementById(elId);
@@ -3892,12 +3942,15 @@ function calcPnlPreview() {
   const amzSP  = parseFloat(document.getElementById('pnl-amz-sp')?.value)||0;
   const amzCat = document.getElementById('pnl-amz-cat')?.value||'apparel_baby';
   if (amzSP>0) {
-    const a = calcAmzPnl(cost, amzSP, amzCat, settings);
+    const a = calcAmzPnl(cost, amzSP, amzCat, settings, gstPct);
     showPreview('amz-preview', `
-      <div class="calc-row"><span>Selling Price</span><span style="font-weight:600">${fmt(amzSP)}</span></div>
+      <div class="calc-row"><span>Selling Price (incl. ${gstPct}% GST)</span><span style="font-weight:600">${fmt(amzSP)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">Net Revenue (excl. GST)</span><span>${fmt(a.netSP)}</span></div>
       <div class="calc-row"><span style="color:var(--ink3)">− Referral Fee (${a.refPct}%)</span><span>−${fmt(a.refFee)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− GST on Referral (18%)</span><span>−${fmt(a.gstOnRef)}</span></div>
       <div class="calc-row"><span style="color:var(--ink3)">− Closing Fee</span><span>−${fmt(a.closingFee)}</span></div>
-      <div class="calc-row"><span style="color:var(--ink3)">− Courier (₹${settings.amzCourier})</span><span>−${fmt(a.courier)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− GST on Closing (18%)</span><span>−${fmt(a.gstOnClose)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− Courier (net of GST)</span><span>−${fmt(a.netCourier)}</span></div>
       <div class="calc-row"><span style="color:var(--ink3)">− Your Cost</span><span>−${fmt(cost)}</span></div>`,
       a.profit, a.margin);
   } else showPreview('amz-preview', null);
@@ -3906,25 +3959,29 @@ function calcPnlPreview() {
   const fcSP   = parseFloat(document.getElementById('pnl-fc-sp')?.value)||0;
   const fcDept = document.getElementById('pnl-fc-dept')?.value||'healthcare';
   if (fcSP>0) {
-    const f = calcFcPnl(cost, fcSP, fcDept, settings);
+    const f = calcFcPnl(cost, fcSP, fcDept, settings, gstPct);
+    const f2 = calcFcPnl(cost, fcSP, fcDept, settings, gstPct);
     showPreview('fc-preview', `
-      <div class="calc-row"><span>Selling Price</span><span style="font-weight:600">${fmt(fcSP)}</span></div>
-      <div class="calc-row"><span style="color:var(--ink3)">− Commission (${f.commPct}%)</span><span>−${fmt(f.commission)}</span></div>
-      <div class="calc-row"><span style="color:var(--ink3)">− GST on Comm (18%)</span><span>−${fmt(f.gstOnComm)}</span></div>
+      <div class="calc-row"><span>Selling Price (incl. ${gstPct}% GST)</span><span style="font-weight:600">${fmt(fcSP)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">Net Revenue (excl. GST)</span><span>${fmt(f2.netSP)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− Commission (${f2.commPct}%)</span><span>−${fmt(f2.commission)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− GST on Comm (18%)</span><span>−${fmt(f2.gstOnComm)}</span></div>
       <div class="calc-row"><span style="color:var(--ink3)">− Your Cost</span><span>−${fmt(cost)}</span></div>`,
-      f.profit, f.margin);
+      f2.profit, f2.margin);
   } else showPreview('fc-preview', null);
 
   // MYNTRA
   const mynSP  = parseFloat(document.getElementById('pnl-myn-sp')?.value)||0;
   const mynCat = document.getElementById('pnl-myn-cat')?.value||'ACCESSORIES';
   if (mynSP>0) {
-    const m = calcMynPnl(cost, mynSP, mynCat, settings);
+    const m = calcMynPnl(cost, mynSP, mynCat, settings, gstPct);
     showPreview('myn-preview', `
-      <div class="calc-row"><span>Selling Price</span><span style="font-weight:600">${fmt(mynSP)}</span></div>
+      <div class="calc-row"><span>Selling Price (incl. ${gstPct}% GST)</span><span style="font-weight:600">${fmt(mynSP)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">Net Revenue (excl. GST)</span><span>${fmt(m.netSP)}</span></div>
       <div class="calc-row"><span style="color:var(--ink3)">− Commission (${m.commPct}%)</span><span>−${fmt(m.commission)}</span></div>
       <div class="calc-row"><span style="color:var(--ink3)">− Fixed Fee</span><span>−${fmt(m.fixedFee)}</span></div>
-      <div class="calc-row"><span style="color:var(--ink3)">− Courier (₹${settings.mynCourier})</span><span>−${fmt(m.courier)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− GST on Fees (18%)</span><span>−${fmt(m.gstOnFees)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− Courier (net of GST)</span><span>−${fmt(m.netCourier)}</span></div>
       <div class="calc-row"><span style="color:var(--ink3)">− Your Cost</span><span>−${fmt(cost)}</span></div>`,
       m.profit, m.margin);
   } else showPreview('myn-preview', null);
@@ -3932,10 +3989,11 @@ function calcPnlPreview() {
   // SHOPIFY
   const shySP = parseFloat(document.getElementById('pnl-shy-sp')?.value)||0;
   if (shySP>0) {
-    const sh = calcShyPnl(cost, shySP, settings);
+    const sh = calcShyPnl(cost, shySP, settings, gstPct);
     showPreview('shy-preview', `
-      <div class="calc-row"><span>Selling Price</span><span style="font-weight:600">${fmt(shySP)}</span></div>
-      <div class="calc-row"><span style="color:var(--ink3)">− Courier (₹${settings.shyCourier})</span><span>−${fmt(sh.courier)}</span></div>
+      <div class="calc-row"><span>Selling Price (incl. ${gstPct}% GST)</span><span style="font-weight:600">${fmt(shySP)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">Net Revenue (excl. GST)</span><span>${fmt(sh.netSP)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">− Courier (net of GST)</span><span>−${fmt(sh.netCourier)}</span></div>
       <div class="calc-row"><span style="color:var(--ink3)">− Your Cost</span><span>−${fmt(cost)}</span></div>`,
       sh.profit, sh.margin);
   } else showPreview('shy-preview', null);
@@ -3960,6 +4018,10 @@ async function savePnlModal() {
   rec.mynSellPrice = parseFloat(document.getElementById('pnl-myn-sp')?.value)  || 0;
   rec.mynCat       = document.getElementById('pnl-myn-cat')?.value  || 'ACCESSORIES';
   rec.shySellPrice = parseFloat(document.getElementById('pnl-shy-sp')?.value)  || 0;
+  // Save GST override if manually selected
+  const gstRaw = document.getElementById('pnl-gst-override')?.value||'auto_18';
+  if (!gstRaw.startsWith('auto_')) rec.gstOverride = parseFloat(gstRaw);
+  else delete rec.gstOverride;
   rec.updatedAt    = today();
 
   try {
