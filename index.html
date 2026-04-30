@@ -3772,6 +3772,28 @@ function calcShyPnl(cost, sellPrice, settings, gstPct) {
     courier: settings.shyCourier, netCourier, totalDeduct, profit,
     margin: netSP>0 ? (profit/netSP*100) : 0 };
 }
+// Myntra commission % by master category + price slab (ZIKKU brand from CTA)
+function getMynCommPct(cat, netPrice) {
+  if (cat === 'APPAREL') {
+    if (netPrice <= 500) return 1;
+    if (netPrice <= 800) return 6;
+    return 18;
+  }
+  // ACCESSORIES, PERSONAL_CARE, HOME
+  if (netPrice <= 500) return 8;
+  return 15;
+}
+
+// Myntra fixed fee by category + SP slab
+function getMynFixedFee(cat, sellPrice) {
+  const isAcc = cat === 'ACCESSORIES';
+  if (sellPrice <= 300)  return isAcc ? 29 : 27;
+  if (sellPrice <= 500)  return isAcc ? 30 : 27;
+  if (sellPrice <= 1000) return isAcc ? 31 : 27;
+  if (sellPrice <= 2000) return isAcc ? 49 : 45;
+  return isAcc ? 65 : 61;
+}
+
 function getAmzReferralPct(cat, price) {
   const rules = {
     apparel_baby:     [[300,0],[Infinity,7]],
