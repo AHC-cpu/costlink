@@ -121,6 +121,10 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font);min-height:10
 .panel-title{font-family:var(--font);font-size:.85rem;font-weight:700;color:var(--ink);}
 .panel-body{padding:1rem 1.1rem;}
 .tw{overflow-x:auto;}
+#tbl-pnl td:first-child, #tbl-pnl th:first-child { position:sticky; left:0; z-index:2; background:var(--bg-panel); }
+#tbl-pnl tr:hover td:first-child { background:var(--bg); }
+#tbl-pnl td:last-child, #tbl-pnl th:last-child { position:sticky; right:0; z-index:2; background:var(--bg-panel); box-shadow:-2px 0 6px rgba(0,0,0,.06); }
+#tbl-pnl tr:hover td:last-child { background:var(--bg); }
 table{width:100%;border-collapse:collapse;}
 thead th{padding:.5rem .85rem;text-align:left;font-size:.58rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);background:var(--bg);white-space:nowrap;position:sticky;top:0;z-index:2;}
 tbody tr{border-bottom:1px solid var(--bg2);transition:background .1s;}
@@ -363,8 +367,8 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
 
       <!-- MAIN TABLE -->
       <div class="panel">
-        <div class="tw" style="overflow-x:auto">
-          <table id="tbl-pnl" style="min-width:1000px">
+        <div class="tw" style="overflow-x:auto;border-radius:8px;">
+          <table id="tbl-pnl" style="min-width:1200px">
             <thead>
               <tr>
                 <th rowspan="2" style="vertical-align:middle;min-width:160px">Product</th>
@@ -376,7 +380,7 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
                 <th colspan="3" style="text-align:center;background:#E8F5E9;border-left:2px solid #81C784">🛍 Firstcry</th>
                 <th colspan="3" style="text-align:center;background:#FCE4EC;border-left:2px solid #F48FB1">🏪 Myntra</th>
                 <th colspan="3" style="text-align:center;background:#F3E5F5;border-left:2px solid #CE93D8">🛒 Shopify</th>
-                <th rowspan="2" style="vertical-align:middle"></th>
+                <th rowspan="2" style="vertical-align:middle;text-align:center;min-width:60px">Edit</th>
               </tr>
               <tr>
                 <th style="background:#FFF8F0;text-align:right;font-size:.6rem">SP</th>
@@ -3648,11 +3652,12 @@ let _pnlEditSheetId = null;
 function loadPnlSettings() {
   try {
     const s = JSON.parse(localStorage.getItem('pnl_settings')||'{}');
-    document.getElementById('amz-courier').value   = s.amzCourier  ?? 70;
-    document.getElementById('fc-health-pct').value = s.fcHealthPct ?? 37;
-    document.getElementById('fc-fashion-pct').value= s.fcFashionPct?? 45;
-    document.getElementById('myn-courier').value   = s.mynCourier  ?? 80;
-    document.getElementById('shy-courier').value   = s.shyCourier  ?? 85;
+    const set = (id, val) => { const el=document.getElementById(id); if(el) el.value=val; };
+    set('amz-courier',    s.amzCourier   ?? 70);
+    set('fc-health-pct',  s.fcHealthPct  ?? 37);
+    set('fc-fashion-pct', s.fcFashionPct ?? 45);
+    set('myn-courier',    s.mynCourier   ?? 80);
+    set('shy-courier',    s.shyCourier   ?? 85);
   } catch(e){}
 }
 
@@ -3847,7 +3852,12 @@ function renderPnl() {
     return { sheet:s, pnl, amz, fc, myn, shy, gst };
   });
 
-  if (q) rows = rows.filter(r => r.sheet.name.toLowerCase().includes(q) || (r.sheet.sku||'').toLowerCase().includes(q));
+  if (q) rows = rows.filter(r =>
+    r.sheet.name.toLowerCase().includes(q) ||
+    (r.sheet.sku||'').toLowerCase().includes(q) ||
+    (r.pnl.hsn||'').toLowerCase().includes(q) ||
+    (r.sheet.category||'').toLowerCase().includes(q)
+  );
   if (_pnlFilter==='loss')     rows = rows.filter(r=>(r.amz&&r.amz.profit<0)||(r.fc&&r.fc.profit<0)||(r.myn&&r.myn.profit<0)||(r.shy&&r.shy.profit<0));
   if (_pnlFilter==='profit')   rows = rows.filter(r=>(r.amz&&r.amz.profit>=0)||(r.fc&&r.fc.profit>=0)||(r.myn&&r.myn.profit>=0)||(r.shy&&r.shy.profit>=0));
   if (_pnlFilter==='amazon')   rows = rows.filter(r=>r.pnl.amzSellPrice>0);
@@ -4101,22 +4111,25 @@ async function savePnlModal() {
   let rec = DB.pnlData.find(p=>p.sheetId===sheetId);
   const isNew = !rec;
   if (!rec) {
-    rec = { sheetId, amzSellPrice:0, amzCat:'apparel_baby', fcSellPrice:0, fcDept:'healthcare',
-            mynSellPrice:0, mynCat:'ACCESSORIES', shySellPrice:0, updatedAt:today() };
+    rec = { sheetId, amzSellPrice:0, amzCat:'apparel_baby',
+            fcSellPrice:0, fcDept:'healthcare',
+            mynSellPrice:0, mynCat:'ACCESSORIES',
+            shySellPrice:0, mrp:0, hsn:'', gstOverride:null, updatedAt:today() };
     DB.pnlData.push(rec);
   }
+
+  // Read all fields — always update everything
   rec.amzSellPrice = parseFloat(document.getElementById('pnl-amz-sp')?.value)  || 0;
-  rec.amzCat       = document.getElementById('pnl-amz-cat')?.value  || 'apparel_baby';
+  rec.amzCat       = document.getElementById('pnl-amz-cat')?.value             || 'apparel_baby';
   rec.fcSellPrice  = parseFloat(document.getElementById('pnl-fc-sp')?.value)   || 0;
-  rec.fcDept       = document.getElementById('pnl-fc-dept')?.value  || 'healthcare';
+  rec.fcDept       = document.getElementById('pnl-fc-dept')?.value             || 'healthcare';
   rec.mynSellPrice = parseFloat(document.getElementById('pnl-myn-sp')?.value)  || 0;
-  rec.mynCat       = document.getElementById('pnl-myn-cat')?.value  || 'ACCESSORIES';
+  rec.mynCat       = document.getElementById('pnl-myn-cat')?.value             || 'ACCESSORIES';
   rec.shySellPrice = parseFloat(document.getElementById('pnl-shy-sp')?.value)  || 0;
   rec.mrp          = parseFloat(document.getElementById('pnl-mrp')?.value)     || 0;
-  rec.hsn          = document.getElementById('pnl-hsn')?.value?.trim()         || '';
-  const gstRaw = document.getElementById('pnl-gst-override')?.value||'auto_18';
-  if (!gstRaw.startsWith('auto_')) rec.gstOverride = parseFloat(gstRaw);
-  else delete rec.gstOverride;
+  rec.hsn          = (document.getElementById('pnl-hsn')?.value||'').trim();
+  const gstRaw     = document.getElementById('pnl-gst-override')?.value        || 'auto_18';
+  rec.gstOverride  = gstRaw.startsWith('auto_') ? null : parseFloat(gstRaw);
   rec.updatedAt    = today();
 
   try {
@@ -4124,11 +4137,12 @@ async function savePnlModal() {
     if (isNew) {
       await appendRow(TAB_PNL, pnlToRow(rec));
     } else {
+      // Find the correct 0-based index in DB.pnlData for updateRow
       const idx = DB.pnlData.findIndex(p=>p.sheetId===sheetId);
       await updateRow(TAB_PNL, idx, pnlToRow(rec));
     }
-    setSyncStatus('ok','Saved');
-    toast('P&L data saved');
+    setSyncStatus('ok','Saved ✓');
+    toast('P&L data saved ✓');
     closeM('modal-pnl');
     renderPnl();
   } catch(e) {
