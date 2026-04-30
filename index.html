@@ -345,7 +345,11 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
         <button class="btn btn-s" id="pnl-filt-myntra"   onclick="setPnlFilter('myntra')"   style="font-size:.72rem;padding:.35rem .75rem">Myntra</button>
         <button class="btn btn-s" id="pnl-filt-shopify"  onclick="setPnlFilter('shopify')"  style="font-size:.72rem;padding:.35rem .75rem">Shopify</button>
         <div class="t-search"><span class="si">⌕</span><input type="text" id="pnl-search" placeholder="Search..." oninput="renderPnl()"/></div>
-        <div style="margin-left:auto"><button class="btn btn-s" onclick="exportPnlExcel()" style="font-size:.72rem;padding:.35rem .8rem">📥 Export Excel</button></div>
+        <div style="margin-left:auto;display:flex;gap:.5rem">
+          <button class="btn btn-s" onclick="openPnlImport()" style="font-size:.72rem;padding:.35rem .8rem">📤 Bulk Import SP</button>
+          <button class="btn btn-s" onclick="exportPnlExcel()" style="font-size:.72rem;padding:.35rem .8rem">📥 Export Excel</button>
+          <button class="btn btn-s" onclick="downloadPnlTemplate()" style="font-size:.72rem;padding:.35rem .8rem">📄 Template</button>
+        </div>
       </div>
 
       <!-- KPI CARDS -->
@@ -364,26 +368,33 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
             <thead>
               <tr>
                 <th rowspan="2" style="vertical-align:middle;min-width:160px">Product</th>
-                <th rowspan="2" style="vertical-align:middle;text-align:right">Your Cost</th>
-                <th colspan="2" style="text-align:center;background:#FFF3E0;border-left:2px solid #FFB74D">🛒 Amazon</th>
-                <th colspan="2" style="text-align:center;background:#E8F5E9;border-left:2px solid #81C784">🛍 Firstcry</th>
-                <th colspan="2" style="text-align:center;background:#FCE4EC;border-left:2px solid #F48FB1">🏪 Myntra</th>
-                <th colspan="2" style="text-align:center;background:#F3E5F5;border-left:2px solid #CE93D8">🛒 Shopify</th>
+                <th rowspan="2" style="vertical-align:middle;text-align:right;font-size:.62rem">Cost</th>
+                <th rowspan="2" style="vertical-align:middle;text-align:right;font-size:.62rem">MRP</th>
+                <th rowspan="2" style="vertical-align:middle;text-align:right;font-size:.62rem">HSN</th>
+                <th rowspan="2" style="vertical-align:middle;text-align:right;font-size:.62rem">GST%</th>
+                <th colspan="3" style="text-align:center;background:#FFF3E0;border-left:2px solid #FFB74D">🛒 Amazon</th>
+                <th colspan="3" style="text-align:center;background:#E8F5E9;border-left:2px solid #81C784">🛍 Firstcry</th>
+                <th colspan="3" style="text-align:center;background:#FCE4EC;border-left:2px solid #F48FB1">🏪 Myntra</th>
+                <th colspan="3" style="text-align:center;background:#F3E5F5;border-left:2px solid #CE93D8">🛒 Shopify</th>
                 <th rowspan="2" style="vertical-align:middle"></th>
               </tr>
               <tr>
-                <th style="background:#FFF8F0;text-align:right;font-size:.62rem">SP</th>
-                <th style="background:#FFF8F0;text-align:right;font-weight:700;font-size:.62rem">P/L</th>
-                <th style="background:#F1F8E9;text-align:right;font-size:.62rem">SP</th>
-                <th style="background:#F1F8E9;text-align:right;font-weight:700;font-size:.62rem">P/L</th>
-                <th style="background:#FCE4EC;text-align:right;font-size:.62rem">SP</th>
-                <th style="background:#FCE4EC;text-align:right;font-weight:700;font-size:.62rem">P/L</th>
-                <th style="background:#F3E5F5;text-align:right;font-size:.62rem">SP</th>
-                <th style="background:#F3E5F5;text-align:right;font-weight:700;font-size:.62rem">P/L</th>
+                <th style="background:#FFF8F0;text-align:right;font-size:.6rem">SP</th>
+                <th style="background:#FFF8F0;text-align:right;font-size:.6rem">Total Fees</th>
+                <th style="background:#FFF8F0;text-align:right;font-weight:700;font-size:.6rem">P/L</th>
+                <th style="background:#F1F8E9;text-align:right;font-size:.6rem">SP</th>
+                <th style="background:#F1F8E9;text-align:right;font-size:.6rem">Commission</th>
+                <th style="background:#F1F8E9;text-align:right;font-weight:700;font-size:.6rem">P/L</th>
+                <th style="background:#FCE4EC;text-align:right;font-size:.6rem">SP</th>
+                <th style="background:#FCE4EC;text-align:right;font-size:.6rem">Total Fees</th>
+                <th style="background:#FCE4EC;text-align:right;font-weight:700;font-size:.6rem">P/L</th>
+                <th style="background:#F3E5F5;text-align:right;font-size:.6rem">SP</th>
+                <th style="background:#F3E5F5;text-align:right;font-size:.6rem">Courier</th>
+                <th style="background:#F3E5F5;text-align:right;font-weight:700;font-size:.6rem">P/L</th>
               </tr>
             </thead>
             <tbody id="tbl-pnl-body">
-              <tr><td colspan="11" style="text-align:center;padding:2rem;color:var(--ink3)">
+              <tr><td colspan="18" style="text-align:center;padding:2rem;color:var(--ink3)">
                 <div style="font-size:1.5rem;opacity:.3;margin-bottom:.5rem">📊</div>
                 Sign in to load your products
               </td></tr>
@@ -406,12 +417,17 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
               <span style="font-size:.82rem;font-weight:600;color:var(--ink)" id="pnl-modal-product">Product</span>
               <span style="font-size:.88rem;font-weight:700;color:var(--orange)" id="pnl-modal-cost"></span>
             </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin-bottom:.5rem">
+              <div class="fg" style="margin-bottom:0"><label style="font-size:.6rem">MRP (₹)</label><input type="number" id="pnl-mrp" placeholder="0.00" min="0" step=".01"/></div>
+              <div class="fg" style="margin-bottom:0"><label style="font-size:.6rem">HSN Code</label><input type="text" id="pnl-hsn" placeholder="e.g. 6111"/></div>
+              <div></div>
+            </div>
             <div style="display:flex;align-items:center;gap:.75rem;padding:.5rem .7rem;background:var(--blue-bg);border-radius:6px;border:1px solid rgba(44,95,168,.15)">
               <span style="font-size:.7rem;font-weight:600;color:var(--blue)">🏷 Product GST %</span>
               <select id="pnl-gst-override" style="font-size:.75rem;flex:1;border:1px solid var(--line2);border-radius:5px;padding:.3rem .5rem;background:#fff" onchange="calcPnlPreview()">
                 <option value="auto_18">Auto-detected: 18%</option>
               </select>
-              <span style="font-size:.65rem;color:var(--ink3)">SP ÷ (1 + GST) = net revenue</span>
+              <span style="font-size:.65rem;color:var(--ink3)">SP ÷ (1+GST) = net revenue</span>
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">
@@ -486,6 +502,32 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
         <div class="mfoot">
           <button class="btn-cancel" onclick="closeM('modal-pnl')">Cancel</button>
           <button class="btn-save" onclick="savePnlModal()">Save P&L Data</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PNL BULK IMPORT MODAL -->
+    <div class="mbg" id="modal-pnl-import">
+      <div class="modal">
+        <div class="mhd">
+          <div class="mtitle">📤 Bulk Import Selling Prices</div>
+          <button class="mclose" onclick="closeM('modal-pnl-import')">✕</button>
+        </div>
+        <div class="mbody">
+          <div style="background:var(--bg);border-radius:8px;padding:.8rem 1rem;margin-bottom:1rem;font-size:.75rem;color:var(--ink3);line-height:1.6">
+            Upload an Excel file with columns: <strong>Product Name</strong> (must match exactly), <strong>MRP</strong>, <strong>HSN</strong>, <strong>GST%</strong>, <strong>Amazon SP</strong>, <strong>Firstcry SP</strong>, <strong>Myntra SP</strong>, <strong>Shopify SP</strong>.<br/>
+            Existing data will be updated. Products not found will be skipped.
+          </div>
+          <input type="file" id="pnl-import-file" accept=".xlsx,.xls" style="display:none" onchange="handlePnlImport(this)"/>
+          <div style="display:flex;gap:.7rem">
+            <button class="btn btn-p" onclick="document.getElementById('pnl-import-file').click()" style="flex:1">📂 Choose Excel File</button>
+            <button class="btn btn-s" onclick="downloadPnlTemplate()">📄 Download Template First</button>
+          </div>
+          <div id="pnl-import-preview" style="margin-top:.8rem"></div>
+        </div>
+        <div class="mfoot">
+          <button class="btn-cancel" onclick="closeM('modal-pnl-import')">Cancel</button>
+          <button class="btn-save" id="btn-pnl-import-save" style="display:none" onclick="savePnlImport()">Save All Changes</button>
         </div>
       </div>
     </div>
@@ -985,7 +1027,7 @@ const HDR_COSTS   = ['ID','Name','SKU','Category','ProductType','ProductItemID',
 const HDR_HISTORY = ['ID','SheetID','ProductName','SKU','ProductType','OldCost','NewCost','Diff','DiffPct','ChangedAt'];
 const HDR_INHOUSE = ['ID','ProductName','FabricItemID','FabricName','MetersPerUnit','WastagePct','FabricCostPerUnit','Stitching','Cutting','Finishing','JobWork','TotalLabour','TotalInhouseCost','Notes','UpdatedAt','CreatedAt'];
 const HDR_COMBOS  = ['ID','ComboName','SKU','Notes','Items','ExtraCosts','TotalCost','MarginPct','SellPrice','UpdatedAt','CreatedAt'];
-const HDR_PNL     = ['SheetID','AmzSellPrice','AmzCat','FcSellPrice','FcDept','MynSellPrice','MynCat','ShySellPrice','UpdatedAt'];
+const HDR_PNL     = ['SheetID','AmzSellPrice','AmzCat','FcSellPrice','FcDept','MynSellPrice','MynCat','ShySellPrice','MRP','HSN','GstOverride','UpdatedAt'];
 
 // ══════════════════════════════════════════════════
 //  LOCAL DB (mirror of sheet)
@@ -1358,13 +1400,18 @@ function rowToPnl(row, h) {
     mynSellPrice: +o.MynSellPrice||0,
     mynCat:       o.MynCat||'ACCESSORIES',
     shySellPrice: +o.ShySellPrice||0,
+    mrp:          +o.MRP||0,
+    hsn:          o.HSN||'',
+    gstOverride:  o.GstOverride ? +o.GstOverride : null,
     updatedAt:    o.UpdatedAt||''
   };
 }
 
 function pnlToRow(p) {
   return [p.sheetId, p.amzSellPrice, p.amzCat, p.fcSellPrice, p.fcDept,
-          p.mynSellPrice, p.mynCat, p.shySellPrice, p.updatedAt];
+          p.mynSellPrice, p.mynCat, p.shySellPrice,
+          p.mrp||0, p.hsn||'', p.gstOverride!=null?p.gstOverride:'',
+          p.updatedAt];
 }
 
 function comboToRow(c) {
@@ -3671,55 +3718,58 @@ function getProductGst(sheet, pnlRec) {
 
 function calcAmzPnl(cost, sellPrice, cat, settings, gstPct) {
   if (!sellPrice) return null;
-  // Selling price includes GST — divide it out
   const netSP      = sellPrice / (1 + gstPct/100);
-  const refPct     = getAmzReferralPct(cat, sellPrice);
-  const refFee     = sellPrice * (refPct/100);
+  const refPct     = getAmzReferralPct(cat, netSP);   // referral on net revenue
+  const refFee     = netSP * (refPct/100);
   const gstOnRef   = refFee * 0.18;
-  const closingFee = getAmzClosingFee(sellPrice);
+  const closingFee = getAmzClosingFee(sellPrice);       // closing fee based on SP slab
   const gstOnClose = closingFee * 0.18;
-  const netCourier = settings.amzCourier / 1.18;   // courier quoted incl GST
-  const totalDeduct= refFee + gstOnRef + closingFee + gstOnClose + netCourier + cost;
+  const netCourier = settings.amzCourier / 1.18;
+  const totalComm  = refFee + gstOnRef + closingFee + gstOnClose;
+  const totalDeduct= totalComm + netCourier + cost;
   const profit     = netSP - totalDeduct;
-  return { sellPrice, netSP, gstPct, refPct, refFee, gstOnRef, closingFee, gstOnClose,
+  return { sellPrice, netSP, gstPct, refPct, refFee, gstOnRef,
+    closingFee, gstOnClose, totalComm,
     courier: settings.amzCourier, netCourier, totalDeduct, profit,
     margin: netSP>0 ? (profit/netSP*100) : 0 };
 }
 
 function calcFcPnl(cost, sellPrice, dept, settings, gstPct) {
   if (!sellPrice) return null;
-  const netSP     = sellPrice / (1 + gstPct/100);
-  const commPct   = dept==='fashion' ? settings.fcFashionPct : settings.fcHealthPct;
-  const commission= sellPrice * (commPct/100);
-  const gstOnComm = commission * 0.18;
-  const totalDeduct= commission + gstOnComm + cost;
-  const profit    = netSP - totalDeduct;
-  return { sellPrice, netSP, gstPct, commPct, commission, gstOnComm, totalDeduct, profit,
+  const netSP      = sellPrice / (1 + gstPct/100);
+  const commPct    = dept==='fashion' ? settings.fcFashionPct : settings.fcHealthPct;
+  const commission = netSP * (commPct/100);   // on net revenue, NO GST on commission
+  const totalComm  = commission;
+  const totalDeduct= commission + cost;
+  const profit     = netSP - totalDeduct;
+  return { sellPrice, netSP, gstPct, commPct, commission, totalComm, totalDeduct, profit,
     margin: netSP>0 ? (profit/netSP*100) : 0 };
 }
 
 function calcMynPnl(cost, sellPrice, cat, settings, gstPct) {
   if (!sellPrice) return null;
-  const netSP     = sellPrice / (1 + gstPct/100);
-  const commPct   = getMynCommPct(cat, sellPrice);
-  const commission= sellPrice * (commPct/100);
-  const fixedFee  = getMynFixedFee(cat, sellPrice);
-  const gstOnFees = (commission + fixedFee) * 0.18;
-  const netCourier= settings.mynCourier / 1.18;
-  const totalDeduct= commission + fixedFee + gstOnFees + netCourier + cost;
-  const profit    = netSP - totalDeduct;
-  return { sellPrice, netSP, gstPct, commPct, commission, fixedFee, gstOnFees,
+  const netSP      = sellPrice / (1 + gstPct/100);
+  const commPct    = getMynCommPct(cat, netSP);        // commission on net revenue
+  const commission = netSP * (commPct/100);
+  const fixedFee   = getMynFixedFee(cat, sellPrice);   // fixed fee slab on SP
+  const totalComm  = commission + fixedFee;
+  const netCourier = settings.mynCourier / 1.18;
+  const totalDeduct= totalComm + netCourier + cost;
+  const profit     = netSP - totalDeduct;
+  return { sellPrice, netSP, gstPct, commPct, commission, fixedFee, totalComm,
     courier: settings.mynCourier, netCourier, totalDeduct, profit,
     margin: netSP>0 ? (profit/netSP*100) : 0 };
 }
 
 function calcShyPnl(cost, sellPrice, settings, gstPct) {
   if (!sellPrice) return null;
-  const netSP     = sellPrice / (1 + gstPct/100);
-  const netCourier= settings.shyCourier / 1.18;
+  const netSP      = sellPrice / (1 + gstPct/100);
+  const netCourier = settings.shyCourier / 1.18;
+  const totalComm  = 0;
   const totalDeduct= netCourier + cost;
-  const profit    = netSP - totalDeduct;
-  return { sellPrice, netSP, gstPct, courier: settings.shyCourier, netCourier, totalDeduct, profit,
+  const profit     = netSP - totalDeduct;
+  return { sellPrice, netSP, gstPct, totalComm,
+    courier: settings.shyCourier, netCourier, totalDeduct, profit,
     margin: netSP>0 ? (profit/netSP*100) : 0 };
 }
 function getAmzReferralPct(cat, price) {
@@ -3810,45 +3860,65 @@ function renderPnl() {
   document.getElementById('pnl-kv-configured').textContent  = all.filter(r=>r.configured).length;
 
   const plCell = (result, bgClass) => {
-    if (!result) return `<td style="text-align:center;color:var(--ink3);font-size:.72rem;padding:.55rem .7rem;${bgClass}">—</td>`;
+    if (!result) return `<td style="text-align:center;color:var(--ink3);font-size:.72rem;padding:.5rem .6rem;${bgClass}">—</td>`;
     const col = result.profit>=0 ? '#2e7d32' : '#c93a1a';
     const sym = result.profit>=0 ? '▲' : '▼';
-    return `<td style="text-align:right;padding:.55rem .7rem;${bgClass}">
+    return `<td style="text-align:right;padding:.5rem .6rem;${bgClass}">
       <div style="font-weight:700;color:${col};font-size:.82rem">${sym} ${fmt(Math.abs(result.profit))}</div>
-      <div style="font-size:.6rem;color:${col}">${result.margin>=0?'+':''}${result.margin.toFixed(1)}%</div>
+      <div style="font-size:.58rem;color:${col}">${result.margin>=0?'+':''}${result.margin.toFixed(1)}%</div>
     </td>`;
   };
 
-  const spCell = (result, pnlSP, bgClass) => {
-    if (!pnlSP) return `<td style="text-align:center;color:var(--ink3);font-size:.7rem;padding:.55rem .7rem;${bgClass}">Not set</td>`;
-    return `<td style="text-align:right;padding:.55rem .7rem;font-weight:500;${bgClass}">${fmt(pnlSP)}</td>`;
+  const spCell = (pnlSP, bgClass) => {
+    if (!pnlSP) return `<td style="text-align:center;color:var(--ink3);font-size:.68rem;padding:.5rem .6rem;${bgClass}">—</td>`;
+    return `<td style="text-align:right;padding:.5rem .6rem;font-weight:500;font-size:.8rem;${bgClass}">${fmt(pnlSP)}</td>`;
+  };
+
+  const commCell = (result, bgClass) => {
+    if (!result || !result.totalComm) return `<td style="text-align:center;color:var(--ink3);font-size:.68rem;padding:.5rem .6rem;${bgClass}">—</td>`;
+    return `<td style="text-align:right;padding:.5rem .6rem;font-size:.75rem;color:#c93a1a;${bgClass}">−${fmt(result.totalComm)}</td>`;
   };
 
   const tbody = document.getElementById('tbl-pnl-body');
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:2.5rem;color:var(--ink3)">
+    tbody.innerHTML = `<tr><td colspan="18" style="text-align:center;padding:2.5rem;color:var(--ink3)">
       <div style="font-size:1.5rem;opacity:.3;margin-bottom:.5rem">📊</div>
       <div>${q?`No products match`:'Click ✎ Edit on any product to enter selling prices'}</div>
     </td></tr>`;
   } else {
-    tbody.innerHTML = rows.map(({sheet,pnl,amz,fc,myn,shy})=>{
+    tbody.innerHTML = rows.map(({sheet,pnl,amz,fc,myn,shy,gst})=>{
       const isLoss=(amz&&amz.profit<0)||(fc&&fc.profit<0)||(myn&&myn.profit<0)||(shy&&shy.profit<0);
       const rowBg=isLoss?'background:rgba(201,58,26,.03)':'';
+      // Price change badge
+      const priceChanged = sheet.prevFinalCost!=null && Math.abs(sheet.finalCost-sheet.prevFinalCost)>0.001;
+      const priceUp      = priceChanged && sheet.finalCost > sheet.prevFinalCost;
+      const changeBadge  = priceChanged
+        ? `<span style="font-size:.55rem;padding:1px 5px;border-radius:3px;font-weight:700;margin-left:4px;background:${priceUp?'rgba(201,58,26,.12)':'rgba(46,125,50,.12)'};color:${priceUp?'#c93a1a':'#2e7d32'}">${priceUp?'▲':'▼'} Cost ${priceUp?'up':'down'}</span>`
+        : '';
+      const gstPct = gst || 18;
       return `<tr style="border-bottom:1px solid var(--bg2);${rowBg}" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='${isLoss?'rgba(201,58,26,.03)':''}'" >
-        <td style="padding:.6rem .85rem">
-          <div style="font-weight:600;font-size:.82rem">${sheet.name}${isLoss?' <span style="font-size:.58rem;color:#c93a1a;font-weight:700">●LOSS</span>':''}</div>
-          ${sheet.sku?`<div style="font-size:.62rem;color:var(--ink3)">${sheet.sku}</div>`:''}
+        <td style="padding:.55rem .8rem">
+          <div style="font-weight:600;font-size:.8rem">${sheet.name}${isLoss?' <span style="font-size:.55rem;color:#c93a1a;font-weight:700">●LOSS</span>':''}${changeBadge}</div>
+          ${sheet.sku?`<div style="font-size:.6rem;color:var(--ink3)">${sheet.sku}</div>`:''}
         </td>
-        <td style="padding:.6rem .85rem;text-align:right;font-weight:600">${fmt(sheet.finalCost)}</td>
-        ${spCell(amz, pnl.amzSellPrice||0, 'background:#FFF8F0;border-left:2px solid #FFE0B2;')}
+        <td style="padding:.5rem .6rem;text-align:right;font-weight:600;font-size:.8rem">${fmt(sheet.finalCost)}${priceChanged?`<div style="font-size:.58rem;color:var(--ink3)">was ${fmt(sheet.prevFinalCost)}</div>`:''}
+        </td>
+        <td style="padding:.5rem .6rem;text-align:right;font-size:.78rem;color:var(--ink2)">${pnl.mrp?fmt(pnl.mrp):'<span style="color:var(--ink3)">—</span>'}</td>
+        <td style="padding:.5rem .6rem;text-align:right;font-size:.72rem;color:var(--ink3);font-family:var(--mono)">${pnl.hsn||'—'}</td>
+        <td style="padding:.5rem .6rem;text-align:right;font-size:.72rem;color:var(--blue)">${gstPct}%</td>
+        ${spCell(pnl.amzSellPrice||0, 'background:#FFF8F0;border-left:2px solid #FFE0B2;')}
+        ${commCell(amz, 'background:#FFF8F0;')}
         ${plCell(amz, 'background:#FFF8F0;')}
-        ${spCell(fc, pnl.fcSellPrice||0, 'background:#F1F8E9;border-left:2px solid #C8E6C9;')}
+        ${spCell(pnl.fcSellPrice||0, 'background:#F1F8E9;border-left:2px solid #C8E6C9;')}
+        ${commCell(fc, 'background:#F1F8E9;')}
         ${plCell(fc, 'background:#F1F8E9;')}
-        ${spCell(myn, pnl.mynSellPrice||0, 'background:#FCE4EC;border-left:2px solid #F8BBD9;')}
+        ${spCell(pnl.mynSellPrice||0, 'background:#FCE4EC;border-left:2px solid #F8BBD9;')}
+        ${commCell(myn, 'background:#FCE4EC;')}
         ${plCell(myn, 'background:#FCE4EC;')}
-        ${spCell(shy, pnl.shySellPrice||0, 'background:#F3E5F5;border-left:2px solid #E1BEE7;')}
+        ${spCell(pnl.shySellPrice||0, 'background:#F3E5F5;border-left:2px solid #E1BEE7;')}
+        ${commCell(shy, 'background:#F3E5F5;')}
         ${plCell(shy, 'background:#F3E5F5;')}
-        <td style="padding:.6rem .85rem;text-align:center">
+        <td style="padding:.5rem .6rem;text-align:center">
           <button class="act" onclick="openPnlModal('${sheet.id}')">✎ Edit</button>
         </td>
       </tr>`;
@@ -3909,6 +3979,8 @@ function openPnlModal(sheetId) {
   sv('pnl-myn-sp',  pnl.mynSellPrice  || '');
   sv('pnl-myn-cat', pnl.mynCat        || 'ACCESSORIES');
   sv('pnl-shy-sp',  pnl.shySellPrice  || '');
+  sv('pnl-mrp',     pnl.mrp           || '');
+  sv('pnl-hsn',     pnl.hsn           || '');
 
   const deptSel = document.getElementById('pnl-fc-dept');
   if (deptSel) {
@@ -4018,7 +4090,8 @@ async function savePnlModal() {
   rec.mynSellPrice = parseFloat(document.getElementById('pnl-myn-sp')?.value)  || 0;
   rec.mynCat       = document.getElementById('pnl-myn-cat')?.value  || 'ACCESSORIES';
   rec.shySellPrice = parseFloat(document.getElementById('pnl-shy-sp')?.value)  || 0;
-  // Save GST override if manually selected
+  rec.mrp          = parseFloat(document.getElementById('pnl-mrp')?.value)     || 0;
+  rec.hsn          = document.getElementById('pnl-hsn')?.value?.trim()         || '';
   const gstRaw = document.getElementById('pnl-gst-override')?.value||'auto_18';
   if (!gstRaw.startsWith('auto_')) rec.gstOverride = parseFloat(gstRaw);
   else delete rec.gstOverride;
@@ -4072,6 +4145,124 @@ function exportPnlExcel() {
   XLSX.utils.book_append_sheet(wb, ws, 'P&L Dashboard');
   XLSX.writeFile(wb, `CostLink_PnL_${new Date().toISOString().slice(0,10)}.xlsx`);
   toast('P&L exported');
+}
+
+// ── BULK PNL IMPORT ─────────────────────────────
+let _pnlImportRows = [];
+
+function openPnlImport() {
+  _pnlImportRows = [];
+  document.getElementById('pnl-import-file').value = '';
+  document.getElementById('pnl-import-preview').innerHTML = '';
+  document.getElementById('btn-pnl-import-save').style.display = 'none';
+  openM('modal-pnl-import');
+}
+
+function downloadPnlTemplate() {
+  const header = ['Product Name','MRP','HSN','GST%','Amazon SP','Amazon Category','Firstcry SP','Firstcry Dept (healthcare/fashion)','Myntra SP','Myntra Category (ACCESSORIES/PERSONAL_CARE/APPAREL/HOME)','Shopify SP'];
+  const rows = DB.costSheets.map(s => {
+    const pnl = DB.pnlData.find(p=>p.sheetId===s.id)||{};
+    return [s.name, pnl.mrp||'', pnl.hsn||'', pnl.gstOverride||'',
+      pnl.amzSellPrice||'', pnl.amzCat||'apparel_baby',
+      pnl.fcSellPrice||'', pnl.fcDept||'healthcare',
+      pnl.mynSellPrice||'', pnl.mynCat||'ACCESSORIES',
+      pnl.shySellPrice||''];
+  });
+  const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+  ws['!cols'] = [{wch:30},{wch:10},{wch:10},{wch:8},{wch:12},{wch:20},{wch:12},{wch:28},{wch:12},{wch:40},{wch:12}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'PnL Import');
+  XLSX.writeFile(wb, 'CostLink_PnL_Template.xlsx');
+  toast('Template downloaded');
+}
+
+function handlePnlImport(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb   = XLSX.read(e.target.result, {type:'binary'});
+      const ws   = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws, {defval:''});
+      if (!data.length) { toast('No data found in file','err'); return; }
+
+      _pnlImportRows = [];
+      let matched=0, skipped=0;
+
+      data.forEach(row => {
+        const name = (row['Product Name']||'').trim();
+        if (!name) { skipped++; return; }
+        const sheet = DB.costSheets.find(s=>s.name.toLowerCase()===name.toLowerCase());
+        if (!sheet) { skipped++; return; }
+
+        _pnlImportRows.push({
+          sheetId:     sheet.id,
+          name:        sheet.name,
+          mrp:         parseFloat(row['MRP'])||0,
+          hsn:         String(row['HSN']||'').trim(),
+          gstOverride: row['GST%']?parseFloat(row['GST%']):null,
+          amzSellPrice:parseFloat(row['Amazon SP'])||0,
+          amzCat:      (row['Amazon Category']||'apparel_baby').trim(),
+          fcSellPrice: parseFloat(row['Firstcry SP'])||0,
+          fcDept:      (row['Firstcry Dept (healthcare/fashion)']||'healthcare').trim(),
+          mynSellPrice:parseFloat(row['Myntra SP'])||0,
+          mynCat:      (row['Myntra Category (ACCESSORIES/PERSONAL_CARE/APPAREL/HOME)']||'ACCESSORIES').trim(),
+          shySellPrice:parseFloat(row['Shopify SP'])||0,
+        });
+        matched++;
+      });
+
+      const prev = document.getElementById('pnl-import-preview');
+      if (!_pnlImportRows.length) {
+        prev.innerHTML = `<div style="color:#c93a1a;font-size:.78rem;padding:.5rem">No products matched. Check product names match exactly.</div>`;
+        document.getElementById('btn-pnl-import-save').style.display='none';
+        return;
+      }
+      prev.innerHTML = `
+        <div style="font-size:.75rem;color:var(--ink3);margin-bottom:.4rem">Found <strong style="color:var(--ink)">${matched}</strong> matches · <strong>${skipped}</strong> skipped</div>
+        <div class="tw"><table><thead><tr><th>Product</th><th>MRP</th><th>GST%</th><th>Amazon SP</th><th>Firstcry SP</th><th>Myntra SP</th><th>Shopify SP</th></tr></thead><tbody>
+          ${_pnlImportRows.map(r=>`<tr>
+            <td style="font-size:.75rem;font-weight:600">${r.name}</td>
+            <td style="font-size:.72rem">${r.mrp||'—'}</td>
+            <td style="font-size:.72rem">${r.gstOverride!=null?r.gstOverride+'%':'auto'}</td>
+            <td style="font-size:.72rem">${r.amzSellPrice||'—'}</td>
+            <td style="font-size:.72rem">${r.fcSellPrice||'—'}</td>
+            <td style="font-size:.72rem">${r.mynSellPrice||'—'}</td>
+            <td style="font-size:.72rem">${r.shySellPrice||'—'}</td>
+          </tr>`).join('')}
+        </tbody></table></div>`;
+      document.getElementById('btn-pnl-import-save').style.display='';
+    } catch(e) { toast('Error reading file: '+e.message,'err'); }
+  };
+  reader.readAsBinaryString(file);
+}
+
+async function savePnlImport() {
+  if (!isSignedIn) { toast('Sign in first','err'); return; }
+  if (!_pnlImportRows.length) return;
+  const btn = document.getElementById('btn-pnl-import-save');
+  btn.textContent='Saving...'; btn.disabled=true;
+  try {
+    setSyncStatus('syncing','Saving...');
+    for (const row of _pnlImportRows) {
+      let rec = DB.pnlData.find(p=>p.sheetId===row.sheetId);
+      const isNew = !rec;
+      if (!rec) { rec = { sheetId:row.sheetId, amzSellPrice:0, amzCat:'apparel_baby', fcSellPrice:0, fcDept:'healthcare', mynSellPrice:0, mynCat:'ACCESSORIES', shySellPrice:0, mrp:0, hsn:'', gstOverride:null, updatedAt:today() }; DB.pnlData.push(rec); }
+      Object.assign(rec, { mrp:row.mrp, hsn:row.hsn, gstOverride:row.gstOverride,
+        amzSellPrice:row.amzSellPrice, amzCat:row.amzCat,
+        fcSellPrice:row.fcSellPrice, fcDept:row.fcDept,
+        mynSellPrice:row.mynSellPrice, mynCat:row.mynCat,
+        shySellPrice:row.shySellPrice, updatedAt:today() });
+      if (isNew) await appendRow(TAB_PNL, pnlToRow(rec));
+      else { const idx=DB.pnlData.findIndex(p=>p.sheetId===row.sheetId); await updateRow(TAB_PNL,idx,pnlToRow(rec)); }
+    }
+    setSyncStatus('ok','Saved');
+    toast(`${_pnlImportRows.length} products updated ✓`);
+    closeM('modal-pnl-import');
+    renderPnl();
+  } catch(e) { toast('Error: '+e.message,'err'); setSyncStatus('err','Error'); }
+  finally { btn.textContent='Save All Changes'; btn.disabled=false; }
 }
 
 // ══════════════════════════════════════════════════
