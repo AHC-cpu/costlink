@@ -1031,7 +1031,7 @@ const HDR_COSTS   = ['ID','Name','SKU','Category','ProductType','ProductItemID',
 const HDR_HISTORY = ['ID','SheetID','ProductName','SKU','ProductType','OldCost','NewCost','Diff','DiffPct','ChangedAt'];
 const HDR_INHOUSE = ['ID','ProductName','FabricItemID','FabricName','MetersPerUnit','WastagePct','FabricCostPerUnit','Stitching','Cutting','Finishing','JobWork','TotalLabour','TotalInhouseCost','Notes','UpdatedAt','CreatedAt'];
 const HDR_COMBOS  = ['ID','ComboName','SKU','Notes','Items','ExtraCosts','TotalCost','MarginPct','SellPrice','UpdatedAt','CreatedAt'];
-const HDR_PNL     = ['SheetID','AmzSellPrice','AmzCat','FcSellPrice','FcDept','MynSellPrice','MynCat','ShySellPrice','MRP','HSN','GstOverride','UpdatedAt'];
+const HDR_PNL     = ['SheetID','AmzSellPrice','AmzCat','FcSellPrice','FcDept','MynSellPrice','MynCat','ShySellPrice','UpdatedAt','MRP','HSN','GstOverride'];
 
 // ══════════════════════════════════════════════════
 //  LOCAL DB (mirror of sheet)
@@ -1412,10 +1412,12 @@ function rowToPnl(row, h) {
 }
 
 function pnlToRow(p) {
+  // Column order MUST match actual sheet row 1 headers exactly:
+  // SheetID | AmzSellPrice | AmzCat | FcSellPrice | FcDept | MynSellPrice | MynCat | ShySellPrice | UpdatedAt | MRP | HSN | GstOverride
   return [p.sheetId, p.amzSellPrice, p.amzCat, p.fcSellPrice, p.fcDept,
           p.mynSellPrice, p.mynCat, p.shySellPrice,
-          p.mrp||0, p.hsn||'', p.gstOverride!=null?p.gstOverride:'',
-          p.updatedAt];
+          p.updatedAt,
+          p.mrp||0, p.hsn||'', p.gstOverride!=null?p.gstOverride:''];
 }
 
 function comboToRow(c) {
