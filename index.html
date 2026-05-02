@@ -4116,7 +4116,7 @@ async function savePnlModal() {
     DB.pnlData.push(rec);
   }
 
-  // Read all fields — always update everything
+  // Read all fields from modal
   rec.amzSellPrice = parseFloat(document.getElementById('pnl-amz-sp')?.value)  || 0;
   rec.amzCat       = document.getElementById('pnl-amz-cat')?.value             || 'apparel_baby';
   rec.fcSellPrice  = parseFloat(document.getElementById('pnl-fc-sp')?.value)   || 0;
@@ -4130,39 +4130,52 @@ async function savePnlModal() {
   rec.gstOverride  = gstRaw.startsWith('auto_') ? null : parseFloat(gstRaw);
   rec.updatedAt    = today();
 
+  const rowData = pnlToRow(rec);
+  console.log('Saving PNL row:', rowData);
+
   try {
     setSyncStatus('syncing','Saving...');
+
     if (isNew) {
-      await appendRow(TAB_PNL, pnlToRow(rec));
+      // New record — append a fresh row
+      await appendRow(TAB_PNL, rowData);
+      toast('P&L data saved ✓');
     } else {
-      // Find the actual row number in the sheet by reading SheetID column
-      // This avoids index mismatch when sheet rows are in different order than DB array
-      const sheetData = await gapi.client.sheets.spreadsheets.values.get({
+      // Existing record — read column A to find the exact sheet row
+      const colA = await gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: APP_CONFIG.SHEET_ID,
         range: `${TAB_PNL}!A:A`
       });
-      const allIds = (sheetData.result.values || []).map(r => r[0]||'');
-      const sheetRowIdx = allIds.findIndex((v,i) => i>0 && v===sheetId); // skip header row 0
-      if (sheetRowIdx > 0) {
-        // sheetRowIdx is 1-based data index (row 2 = index 1)
-        const range = `${TAB_PNL}!A${sheetRowIdx + 1}`;
-        await gapi.client.sheets.spreadsheets.values.update({
+      const ids = (colA.result.values || []).map(r => (r[0]||'').trim());
+      // ids[0] = header "SheetID", ids[1] = first data row, etc.
+      let targetRow = -1;
+      for (let i = 1; i < ids.length; i++) {
+        if (ids[i] === sheetId) { targetRow = i + 1; break; } // +1 because sheets are 1-indexed
+      }
+
+      if (targetRow > 0) {
+        // Update existing row
+        const resp = await gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: APP_CONFIG.SHEET_ID,
-          range,
+          range: `${TAB_PNL}!A${targetRow}`,
           valueInputOption: 'RAW',
-          resource: { values: [pnlToRow(rec)] }
+          resource: { values: [rowData] }
         });
+        console.log('Update response:', resp.status, resp.result?.updatedCells, 'cells updated');
+        toast('P&L data saved ✓');
       } else {
-        // Row not found in sheet — append instead
-        await appendRow(TAB_PNL, pnlToRow(rec));
+        // Not found in sheet — append
+        await appendRow(TAB_PNL, rowData);
+        toast('P&L data saved ✓ (new row)');
       }
     }
+
     setSyncStatus('ok','Saved ✓');
-    toast('P&L data saved ✓');
     closeM('modal-pnl');
     renderPnl();
   } catch(e) {
-    toast('Save failed: '+e.message,'err');
+    console.error('PNL save error:', e);
+    toast('Save failed: '+(e.result?.error?.message||e.message||'unknown error'),'err');
     setSyncStatus('err','Error');
   }
 }
