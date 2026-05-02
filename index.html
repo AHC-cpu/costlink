@@ -1655,7 +1655,6 @@ function calcPurPreview() {
     dutyPerUnit     = qty > 0 ? totalDuty / qty : 0;
     impTransPerUnit = qty > 0 ? totalImpTrans / qty : 0;
 
-    // Update readonly per-unit display
     const el1 = document.getElementById('pi-duty-per-unit');
     const el2 = document.getElementById('pi-imp-trans-unit');
     if (el1) el1.value = fmt(dutyPerUnit) + ' / unit';
@@ -1691,7 +1690,6 @@ async function savePurItem() {
   const gstAmt       = rate * (gstPct / 100);
   const transPerUnit = qty > 0 ? transport / qty : 0;
 
-  // Import charges — total amounts divided by qty to get per unit
   let customDuty = 0, customDutyPerUnit = 0, importTransport = 0, importTransportPerUnit = 0;
   if (imported) {
     customDuty         = gf('pi-duty-val') || 0;
@@ -4137,9 +4135,27 @@ async function savePnlModal() {
     if (isNew) {
       await appendRow(TAB_PNL, pnlToRow(rec));
     } else {
-      // Find the correct 0-based index in DB.pnlData for updateRow
-      const idx = DB.pnlData.findIndex(p=>p.sheetId===sheetId);
-      await updateRow(TAB_PNL, idx, pnlToRow(rec));
+      // Find the actual row number in the sheet by reading SheetID column
+      // This avoids index mismatch when sheet rows are in different order than DB array
+      const sheetData = await gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: APP_CONFIG.SHEET_ID,
+        range: `${TAB_PNL}!A:A`
+      });
+      const allIds = (sheetData.result.values || []).map(r => r[0]||'');
+      const sheetRowIdx = allIds.findIndex((v,i) => i>0 && v===sheetId); // skip header row 0
+      if (sheetRowIdx > 0) {
+        // sheetRowIdx is 1-based data index (row 2 = index 1)
+        const range = `${TAB_PNL}!A${sheetRowIdx + 1}`;
+        await gapi.client.sheets.spreadsheets.values.update({
+          spreadsheetId: APP_CONFIG.SHEET_ID,
+          range,
+          valueInputOption: 'RAW',
+          resource: { values: [pnlToRow(rec)] }
+        });
+      } else {
+        // Row not found in sheet — append instead
+        await appendRow(TAB_PNL, pnlToRow(rec));
+      }
     }
     setSyncStatus('ok','Saved ✓');
     toast('P&L data saved ✓');
@@ -4281,17 +4297,42 @@ async function savePnlImport() {
   btn.textContent='Saving...'; btn.disabled=true;
   try {
     setSyncStatus('syncing','Saving...');
+    // Read all SheetID values from column A once (avoid N API calls)
+    const sheetData = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId: APP_CONFIG.SHEET_ID,
+      range: `${TAB_PNL}!A:A`
+    });
+    const allIds = (sheetData.result.values || []).map(r => r[0]||'');
+
     for (const row of _pnlImportRows) {
       let rec = DB.pnlData.find(p=>p.sheetId===row.sheetId);
       const isNew = !rec;
-      if (!rec) { rec = { sheetId:row.sheetId, amzSellPrice:0, amzCat:'apparel_baby', fcSellPrice:0, fcDept:'healthcare', mynSellPrice:0, mynCat:'ACCESSORIES', shySellPrice:0, mrp:0, hsn:'', gstOverride:null, updatedAt:today() }; DB.pnlData.push(rec); }
+      if (!rec) {
+        rec = { sheetId:row.sheetId, amzSellPrice:0, amzCat:'apparel_baby', fcSellPrice:0,
+                fcDept:'healthcare', mynSellPrice:0, mynCat:'ACCESSORIES', shySellPrice:0,
+                mrp:0, hsn:'', gstOverride:null, updatedAt:today() };
+        DB.pnlData.push(rec);
+      }
       Object.assign(rec, { mrp:row.mrp, hsn:row.hsn, gstOverride:row.gstOverride,
         amzSellPrice:row.amzSellPrice, amzCat:row.amzCat,
         fcSellPrice:row.fcSellPrice, fcDept:row.fcDept,
         mynSellPrice:row.mynSellPrice, mynCat:row.mynCat,
         shySellPrice:row.shySellPrice, updatedAt:today() });
-      if (isNew) await appendRow(TAB_PNL, pnlToRow(rec));
-      else { const idx=DB.pnlData.findIndex(p=>p.sheetId===row.sheetId); await updateRow(TAB_PNL,idx,pnlToRow(rec)); }
+      if (isNew) {
+        await appendRow(TAB_PNL, pnlToRow(rec));
+        allIds.push(row.sheetId); // keep local list in sync
+      } else {
+        const sheetRowIdx = allIds.findIndex((v,i) => i>0 && v===row.sheetId);
+        if (sheetRowIdx > 0) {
+          const range = `${TAB_PNL}!A${sheetRowIdx + 1}`;
+          await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId: APP_CONFIG.SHEET_ID, range,
+            valueInputOption: 'RAW', resource: { values: [pnlToRow(rec)] }
+          });
+        } else {
+          await appendRow(TAB_PNL, pnlToRow(rec));
+        }
+      }
     }
     setSyncStatus('ok','Saved');
     toast(`${_pnlImportRows.length} products updated ✓`);
