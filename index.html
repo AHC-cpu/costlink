@@ -1031,7 +1031,7 @@ const HDR_COSTS   = ['ID','Name','SKU','Category','ProductType','ProductItemID',
 const HDR_HISTORY = ['ID','SheetID','ProductName','SKU','ProductType','OldCost','NewCost','Diff','DiffPct','ChangedAt'];
 const HDR_INHOUSE = ['ID','ProductName','FabricItemID','FabricName','MetersPerUnit','WastagePct','FabricCostPerUnit','Stitching','Cutting','Finishing','JobWork','TotalLabour','TotalInhouseCost','Notes','UpdatedAt','CreatedAt'];
 const HDR_COMBOS  = ['ID','ComboName','SKU','Notes','Items','ExtraCosts','TotalCost','MarginPct','SellPrice','UpdatedAt','CreatedAt'];
-const HDR_PNL     = ['SheetID','AmzSellPrice','AmzCat','FcSellPrice','FcDept','MynSellPrice','MynCat','ShySellPrice','UpdatedAt','MRP','HSN','GstOverride'];
+const HDR_PNL     = ['SheetID','AmzSellPrice','AmzCommission','FcSellPrice','FcDept','UpdatedAt','AmzCat','MynSellPrice','MynCat','ShySellPrice','MRP','HSN','GstOverride'];
 
 // ══════════════════════════════════════════════════
 //  LOCAL DB (mirror of sheet)
@@ -1412,12 +1412,25 @@ function rowToPnl(row, h) {
 }
 
 function pnlToRow(p) {
-  // Column order MUST match actual sheet row 1 headers exactly:
-  // SheetID | AmzSellPrice | AmzCat | FcSellPrice | FcDept | MynSellPrice | MynCat | ShySellPrice | UpdatedAt | MRP | HSN | GstOverride
-  return [p.sheetId, p.amzSellPrice, p.amzCat, p.fcSellPrice, p.fcDept,
-          p.mynSellPrice, p.mynCat, p.shySellPrice,
-          p.updatedAt,
-          p.mrp||0, p.hsn||'', p.gstOverride!=null?p.gstOverride:''];
+  // MUST match sheet column order exactly:
+  // A=SheetID, B=AmzSellPrice, C=AmzCommission, D=FcSellPrice, E=FcDept,
+  // F=UpdatedAt, G=AmzCat, H=MynSellPrice, I=MynCat, J=ShySellPrice,
+  // K=MRP, L=HSN, M=GstOverride
+  return [
+    p.sheetId,          // A
+    p.amzSellPrice,     // B
+    '',                 // C - AmzCommission (legacy, kept empty)
+    p.fcSellPrice,      // D
+    p.fcDept,           // E
+    p.updatedAt,        // F
+    p.amzCat,           // G
+    p.mynSellPrice,     // H
+    p.mynCat,           // I
+    p.shySellPrice,     // J
+    p.mrp||0,           // K
+    p.hsn||'',          // L
+    p.gstOverride!=null?p.gstOverride:''  // M
+  ];
 }
 
 function comboToRow(c) {
