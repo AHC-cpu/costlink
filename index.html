@@ -237,6 +237,10 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
     <div class="sb-footer">
       <div class="sb-user" id="sb-user">Not signed in</div>
       <button class="sb-signout" id="sb-signout" onclick="signOut()" style="display:none">Sign Out</button>
+      <button onclick="runManualBackup()" id="btn-backup" style="display:none;width:100%;margin-top:.4rem;background:none;border:1px solid rgba(255,255,255,.15);border-radius:6px;color:rgba(255,255,255,.6);padding:.35rem .5rem;cursor:pointer;font-size:.65rem;text-align:left" title="Last backup shown in tooltip">
+        💾 Backup Now
+      </button>
+      <div id="backup-status" style="font-size:.6rem;color:rgba(255,255,255,.35);margin-top:.2rem;display:none"></div>
     </div>
   </nav>
 
@@ -1188,10 +1192,15 @@ async function onSignedIn() {
     document.getElementById('sb-user').textContent = profile || APP_CONFIG.COMPANY_NAME;
     document.getElementById('sb-signout').style.display = '';
     document.getElementById('btn-main').style.display = '';
+    document.getElementById('btn-backup').style.display = '';
+    document.getElementById('backup-status').style.display = '';
+    updateBackupUI();
 
     setSyncStatus('ok', 'Synced with Google Sheets');
     toast('Connected! Data loaded from Google Sheets ✓');
     goto('board');
+    // Check if auto backup is due (runs silently in background)
+    setTimeout(() => checkAutoBackup(), 3000);
   } catch(e) {
     console.error(e);
     toast('Error connecting to sheet: ' + e.message, 'err');
@@ -1219,6 +1228,8 @@ function signOut() {
   DB = { items:[], costSheets:[], costHistory:[] };
   document.getElementById('sb-user').textContent = 'Not signed in';
   document.getElementById('sb-signout').style.display = 'none';
+  document.getElementById('btn-backup').style.display = 'none';
+  document.getElementById('backup-status').style.display = 'none';
   setSyncStatus('', 'Not signed in');
   goto('login');
   toast('Signed out');
@@ -1430,7 +1441,7 @@ function pnlToRow(p) {
     p.shySellPrice,     // J
     p.mrp||0,           // K
     p.hsn||'',          // L
-    p.gstOverride!=null?p.gstOverride:''  // M
+    (p.gstOverride !== null && p.gstOverride !== undefined) ? p.gstOverride : ''  // M
   ];
 }
 
@@ -3221,10 +3232,22 @@ function editInhouse(id) {
   if (wrap) {
     wrap.innerHTML = '';
     let rows = [];
-    try { rows = r.fabricRows ? JSON.parse(r.fabricRows) : []; } catch(e){}
-    // Fall back to single fabric if no fabricRows stored
-    if (!rows.length && r.fabricItemId) {
-      rows = [{ fabricItemId:r.fabricItemId, metersPerUnit:r.metersPerUnit, wastagePct:r.wastagePct }];
+    // Try to parse stored JSON first
+    if (r.fabricRows) {
+      try { rows = JSON.parse(r.fabricRows); } catch(e){ rows = []; }
+    }
+    // If no fabricRows JSON, reconstruct from old single-fabric columns
+    if (!rows.length) {
+      if (r.fabricItemId || r.fabricName) {
+        rows = [{
+          fabricItemId:  r.fabricItemId || '',
+          fabricName:    r.fabricName   || '',
+          rateOverride:  0,
+          unit:          '',
+          metersPerUnit: r.metersPerUnit || 0,
+          wastagePct:    r.wastagePct   || 0
+        }];
+      }
     }
     if (!rows.length) rows = [{}];
     rows.forEach(saved => addFabricRow(saved));
@@ -3235,8 +3258,10 @@ function editInhouse(id) {
   if (ew) {
     ew.innerHTML = '';
     let savedExtras = [];
-    try { savedExtras = r.otherExtras ? JSON.parse(r.otherExtras) : []; } catch(e){}
-    savedExtras.forEach(e => addInhouseExtra(e));
+    if (r.otherExtras) {
+      try { savedExtras = JSON.parse(r.otherExtras); } catch(e){ savedExtras = []; }
+    }
+    if (Array.isArray(savedExtras)) savedExtras.forEach(e => addInhouseExtra(e));
   }
   calcInhouse();
   document.getElementById('page-inhouse').scrollTop = 0;
@@ -4073,13 +4098,15 @@ function openPnlModal(sheetId) {
       <option value="28" ${pnl.gstOverride===28?'selected':''}>28% (manual)</option>`;
     gstSel.onchange = () => {
       const v = gstSel.value;
-      if (v.startsWith('auto_')) {
-        const p2 = DB.pnlData.find(p=>p.sheetId===sheetId);
-        if (p2) delete p2.gstOverride;
-      } else {
-        const p2 = DB.pnlData.find(p=>p.sheetId===sheetId);
-        if (p2) p2.gstOverride = parseFloat(v);
+      // Ensure rec exists in DB.pnlData
+      let p2 = DB.pnlData.find(p=>p.sheetId===sheetId);
+      if (!p2) {
+        p2 = { sheetId, amzSellPrice:0, amzCat:'apparel_baby', fcSellPrice:0,
+               fcDept:'healthcare', mynSellPrice:0, mynCat:'ACCESSORIES',
+               shySellPrice:0, mrp:0, hsn:'', gstOverride:null, updatedAt:today() };
+        DB.pnlData.push(p2);
       }
+      p2.gstOverride = v.startsWith('auto_') ? null : parseFloat(v);
       calcPnlPreview();
     };
   }
@@ -4208,7 +4235,7 @@ async function savePnlModal() {
   rec.shySellPrice = parseFloat(document.getElementById('pnl-shy-sp')?.value)  || 0;
   rec.mrp          = parseFloat(document.getElementById('pnl-mrp')?.value)     || 0;
   rec.hsn          = (document.getElementById('pnl-hsn')?.value||'').trim();
-  const gstRaw     = document.getElementById('pnl-gst-override')?.value        || 'auto_18';
+  const gstRaw     = document.getElementById('pnl-gst-override')?.value || 'auto_18';
   rec.gstOverride  = gstRaw.startsWith('auto_') ? null : parseFloat(gstRaw);
   rec.updatedAt    = today();
 
@@ -4435,6 +4462,149 @@ async function savePnlImport() {
     renderPnl();
   } catch(e) { toast('Error: '+e.message,'err'); setSyncStatus('err','Error'); }
   finally { btn.textContent='Save All Changes'; btn.disabled=false; }
+}
+
+// ══════════════════════════════════════════════════
+//  AUTO BACKUP MODULE
+// ══════════════════════════════════════════════════
+const BACKUP_INTERVAL_DAYS = 7;
+const BACKUP_KEY = 'costlink_last_backup';
+
+function getLastBackupDate() {
+  return localStorage.getItem(BACKUP_KEY) || null;
+}
+
+function setLastBackupDate(dateStr) {
+  localStorage.setItem(BACKUP_KEY, dateStr);
+}
+
+function daysSinceBackup() {
+  const last = getLastBackupDate();
+  if (!last) return 999;
+  const diff = new Date() - new Date(last);
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
+function updateBackupUI() {
+  const btn    = document.getElementById('btn-backup');
+  const status = document.getElementById('backup-status');
+  if (!btn || !status) return;
+  const last = getLastBackupDate();
+  const days = daysSinceBackup();
+  if (last) {
+    const due = days >= BACKUP_INTERVAL_DAYS;
+    status.textContent  = due
+      ? `⚠ Backup overdue (${days}d ago)`
+      : `Last backup: ${last} (${days}d ago)`;
+    status.style.color  = due ? '#ffb74d' : 'rgba(255,255,255,.35)';
+    btn.title = `Last backup: ${last}`;
+  } else {
+    status.textContent = '⚠ No backup yet';
+    status.style.color = '#ffb74d';
+  }
+}
+
+async function checkAutoBackup() {
+  // Called after sign-in — runs backup if overdue
+  if (!isSignedIn) return;
+  updateBackupUI();
+  if (daysSinceBackup() >= BACKUP_INTERVAL_DAYS) {
+    console.log('Auto backup triggered — last backup was', daysSinceBackup(), 'days ago');
+    await runBackup(true); // true = auto (silent toast)
+  }
+}
+
+async function runManualBackup() {
+  if (!isSignedIn) { toast('Sign in first to backup','err'); return; }
+  await runBackup(false);
+}
+
+async function runBackup(isAuto = false) {
+  const btn = document.getElementById('btn-backup');
+  const status = document.getElementById('backup-status');
+  if (btn) { btn.textContent = '💾 Backing up…'; btn.disabled = true; }
+  if (status) { status.textContent = 'Backup in progress…'; status.style.color = '#ffb74d'; }
+
+  try {
+    const dateStr  = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const metaResp = await gapi.client.sheets.spreadsheets.get({
+      spreadsheetId: APP_CONFIG.SHEET_ID
+    });
+    const existingTabs = metaResp.result.sheets.map(s => s.properties.title);
+
+    // Data to backup: all 6 main tabs
+    const tabsToBak = [TAB_ITEMS, TAB_COSTS, TAB_HISTORY, TAB_INHOUSE, TAB_COMBOS, TAB_PNL];
+    let backedUp = 0;
+
+    for (const tab of tabsToBak) {
+      const backupName = `BK_${dateStr}_${tab}`.slice(0, 100); // Sheet tab name limit
+
+      // Skip if this backup already exists
+      if (existingTabs.includes(backupName)) continue;
+
+      // Read full data from source tab
+      let srcData = [];
+      try {
+        const r = await gapi.client.sheets.spreadsheets.values.get({
+          spreadsheetId: APP_CONFIG.SHEET_ID,
+          range: `${tab}!A1:ZZ`
+        });
+        srcData = r.result.values || [];
+      } catch(e) { continue; } // Tab might not exist yet
+      if (!srcData.length) continue;
+
+      // Create new backup tab
+      await gapi.client.sheets.spreadsheets.batchUpdate({
+        spreadsheetId: APP_CONFIG.SHEET_ID,
+        resource: { requests: [{ addSheet: { properties: { title: backupName } } }] }
+      });
+
+      // Write data to backup tab
+      await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId: APP_CONFIG.SHEET_ID,
+        range: `${backupName}!A1`,
+        valueInputOption: 'RAW',
+        resource: { values: srcData }
+      });
+
+      backedUp++;
+    }
+
+    // Remove old backups — keep only last 4 (28 days)
+    const backupTabs = existingTabs
+      .filter(t => t.startsWith('BK_'))
+      .sort(); // chronological
+    if (backupTabs.length > 24) { // 4 backups × 6 tabs = 24
+      const toDelete = backupTabs.slice(0, backupTabs.length - 24);
+      const sheetMeta = metaResp.result.sheets;
+      const deleteReqs = toDelete.map(name => {
+        const s = sheetMeta.find(x => x.properties.title === name);
+        return s ? { deleteSheet: { sheetId: s.properties.sheetId } } : null;
+      }).filter(Boolean);
+      if (deleteReqs.length) {
+        await gapi.client.sheets.spreadsheets.batchUpdate({
+          spreadsheetId: APP_CONFIG.SHEET_ID,
+          resource: { requests: deleteReqs }
+        });
+      }
+    }
+
+    setLastBackupDate(dateStr);
+    updateBackupUI();
+
+    if (isAuto) {
+      toast(`✅ Auto backup complete (${dateStr})`);
+    } else {
+      toast(`✅ Backup saved — ${dateStr} (${backedUp} tabs)`);
+    }
+  } catch(e) {
+    console.error('Backup error:', e);
+    toast('Backup failed: ' + (e.result?.error?.message || e.message || 'unknown'), 'err');
+    if (status) { status.textContent = 'Backup failed'; status.style.color = '#c93a1a'; }
+  } finally {
+    if (btn) { btn.textContent = '💾 Backup Now'; btn.disabled = false; }
+    updateBackupUI();
+  }
 }
 
 // ══════════════════════════════════════════════════
