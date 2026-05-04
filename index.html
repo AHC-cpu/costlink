@@ -1029,7 +1029,7 @@ const TAB_PNL     = 'PnlData';
 const HDR_ITEMS   = ['ID','ItemCode','Name','Category','Rate','Qty','Unit','GST','GSTAmount','Transport','TransportPerUnit','IsImported','CustomDuty','CustomDutyPerUnit','ImportTransport','ImportTransportPerUnit','EffectiveCost','Supplier','Notes','PurchaseDate','UpdatedAt','CreatedAt'];
 const HDR_COSTS   = ['ID','Name','SKU','Category','ProductType','ProductItemID','InhouseCost','InhouseDesc','TagItemID','ProdPackItemID','LabelItemID','CourierPackItemID','CourierLabelItemID','ProductCost','TagCost','ProdPackCost','LabelCost','CourierPackCost','CourierLabelCost','ExtraItems','ExtraTotal','FinalCost','PrevFinalCost','CostChangedAt','UpdatedAt','CreatedAt','InhouseID','ComboQty','PackBrochureItemID','TapeItemID','StickerItemID','PackBrochureCost','TapeCost','StickerCost'];
 const HDR_HISTORY = ['ID','SheetID','ProductName','SKU','ProductType','OldCost','NewCost','Diff','DiffPct','ChangedAt'];
-const HDR_INHOUSE = ['ID','ProductName','FabricItemID','FabricName','MetersPerUnit','WastagePct','FabricCostPerUnit','Stitching','Cutting','Finishing','JobWork','TotalLabour','TotalInhouseCost','Notes','UpdatedAt','CreatedAt'];
+const HDR_INHOUSE = ['ID','ProductName','FabricItemID','FabricName','MetersPerUnit','WastagePct','FabricCostPerUnit','Stitching','Cutting','Finishing','JobWork','TotalLabour','TotalInhouseCost','Notes','UpdatedAt','CreatedAt','FabricRows','OtherExtras','ExtraTotal'];
 const HDR_COMBOS  = ['ID','ComboName','SKU','Notes','Items','ExtraCosts','TotalCost','MarginPct','SellPrice','UpdatedAt','CreatedAt'];
 const HDR_PNL     = ['SheetID','AmzSellPrice','AmzCommission','FcSellPrice','FcDept','UpdatedAt','AmzCat','MynSellPrice','MynCat','ShySellPrice','MRP','HSN','GstOverride'];
 
@@ -1379,7 +1379,8 @@ function rowToInhouse(row, h) {
     metersPerUnit:+o.MetersPerUnit||0, wastagePct:+o.WastagePct||0, fabricCostPerUnit:+o.FabricCostPerUnit||0,
     stitching:+o.Stitching||0, cutting:+o.Cutting||0, finishing:+o.Finishing||0, jobWork:+o.JobWork||0,
     totalLabour:+o.TotalLabour||0, totalInhouseCost:+o.TotalInhouseCost||0,
-    notes:o.Notes||'', updatedAt:o.UpdatedAt, createdAt:o.CreatedAt };
+    notes:o.Notes||'', updatedAt:o.UpdatedAt, createdAt:o.CreatedAt,
+    fabricRows:o.FabricRows||'', otherExtras:o.OtherExtras||'', extraTotal:+o.ExtraTotal||0 };
 }
 
 function rowToCombo(row, h) {
@@ -1534,7 +1535,11 @@ function itemToRow(i) {
     i.purchaseDate||'', i.updatedAt, i.createdAt];
 }
 function inhouseToRow(r) {
-  return [r.id,r.productName,r.fabricItemId||'',r.fabricName||'',r.metersPerUnit,r.wastagePct,r.fabricCostPerUnit,r.stitching,r.cutting,r.finishing,r.jobWork,r.totalLabour,r.totalInhouseCost,r.notes||'',r.updatedAt,r.createdAt];
+  return [r.id, r.productName, r.fabricItemId||'', r.fabricName||'',
+    r.metersPerUnit, r.wastagePct, r.fabricCostPerUnit,
+    r.stitching, r.cutting, r.finishing, r.jobWork, r.totalLabour,
+    r.totalInhouseCost, r.notes||'', r.updatedAt, r.createdAt,
+    r.fabricRows||'', r.otherExtras||'', r.extraTotal||0];
 }
 function histToRow(h) {
   return [h.id,h.sheetId,h.productName,h.sku||'',h.productType,h.oldCost,h.newCost,h.diff,h.diffPct,h.changedAt];
@@ -1745,7 +1750,22 @@ async function savePurItem() {
     setSyncStatus('syncing','Saving…');
     if(editItemId) {
       const idx = DB.items.findIndex(x=>x.id===editItemId);
-      if(idx>=0){ DB.items[idx]=rec; await updateRow(TAB_ITEMS, idx, itemToRow(rec)); }
+      if(idx>=0){
+        DB.items[idx]=rec;
+        // Find actual sheet row by ID to avoid index mismatch
+        const colA = await gapi.client.sheets.spreadsheets.values.get({
+          spreadsheetId: APP_CONFIG.SHEET_ID, range:`${TAB_ITEMS}!A:A`
+        });
+        const ids = (colA.result.values||[]).map(r=>(r[0]||'').trim());
+        let targetRow = -1;
+        for(let i=1;i<ids.length;i++){ if(ids[i]===editItemId){targetRow=i+1;break;} }
+        if(targetRow>0){
+          await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId:APP_CONFIG.SHEET_ID, range:`${TAB_ITEMS}!A${targetRow}`,
+            valueInputOption:'RAW', resource:{values:[itemToRow(rec)]}
+          });
+        } else { await appendRow(TAB_ITEMS, itemToRow(rec)); }
+      }
       toast('Item updated ✓');
     } else {
       DB.items.push(rec);
@@ -2216,6 +2236,33 @@ async function recomputeByName(itemName, itemCat, newEffectiveCost, specificId=n
     count++;
   }
   if (count > 0) toast(`${count} product cost${count>1?'s':''} auto-updated 🔄`, 'warn');
+}
+
+// When inhouse production cost changes, update all cost sheets using that inhouse record
+async function recomputeInhouseCostSheets(inhouseId, newInhouseCost) {
+  const affected = DB.costSheets.filter(s => s.productType === 'inhouse' && s.inhouseId === inhouseId);
+  if (!affected.length) return;
+  for (let i = 0; i < DB.costSheets.length; i++) {
+    const s = DB.costSheets[i];
+    if (s.productType !== 'inhouse' || s.inhouseId !== inhouseId) continue;
+    if (Math.abs(newInhouseCost - s.inhouseCost) < 0.001) continue;
+    const newFinal = newInhouseCost + (s.prodPackCost||0) + (s.labelCost||0) +
+                     (s.packBrochureCost||0) + (s.courierPackCost||0) +
+                     (s.tapeCost||0) + (s.stickerCost||0) + (s.extraTotal||0);
+    const h = {
+      id:uid(), sheetId:s.id, productName:s.name, sku:s.sku||'',
+      productType:s.productType, oldCost:s.finalCost, newCost:newFinal,
+      diff:newFinal-s.finalCost,
+      diffPct:s.finalCost>0?(newFinal-s.finalCost)/s.finalCost*100:0,
+      changedAt:today()
+    };
+    DB.costHistory.push(h);
+    await appendRow(TAB_HISTORY, histToRow(h));
+    const updated = { ...s, inhouseCost:newInhouseCost, productCost:newInhouseCost,
+      prevFinalCost:s.finalCost, finalCost:newFinal, costChangedAt:today(), updatedAt:today() };
+    DB.costSheets[i] = updated;
+    await updateRow(TAB_COSTS, i, costToRow(updated));
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -3120,13 +3167,31 @@ async function saveInhouse() {
     setSyncStatus('syncing','Saving…');
     if(editInhouseId) {
       const idx = DB.inhouse.findIndex(x=>x.id===editInhouseId);
-      if(idx>=0){ DB.inhouse[idx]=rec; await updateRow(TAB_INHOUSE,idx,inhouseToRow(rec)); }
+      if(idx>=0){
+        DB.inhouse[idx]=rec;
+        const colA = await gapi.client.sheets.spreadsheets.values.get({
+          spreadsheetId:APP_CONFIG.SHEET_ID, range:`${TAB_INHOUSE}!A:A`
+        });
+        const ids=(colA.result.values||[]).map(r=>(r[0]||'').trim());
+        let targetRow=-1;
+        for(let i=1;i<ids.length;i++){if(ids[i]===editInhouseId){targetRow=i+1;break;}}
+        if(targetRow>0){
+          await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId:APP_CONFIG.SHEET_ID, range:`${TAB_INHOUSE}!A${targetRow}`,
+            valueInputOption:'RAW', resource:{values:[inhouseToRow(rec)]}
+          });
+        } else { await appendRow(TAB_INHOUSE, inhouseToRow(rec)); }
+      }
       toast(`"${productName}" updated — ${fmt(totalCost)}/pc`);
     } else {
       DB.inhouse.push(rec);
       await appendRow(TAB_INHOUSE, inhouseToRow(rec));
       toast(`"${productName}" saved — ${fmt(totalCost)}/pc`);
     }
+
+    // Issue 1 fix: update all cost sheets that reference this inhouse record
+    await recomputeInhouseCostSheets(rec.id, totalCost);
+
     setSyncStatus('ok','Saved ✓');
     resetInhouseForm();
     renderInhouseList();
@@ -3716,22 +3781,24 @@ function setPnlFilter(f) {
   renderPnl();
 }
 
-// Get GST % for a cost sheet — pulled from linked purchase item, fallback to pnlRec override
+// Get GST % for a cost sheet — manual override > purchase item > fallback 18%
 function getProductGst(sheet, pnlRec) {
-  // 1. Try to pull from the product item linked to the cost sheet
+  // 1. Manual override set by user — highest priority
+  if (pnlRec?.gstOverride != null && pnlRec.gstOverride > 0) return pnlRec.gstOverride;
+  // 2. Pull from the product item linked to the cost sheet
   if (sheet?.productItemId) {
     const item = DB.items.find(x=>x.id===sheet.productItemId);
     if (item && item.gst > 0) return item.gst;
   }
-  // 2. Try any linked item (packing etc)
+  // 3. Try any linked item (packing etc)
   if (sheet) {
     for (const fld of ['prodPackItemId','labelItemId','tagItemId','courierPackItemId']) {
       const item = DB.items.find(x=>x.id===sheet[fld]);
       if (item && item.gst > 0) return item.gst;
     }
   }
-  // 3. Fall back to user-selected override in pnl record
-  return pnlRec?.gstOverride || 18;
+  // 4. Default fallback
+  return 18;
 }
 
 function calcAmzPnl(cost, sellPrice, cat, settings, gstPct) {
