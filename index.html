@@ -2289,6 +2289,28 @@ async function updateSheetRow(tabName, rowId, rowData) {
     return r.ok;
   } catch(e) { return false; }
 }
+// Normalise any date string to YYYY-MM-DD for consistent comparison
+function normDate(raw) {
+  if(!raw) return '';
+  raw = raw.trim();
+  // Already YYYY-MM-DD
+  if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  // DD/MM/YYYY or DD-MM-YYYY
+  const dmy = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if(dmy) return `${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`;
+  // MM/DD/YYYY (US format - less common but handle it)
+  const mdy = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(mdy) {
+    // Ambiguous — if first part > 12 it must be day, else assume DD/MM
+    if(parseInt(mdy[1]) > 12) return `${mdy[3]}-${mdy[2].padStart(2,'0')}-${mdy[1].padStart(2,'0')}`;
+    return `${mdy[3]}-${mdy[1].padStart(2,'0')}-${mdy[2].padStart(2,'0')}`;
+  }
+  // Try native Date parse as last resort
+  const d = new Date(raw);
+  if(!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+  return raw; // return as-is if nothing works
+}
+
 async function syncSheets() {
   if (!cfg.sid || cfg.sid === 'YOUR_SPREADSHEET_ID_HERE') {
     setGS('err', 'Sheet ID not set'); return;
@@ -2331,7 +2353,7 @@ async function syncSheets() {
     if (rj.values?.length) {
       const seen = new Set();
       recv = rj.values.map(row => ({
-        id:row[0]||'',date:row[1]||'',challan:row[2]||'',company:row[3]||'',lotNo:row[4]||'',altLot:row[5]||'',
+        id:row[0]||'', date:normDate(row[1]), challan:row[2]||'',company:row[3]||'',lotNo:row[4]||'',altLot:row[5]||'',
         shade:row[6]||'',count:row[7]||'',tpi:row[8]||'',blend:row[9]||'',bags:+row[10]||0,weight:+row[11]||0,
         rate:+row[12]||0,vehicle:row[13]||'',status:row[14]||'Received',remarks:row[15]||'',
         allowedShortage:+row[17]||0,singleConeTip:row[18]||'',doubleConeTip:row[19]||'',
@@ -2345,7 +2367,7 @@ async function syncSheets() {
     if (dj.values?.length) {
       const seen = new Set();
       disp = dj.values.map(row => ({
-        id:row[0]||'',date:row[1]||'',challan:row[2]||'',company:row[3]||'',lotNo:row[4]||'',
+        id:row[0]||'', date:normDate(row[1]), challan:row[2]||'',company:row[3]||'',lotNo:row[4]||'',
         shade:row[5]||'',count:row[6]||'',tpi:row[7]||'',blend:row[8]||'',bags:+row[9]||0,weight:+row[10]||0,
         rate:+row[11]||0,form:row[12]||'D',plant:row[13]||'',vehicle:row[14]||'',remark:row[15]||'',
         isPacking: row[17]==='true'||row[17]===true||row[17]==='1'||row[17]==='yes'
