@@ -2619,8 +2619,8 @@ function applyLotsDate() {
     const el=g(id); if(el) el.classList.remove('on');
   });
   // Validate: if only "To" is set, treat it as "up to that date"
-  const from = g('lDateFrom').value;
-  const to   = g('lDateTo').value;
+  const from = normDate(g('lDateFrom').value);
+  const to   = normDate(g('lDateTo').value);
   if(from && to && from > to) {
     toast('From date must be before To date','err'); return;
   }
@@ -4183,8 +4183,9 @@ function buildLotData(lFrom, lTo) {
   const lots = {};
   recv.filter(r=>!r.isPacking).forEach(r=>{
     if(!r.lotNo) return;
-    if(lFrom && r.date < lFrom) return;  // skip receipts before range
-    if(lTo   && r.date > lTo)   return;  // skip receipts after range
+    const rDate = normDate(r.date);
+    if(lFrom && rDate < lFrom) return;
+    if(lTo   && rDate > lTo)   return;
     if(!lots[r.lotNo]) lots[r.lotNo]={
       lotNo:r.lotNo, altLot:r.altLot||'', company:r.company, shade:r.shade,
       count:r.count, tpi:r.tpi, blend:r.blend, date:r.date, firstDate:r.date,
@@ -4201,8 +4202,9 @@ function buildLotData(lFrom, lTo) {
   });
   disp.filter(d=>!d.isPacking).forEach(d=>{
     if(!d.lotNo) return;
-    if(lFrom && d.date < lFrom) return;  // skip dispatches before range
-    if(lTo   && d.date > lTo)   return;  // skip dispatches after range
+    const dDate = normDate(d.date);
+    if(lFrom && dDate < lFrom) return;
+    if(lTo   && dDate > lTo)   return;
     if(!lots[d.lotNo]) lots[d.lotNo]={
       lotNo:d.lotNo, altLot:'', company:d.company, shade:d.shade,
       count:d.count, tpi:d.tpi, blend:d.blend, date:d.date, firstDate:d.date,
@@ -4245,9 +4247,9 @@ function buildLots() {
   const selTpi = msGet('lTpi');
   const selShd = msGet('lShd');
 
-  // Read date range FIRST — receipts outside this range are excluded from quantities
-  const lFrom = g('lDateFrom')?.value || '';
-  const lTo   = g('lDateTo')?.value   || '';
+  // Read date range FIRST — normalise to YYYY-MM-DD regardless of browser locale
+  const lFrom = normDate(g('lDateFrom')?.value || '');
+  const lTo   = normDate(g('lDateTo')?.value   || '');
 
   const lots={};
 
@@ -4255,8 +4257,9 @@ function buildLots() {
   recv.filter(r=>!r.isPacking).forEach(r=>{
     if(!r.lotNo) return;
     // Skip receipts outside the selected date range
-    if(lFrom && r.date < lFrom) return;
-    if(lTo   && r.date > lTo)   return;
+    const rDate = normDate(r.date);
+    if(lFrom && rDate < lFrom) return;
+    if(lTo   && rDate > lTo)   return;
 
     if(!lots[r.lotNo]) lots[r.lotNo]={
       lotNo:r.lotNo, altLot:r.altLot||'', company:r.company, shade:r.shade,
@@ -4280,8 +4283,9 @@ function buildLots() {
   // Build from dispatches — only within date range
   disp.filter(d=>!d.isPacking).forEach(d=>{
     if(!d.lotNo) return;
-    if(lFrom && d.date < lFrom) return;  // skip dispatches before range
-    if(lTo   && d.date > lTo)   return;  // skip dispatches after range
+    const dDate = normDate(d.date);
+    if(lFrom && dDate < lFrom) return;
+    if(lTo   && dDate > lTo)   return;
     if(!lots[d.lotNo]) lots[d.lotNo]={
       lotNo:d.lotNo, altLot:'', company:d.company, shade:d.shade,
       count:d.count, tpi:d.tpi, blend:d.blend, date:d.date, firstDate:d.date,
@@ -5893,7 +5897,7 @@ function downloadExcel(tab) {
   } else if (tab === 'lots') {
     filename = `LotStatus_${today()}.csv`;
     const cv = k => lotColVis[k] !== false;
-    const lFrom  = g('lDateFrom')?.value||'', lTo = g('lDateTo')?.value||'';
+    const lFrom  = normDate(g('lDateFrom')?.value||''), lTo = normDate(g('lDateTo')?.value||'');
     const lotData = buildLotData(lFrom, lTo);
     const showCompleted = g('showCompletedLots')?.checked;
     const selCo  = msGet('lCo'), selSt=msGet('lSt'), selCnt=msGet('lCnt');
@@ -6098,7 +6102,7 @@ function printTab(tab) {
     const selTpi=msGet('lTpi'), selShd=msGet('lShd');
     const srch=g('srchL').value.toLowerCase();
     const showCompleted=g('showCompletedLots')?.checked;
-    const lFrom=g('lDateFrom')?.value, lTo=g('lDateTo')?.value;
+    const lFrom=normDate(g('lDateFrom')?.value||''), lTo=normDate(g('lDateTo')?.value||'');
     sub = [(selCo.length?selCo.join(', '):'All Companies'), lFrom&&lTo?`${lFrom} → ${lTo}`:lFrom?`From ${lFrom}`:lTo?`Up to ${lTo}`:''].filter(Boolean).join(' · ') || 'All Lots';
     let lotRows = buildLotData(lFrom, lTo);
     if(!showCompleted) lotRows=lotRows.filter(l=>l.cs!=='Completed');
