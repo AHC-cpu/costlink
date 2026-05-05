@@ -444,25 +444,206 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
               <div class="fg"><label>Selling Price (₹)</label><input type="number" id="pnl-amz-sp" placeholder="0.00" min="0" step=".01" oninput="calcPnlPreview()"/></div>
               <div class="fg"><label>Amazon Category</label>
                 <select id="pnl-amz-cat" onchange="calcPnlPreview()" style="font-size:.76rem">
-                  <option value="apparel_baby">Apparel - Baby (7%)</option>
-                  <option value="apparel_other">Apparel - Other (4.5-19%)</option>
-                  <option value="apparel_innerwear">Apparel - Innerwear (7-18.5%)</option>
-                  <option value="apparel_shorts">Apparel - Shorts (2-24%)</option>
-                  <option value="apparel_sleepwear">Apparel - Sleepwear (5-19%)</option>
-                  <option value="baby_hardlines">Baby Hardlines (0-10%)</option>
-                  <option value="baby_other">Baby - Other Products (6.5-8%)</option>
-                  <option value="baby_diapers">Baby - Diapers (5-9.5%)</option>
-                  <option value="handbags">Handbags (6.5-12%)</option>
-                  <option value="luggage_travel">Luggage - Travel Accessories (9-12%)</option>
-                  <option value="luggage_suitcase">Luggage - Suitcase and Trolleys (1.5-6.5%)</option>
-                  <option value="beauty_haircare">Beauty - Haircare Bath Shower (5-8%)</option>
-                  <option value="beauty_other">Beauty - Other Products (7-9%)</option>
-                  <option value="feminine_hygiene">Feminine Hygiene and Care (2-8%)</option>
-                  <option value="health_medical">Health - Medical Equipment (8%)</option>
-                  <option value="health_other">Health and Household - Other (11.5%)</option>
-                  <option value="bedsheets">Bedsheets Blankets Covers (7-8.5%)</option>
-                  <option value="home_other">Home - Other Products (5-18%)</option>
-                  <option value="sports_other">Sports - Other Products (9-13%)</option>
+                  <optgroup label="── APPAREL ──">
+                    <option value="apparel_baby">Apparel - Baby (7%)</option>
+                    <option value="apparel_womens_inner">Apparel - Women's Innerwear &amp; Lingerie (18%)</option>
+                    <option value="apparel_sarees">Apparel - Sarees &amp; Dress Materials (15%)</option>
+                    <option value="apparel_sweatshirts">Apparel - Sweatshirts &amp; Jackets (18%)</option>
+                    <option value="apparel_dress">Apparel - Dress (19%)</option>
+                    <option value="apparel_shirts">Apparel - Shirts (21%)</option>
+                    <option value="apparel_socks">Apparel - Socks &amp; Stockings (19%)</option>
+                    <option value="apparel_thermals">Apparel - Thermals (19%)</option>
+                    <option value="apparel_pants">Apparel - Pants/Trousers/Jeans/Leggings (19%)</option>
+                    <option value="apparel_innerwear">Apparel - Other Innerwear (18.5%)</option>
+                    <option value="apparel_sleepwear">Apparel - Sleepwear (19%)</option>
+                    <option value="apparel_accessories">Apparel - Accessories (19%)</option>
+                    <option value="apparel_tshirts_men">Apparel - Men's T-Shirts (23%)</option>
+                    <option value="apparel_ethnic">Apparel - Ethnic Wear (16.5%)</option>
+                    <option value="apparel_shorts">Apparel - Shorts (24%)</option>
+                    <option value="apparel_other">Apparel - Other (19%)</option>
+                  </optgroup>
+                  <optgroup label="── BABY ──">
+                    <option value="baby_hardlines">Baby - Hardlines / Carriers / Furniture (6.5%)</option>
+                    <option value="baby_strollers">Baby - Strollers (9%)</option>
+                    <option value="baby_walker">Baby - Walker (5%)</option>
+                    <option value="baby_diapers">Baby - Diapers (9.5%)</option>
+                    <option value="baby_other">Baby - Other Products (7.5%)</option>
+                    <option value="breast_pumps">Baby - Breast Pumps (7.5%)</option>
+                    <option value="diaper_bags">Baby - Diaper Bags (7.5%)</option>
+                  </optgroup>
+                  <optgroup label="── BEAUTY &amp; PERSONAL CARE ──">
+                    <option value="beauty_haircare">Beauty - Haircare / Bath &amp; Shower (8%)</option>
+                    <option value="beauty_makeup">Beauty - Makeup (7%)</option>
+                    <option value="beauty_fragrance">Beauty - Fragrance (10-14%)</option>
+                    <option value="face_wash">Face Wash (9-9.5%)</option>
+                    <option value="moisturiser">Moisturiser Cream (9-9.5%)</option>
+                    <option value="sunscreen">Sunscreen (9-9.5%)</option>
+                    <option value="beauty_other">Beauty - Other Products (9%)</option>
+                    <option value="luxury_beauty">Luxury Beauty (9-10%)</option>
+                    <option value="deodorants">Deodorants (6.5-7%)</option>
+                    <option value="feminine_hygiene">Feminine Hygiene &amp; Care (8%)</option>
+                  </optgroup>
+                  <optgroup label="── HEALTH ──">
+                    <option value="health_medical">Health - Medical Equipment / Elderly Care (2%)</option>
+                    <option value="health_sports_nutrition">Health - Sports Nutrition &amp; Shakes (9-9.5%)</option>
+                    <option value="health_ayurvedic">Health - Ayurvedic / Homeopathic (7%)</option>
+                    <option value="health_cleaning">Health - Household Cleaning / Hand Wash (8%)</option>
+                    <option value="health_vitamins">Health - Vitamins &amp; Supplements (9-11%)</option>
+                    <option value="health_regulated">Health - Regulated / Contact Lenses / Diagnostic (2%)</option>
+                    <option value="health_other">Health - Other Products (11.5%)</option>
+                    <option value="body_support">Body Support Wearables &amp; Soft Aids (2%)</option>
+                    <option value="otc_medicine">OTC Medicine (12-15%)</option>
+                    <option value="pharmacy">Pharmacy - Prescription Medicines (8%)</option>
+                  </optgroup>
+                  <optgroup label="── PERSONAL CARE APPLIANCES ──">
+                    <option value="pca_weighing">PCA - Weighing Scales &amp; Fat Analysers (13.5%)</option>
+                    <option value="pca_grooming">PCA - Grooming &amp; Styling (9.5%)</option>
+                    <option value="pca_massagers">PCA - Electric Massagers (14.5%)</option>
+                    <option value="pca_glucometer">PCA - Glucometer (5.5%)</option>
+                    <option value="pca_thermometers">PCA - Thermometers (10.5%)</option>
+                    <option value="pca_bp_monitors">PCA - Blood Pressure Monitors (7.5%)</option>
+                    <option value="pca_pain_relief">PCA - Electric Pain Relief Devices (7.5%)</option>
+                    <option value="pca_toothbrush">PCA - Electric Toothbrush &amp; Oral Irrigators (7.5%)</option>
+                    <option value="pca_other">PCA - Other Products (7.5%)</option>
+                  </optgroup>
+                  <optgroup label="── FASHION ACCESSORIES ──">
+                    <option value="eyewear">Eyewear - Sunglasses / Frames (18.5%)</option>
+                    <option value="watches">Watches (15%)</option>
+                    <option value="flip_flops">Flip Flops (15%)</option>
+                    <option value="kids_shoes">Kids Shoes (16%)</option>
+                    <option value="shoes">Shoes (8%)</option>
+                    <option value="wallets">Wallets (14%)</option>
+                    <option value="backpacks">Backpacks (14.5%)</option>
+                    <option value="handbags">Handbags (12%)</option>
+                    <option value="luggage_suitcase">Luggage - Suitcase &amp; Trolleys (5.5%)</option>
+                    <option value="luggage_travel">Luggage - Travel Accessories (12%)</option>
+                    <option value="luggage_other">Luggage - Other (8%)</option>
+                    <option value="fashion_jewellery">Fashion Jewellery (22.5%)</option>
+                    <option value="silver_jewellery">Silver Jewellery (13%)</option>
+                  </optgroup>
+                  <optgroup label="── KITCHEN &amp; HOME ──">
+                    <option value="kitchen_tools">Kitchen Tools / Choppers / Bakeware (12.5%)</option>
+                    <option value="cookware">Cookware / Tableware / Dinnerware (12.5%)</option>
+                    <option value="kitchen_glass">Kitchen Glassware &amp; Ceramicware (12.5%)</option>
+                    <option value="containers">Containers / Bottles / Kitchen Storage (12%)</option>
+                    <option value="kitchen_linens">Slipcovers &amp; Kitchen Linens (15.5%)</option>
+                    <option value="kitchen_other">Kitchen - Other (12.5%)</option>
+                    <option value="bedsheets">Bedsheets / Blankets / Covers (8.5%)</option>
+                    <option value="home_furnishing">Home Furnishing (11%)</option>
+                    <option value="home_storage">Home Storage (15%)</option>
+                    <option value="home_decor">Home Decor Products (17%)</option>
+                    <option value="home_other">Home - Other Products (18%)</option>
+                    <option value="wall_art">Wall Art (13.5%)</option>
+                    <option value="rugs_doormats">Rugs &amp; Doormats (9%)</option>
+                    <option value="cushion_covers">Cushion Covers (10%)</option>
+                    <option value="curtains">Curtains &amp; Accessories (16.5%)</option>
+                    <option value="led_bulbs">LED Bulbs &amp; Battens (14%)</option>
+                    <option value="indoor_lighting">Indoor Lighting (16%)</option>
+                    <option value="clocks">Clocks (10%)</option>
+                    <option value="mattresses">Mattresses (13.5-25.5%)</option>
+                    <option value="bean_bags">Bean Bags &amp; Inflatables (8%)</option>
+                  </optgroup>
+                  <optgroup label="── SPORTS &amp; OUTDOORS ──">
+                    <option value="sports_cricket_badminton">Sports - Cricket / Badminton / Football (8.5%)</option>
+                    <option value="sports_bats_rackets">Sports - Bats &amp; Rackets (7.5%)</option>
+                    <option value="sports_footwear">Sports Footwear (16%)</option>
+                    <option value="gym_equipment">Gym Equipment (10-12%)</option>
+                    <option value="gym_weights">Gym Weights (5.5%)</option>
+                    <option value="sports_other">Sports - Other Products (13%)</option>
+                    <option value="bicycles">Bicycles (6%)</option>
+                    <option value="garden_plants">Garden - Plants / Seeds / Tools (11%)</option>
+                    <option value="garden_pest">Garden - Pest Control / Plant Protection (9%)</option>
+                    <option value="garden_equipment">Garden - Equipment / Lawn Mowers (6.5%)</option>
+                    <option value="garden_solar">Garden - Solar Devices (8%)</option>
+                    <option value="garden_other">Garden - Other (10%)</option>
+                  </optgroup>
+                  <optgroup label="── ELECTRONICS ──">
+                    <option value="mobile_phones">Mobile Phones (5%)</option>
+                    <option value="laptops">Laptops (6%)</option>
+                    <option value="tablets">Tablets (6-10%)</option>
+                    <option value="televisions">Television (6%)</option>
+                    <option value="headphones">Headsets / Headphones / Earphones (18%)</option>
+                    <option value="power_banks">Power Banks &amp; Chargers (20.5%)</option>
+                    <option value="cables_adapters">Cables &amp; Adapters (20%)</option>
+                    <option value="cases_covers">Cases / Covers / Screen Guards (25%)</option>
+                    <option value="accessories_electronics">Electronics Accessories (5-17%)</option>
+                    <option value="speakers">Speakers (11-14%)</option>
+                    <option value="smart_watches">Smart Watches &amp; Accessories (5-17%)</option>
+                  </optgroup>
+                  <optgroup label="── TOYS ──">
+                    <option value="toys_infant">Toys - Infant &amp; Pre-school (11.5%)</option>
+                    <option value="toys_games_puzzles">Toys - Games / Puzzles / Board Games (12.5%)</option>
+                    <option value="toys_outdoor">Toys - Outdoor / Activity / Sports (10.5%)</option>
+                    <option value="toys_plush">Toys - Plush / Action Figures / Dolls (10.5%)</option>
+                    <option value="toys_rc_vehicles">Toys - RC &amp; Non-RC Vehicles (12.5%)</option>
+                    <option value="toys_stem">Toys - STEM / Art &amp; Craft (11.5%)</option>
+                    <option value="toys_party">Toys - Party Supplies / Balloons (12.5%)</option>
+                    <option value="toys_other">Toys - Other (11.5%)</option>
+                  </optgroup>
+                  <optgroup label="── PET ──">
+                    <option value="pet_food">Pet Foods (6.5-9.5%)</option>
+                    <option value="pet_accessories">Pet Accessories / Apparel / Leash (12.5%)</option>
+                    <option value="pet_essentials">Pet Essentials / Health Care (14%)</option>
+                    <option value="pet_other">Pet - Other (12%)</option>
+                  </optgroup>
+                  <optgroup label="── GROCERY ──">
+                    <option value="grocery_herbs">Grocery - Herbs &amp; Spices (8%)</option>
+                    <option value="grocery_dried_fruits">Grocery - Dried Fruits &amp; Nuts (9%)</option>
+                    <option value="grocery_hampers">Grocery - Hampers &amp; Gifting (11.5%)</option>
+                    <option value="grocery_oils">Grocery - Oils (5%)</option>
+                    <option value="grocery_beverages">Grocery - Beverages (10%)</option>
+                    <option value="grocery_other">Grocery - Other (9%)</option>
+                  </optgroup>
+                  <optgroup label="── APPLIANCES ──">
+                    <option value="small_appliances">Small Appliances (4.5-8%)</option>
+                    <option value="water_purifier">Water Purifier &amp; Accessories (6.5-7.5%)</option>
+                    <option value="water_heaters">Water Heaters (8-9%)</option>
+                    <option value="cleaning_appliances">Cleaning &amp; Home Appliances (7.5-8.5%)</option>
+                    <option value="fans_robotic">Fans &amp; Robotic Vacuums (4.5-8%)</option>
+                    <option value="inverter_batteries">Inverter &amp; Batteries (4.5%)</option>
+                    <option value="refrigerators">Refrigerators (5%)</option>
+                    <option value="chimneys">Chimneys (9.5%)</option>
+                    <option value="major_appliances_other">Major Appliances - Other (5.5%)</option>
+                  </optgroup>
+                  <optgroup label="── AUTOMOTIVE ──">
+                    <option value="auto_tyres">Automotive - Tyres &amp; Rims (3%)</option>
+                    <option value="auto_batteries">Automotive - Batteries &amp; Air Fresheners (8.5%)</option>
+                    <option value="auto_accessories">Automotive - Floor Mats / Seat Covers (14%)</option>
+                    <option value="auto_helmets">Automotive - Helmets &amp; Riding Gloves (8.5%)</option>
+                    <option value="auto_parts">Automotive - Car &amp; Bike Parts (16%)</option>
+                    <option value="auto_cleaning">Automotive - Cleaning Kits &amp; Polish (13%)</option>
+                    <option value="auto_other">Automotive - Other (16%)</option>
+                    <option value="vehicle_tools">Vehicle Tools &amp; Appliances (8.5%)</option>
+                    <option value="oils_lubricants">Oils &amp; Lubricants (11.5%)</option>
+                  </optgroup>
+                  <optgroup label="── OFFICE &amp; BUSINESS ──">
+                    <option value="office_arts_crafts">Office - Arts &amp; Crafts (5%)</option>
+                    <option value="office_supplies">Office - Supplies (13%)</option>
+                    <option value="office_writing">Office - Writing Instruments (14%)</option>
+                    <option value="office_electronic">Office - Electronic Devices (11.5%)</option>
+                    <option value="office_other">Office - Other (11.5%)</option>
+                    <option value="business_scientific">Business &amp; Scientific Supplies (7-11.5%)</option>
+                    <option value="business_electrical">Business - Electrical Testing (6%)</option>
+                    <option value="business_commercial">Business - Commercial / Food Equipment (5.5%)</option>
+                    <option value="business_other">Business - Other (5-8%)</option>
+                    <option value="packing_materials">Packing Materials (5%)</option>
+                    <option value="power_hand_tools">Power &amp; Hand Tools (10%)</option>
+                    <option value="masks">Masks (8%)</option>
+                    <option value="stethoscopes">Stethoscopes (10.5%)</option>
+                  </optgroup>
+                  <optgroup label="── HOME IMPROVEMENT ──">
+                    <option value="home_imp_accessories">Home Improvement - Accessories (13.5%)</option>
+                    <option value="home_imp_kitchen_bath">Home Improvement - Kitchen &amp; Bath Fittings (12%)</option>
+                    <option value="home_imp_wallpapers">Home Improvement - Wallpapers (6.5%)</option>
+                    <option value="home_imp_wall_paints">Wall Paints &amp; Tools (6%)</option>
+                    <option value="home_imp_security">Home Safety &amp; Security Systems (6%)</option>
+                    <option value="home_imp_other">Home Improvement - Other (13.5%)</option>
+                    <option value="safes_lockers">Safes &amp; Lockers (12%)</option>
+                    <option value="ladders">Ladders (8%)</option>
+                    <option value="tiles_flooring">Tiles &amp; Flooring (8%)</option>
+                    <option value="wires_cables">Wires / Electrical Cables (10%)</option>
+                    <option value="sanitaryware">Sanitaryware / Toilets / Basins (6-8%)</option>
+                  </optgroup>
                 </select>
               </div>
               <div class="calc-preview" style="margin-top:.3rem" id="amz-preview">
@@ -3904,40 +4085,186 @@ function getMynFixedFee(cat, sellPrice) {
   return isAcc ? 65 : 61;
 }
 
-function getAmzReferralPct(cat, price) {
-  const rules = {
-    apparel_baby:     [[300,0],[Infinity,7]],
-    apparel_other:    [[300,0],[500,4.5],[1000,11],[Infinity,19]],
-    apparel_innerwear:[[300,0],[500,7],[1000,16.5],[Infinity,18.5]],
-    apparel_shorts:   [[300,0],[500,2],[1000,19.5],[Infinity,24]],
-    apparel_sleepwear:[[300,0],[500,5],[1000,13],[Infinity,19]],
-    baby_hardlines:   [[300,0],[500,10],[1000,9],[Infinity,6.5]],
-    baby_other:       [[300,0],[500,6.5],[1000,8],[Infinity,7.5]],
-    baby_diapers:     [[300,5],[500,5.5],[Infinity,9.5]],
-    handbags:         [[300,0],[500,6.5],[1000,11],[Infinity,12]],
-    luggage_travel:   [[300,0],[500,9],[1000,10],[Infinity,12]],
-    luggage_suitcase: [[300,0],[500,1.5],[1000,6.5],[Infinity,5.5]],
-    beauty_haircare:  [[300,0],[500,5],[Infinity,8]],
-    beauty_other:     [[300,0],[500,7],[Infinity,9]],
-    feminine_hygiene: [[300,0],[500,2],[1000,7.5],[Infinity,8]],
-    health_medical:   [[300,0],[Infinity,8]],
-    health_other:     [[300,0],[Infinity,11.5]],
-    bedsheets:        [[500,0],[1000,7],[Infinity,8.5]],
-    home_other:       [[300,0],[500,5],[1000,13],[Infinity,18]],
-    sports_other:     [[300,0],[500,9],[Infinity,13]],
-  };
-  const slabs = rules[cat] || [[300,0],[Infinity,8]];
-  for (const [limit, pct] of slabs) {
-    if (price <= limit) return pct;
+function getAmzReferralPct(cat, p) {
+  switch(cat) {
+    case 'apparel_baby':           return p<=1000?0:7;
+    case 'apparel_womens_inner':   return p<=1000?0:18;
+    case 'apparel_sarees':         return p<=1000?0:15;
+    case 'apparel_sweatshirts':    return p<=1000?0:18;
+    case 'apparel_dress':          return p<=1000?0:19;
+    case 'apparel_shirts':         return p<=1000?0:21;
+    case 'apparel_socks':          return p<=1000?0:19;
+    case 'apparel_thermals':       return p<=1000?0:19;
+    case 'apparel_pants':          return p<=1000?0:19;
+    case 'apparel_innerwear':      return p<=1000?0:18.5;
+    case 'apparel_sleepwear':      return p<=1000?0:19;
+    case 'apparel_accessories':    return p<=1000?0:19;
+    case 'apparel_tshirts_men':    return p<=1000?0:23;
+    case 'apparel_ethnic':         return p<=1000?0:16.5;
+    case 'apparel_shorts':         return p<=1000?0:24;
+    case 'apparel_other':          return p<=1000?0:19;
+    case 'baby_hardlines':         return p<=1000?0:6.5;
+    case 'baby_strollers':         return p<=1000?0:9;
+    case 'baby_furniture':         return p<=1000?0:8.5;
+    case 'baby_walker':            return p<=1000?0:5;
+    case 'baby_diapers':           return p<=1000?0:9.5;
+    case 'baby_other':             return p<=1000?0:7.5;
+    case 'breast_pumps':           return p<=1000?0:7.5;
+    case 'diaper_bags':            return p<=1000?0:7.5;
+    case 'beauty_haircare':        return p<=1000?0:8;
+    case 'beauty_makeup':          return p<=1000?0:7;
+    case 'beauty_fragrance':       return p<=500?0:p<=1000?14:10;
+    case 'beauty_other':           return p<=500?0:9;
+    case 'face_wash':              return p<=500?0:p<=1000?9:9.5;
+    case 'moisturiser':            return p<=500?0:p<=1000?9:9.5;
+    case 'sunscreen':              return p<=500?0:p<=1000?9:9.5;
+    case 'luxury_beauty':          return p<=500?0:p<=1000?9:10;
+    case 'feminine_hygiene':       return p<=1000?0:8;
+    case 'deodorants':             return p<=500?0:p<=1000?6.5:7;
+    case 'health_medical':         return p<=1000?0:2;
+    case 'health_sports_nutrition':return p<=300?0:p<=500?9:9.5;
+    case 'health_ayurvedic':       return p<=1000?0:7;
+    case 'health_cleaning':        return p<=1000?0:8;
+    case 'health_vitamins':        return p<=300?0:p<=500?9:p<=1000?10.5:11;
+    case 'health_regulated':       return p<=1000?0:2;
+    case 'health_other':           return p<=300?0:11.5;
+    case 'body_support':           return p<=1000?0:2;
+    case 'otc_medicine':           return p<=500?12:15;
+    case 'pharmacy':               return 8;
+    case 'pca_weighing':           return p<=1000?0:13.5;
+    case 'pca_grooming':           return p<=1000?0:9.5;
+    case 'pca_massagers':          return p<=1000?0:14.5;
+    case 'pca_glucometer':         return p<=1000?0:5.5;
+    case 'pca_thermometers':       return p<=1000?0:10.5;
+    case 'pca_bp_monitors':        return p<=1000?0:7.5;
+    case 'pca_pain_relief':        return p<=1000?0:7.5;
+    case 'pca_toothbrush':         return p<=1000?0:7.5;
+    case 'pca_other':              return p<=1000?0:7.5;
+    case 'eyewear':                return p<=1000?0:18.5;
+    case 'watches':                return p<=1000?0:15;
+    case 'flip_flops':             return p<=1000?0:15;
+    case 'kids_shoes':             return p<=1000?0:16;
+    case 'shoes':                  return p<=1000?0:8;
+    case 'wallets':                return p<=1000?0:14;
+    case 'backpacks':              return p<=1000?0:14.5;
+    case 'handbags':               return p<=1000?0:12;
+    case 'luggage_suitcase':       return p<=1000?0:5.5;
+    case 'luggage_travel':         return p<=1000?0:12;
+    case 'luggage_other':          return p<=1000?0:8;
+    case 'fashion_jewellery':      return p<=1000?0:22.5;
+    case 'silver_jewellery':       return p<=1000?0:13;
+    case 'kitchen_tools':          return p<=1000?0:12.5;
+    case 'cookware':               return p<=1000?0:12.5;
+    case 'kitchen_glass':          return p<=1000?0:12.5;
+    case 'containers':             return p<=1000?0:12;
+    case 'kitchen_linens':         return p<=1000?0:15.5;
+    case 'kitchen_other':          return p<=1000?0:12.5;
+    case 'bedsheets':              return p<=1000?0:8.5;
+    case 'home_furnishing':        return p<=1000?0:11;
+    case 'home_storage':           return p<=1000?0:15;
+    case 'home_decor':             return p<=1000?0:17;
+    case 'home_other':             return p<=1000?0:18;
+    case 'wall_art':               return p<=1000?0:13.5;
+    case 'rugs_doormats':          return p<=1000?0:9;
+    case 'cushion_covers':         return p<=1000?0:10;
+    case 'curtains':               return p<=1000?0:16.5;
+    case 'led_bulbs':              return p<=1000?0:14;
+    case 'indoor_lighting':        return p<=1000?0:16;
+    case 'clocks':                 return p<=1000?0:10;
+    case 'sports_cricket_badminton':return p<=1000?0:8.5;
+    case 'sports_bats_rackets':    return p<=1000?0:7.5;
+    case 'sports_footwear':        return p<=1000?0:16;
+    case 'gym_equipment':          return p<=1000?0:p<=35000?12:10;
+    case 'gym_weights':            return p<=1000?0:5.5;
+    case 'sports_other':           return p<=1000?0:13;
+    case 'bicycles':               return p<=1000?0:6;
+    case 'mobile_phones':          return 5;
+    case 'laptops':                return 6;
+    case 'tablets':                return p<=300?0:p<=12000?6:10;
+    case 'televisions':            return 6;
+    case 'headphones':             return p<=1000?0:18;
+    case 'power_banks':            return p<=1000?0:20.5;
+    case 'cables_adapters':        return p<=1000?0:20;
+    case 'cases_covers':           return p<=1000?0:25;
+    case 'accessories_electronics':return p<=300?0:p<=1000?5:17;
+    case 'speakers':               return p<=500?11:p<=1000?11.5:14;
+    case 'smart_watches':          return p<=300?0:p<=1000?5:17;
+    case 'toys_infant':            return p<=1000?0:11.5;
+    case 'toys_games_puzzles':     return p<=1000?0:12.5;
+    case 'toys_outdoor':           return p<=1000?0:10.5;
+    case 'toys_plush':             return p<=1000?0:10.5;
+    case 'toys_rc_vehicles':       return p<=1000?0:12.5;
+    case 'toys_stem':              return p<=1000?0:11.5;
+    case 'toys_party':             return p<=1000?0:12.5;
+    case 'toys_other':             return p<=1000?0:11.5;
+    case 'pet_food':               return p<=300?0:p<=1000?6.5:9.5;
+    case 'pet_accessories':        return p<=1000?0:12.5;
+    case 'pet_essentials':         return p<=1000?0:14;
+    case 'pet_other':              return p<=1000?0:12;
+    case 'grocery_herbs':          return p<=1000?0:8;
+    case 'grocery_dried_fruits':   return p<=1000?0:9;
+    case 'grocery_hampers':        return p<=1000?0:11.5;
+    case 'grocery_oils':           return p<=1000?0:5;
+    case 'grocery_beverages':      return p<=1000?0:10;
+    case 'grocery_other':          return p<=1000?0:9;
+    case 'small_appliances':       return p<=1000?0:p<=5000?4.5:8;
+    case 'water_purifier':         return p<=1000?0:p<=5000?6.5:7.5;
+    case 'water_heaters':          return p<=1000?0:p<=5000?8:9;
+    case 'cleaning_appliances':    return p<=1000?0:p<=5000?7.5:8.5;
+    case 'fans_robotic':           return p<=1000?0:p<=5000?4.5:8;
+    case 'inverter_batteries':     return p<=1000?0:4.5;
+    case 'major_appliances_other': return 5.5;
+    case 'refrigerators':          return 5;
+    case 'chimneys':               return 9.5;
+    case 'mattresses':             return p<=500?25.5:p<=1000?0:p<=20000?16:13.5;
+    case 'bean_bags':              return p<=1000?0:8;
+    case 'office_arts_crafts':     return p<=1000?0:5;
+    case 'office_supplies':        return p<=1000?0:13;
+    case 'office_writing':         return p<=1000?0:14;
+    case 'office_electronic':      return p<=1000?0:11.5;
+    case 'office_other':           return p<=1000?0:11.5;
+    case 'business_scientific':    return p<=1000?0:p<=15000?11.5:7;
+    case 'business_electrical':    return p<=1000?0:6;
+    case 'business_commercial':    return p<=1000?0:5.5;
+    case 'business_other':         return p<=1000?0:p<=15000?8:5;
+    case 'packing_materials':      return p<=1000?0:5;
+    case 'power_hand_tools':       return p<=1000?0:10;
+    case 'masks':                  return p<=1000?0:8;
+    case 'stethoscopes':           return p<=1000?0:10.5;
+    case 'home_imp_wallpapers':    return p<=1000?0:6.5;
+    case 'home_imp_wall_paints':   return p<=1000?0:6;
+    case 'home_imp_accessories':   return p<=1000?0:13.5;
+    case 'home_imp_kitchen_bath':  return p<=1000?0:12;
+    case 'home_imp_security':      return p<=1000?0:6;
+    case 'home_imp_other':         return p<=1000?0:13.5;
+    case 'safes_lockers':          return p<=1000?0:12;
+    case 'ladders':                return p<=1000?0:8;
+    case 'tiles_flooring':         return p<=1000?0:8;
+    case 'wires_cables':           return p<=1000?0:10;
+    case 'sanitaryware':           return p<=1000?0:p<=10000?8:6;
+    case 'auto_tyres':             return p<=1000?0:3;
+    case 'auto_batteries':         return p<=1000?0:8.5;
+    case 'auto_accessories':       return p<=1000?0:14;
+    case 'auto_helmets':           return p<=1000?0:8.5;
+    case 'auto_parts':             return p<=1000?0:16;
+    case 'auto_cleaning':          return p<=1000?0:13;
+    case 'auto_other':             return p<=1000?0:16;
+    case 'vehicle_tools':          return p<=1000?0:8.5;
+    case 'oils_lubricants':        return p<=1000?0:11.5;
+    case 'garden_plants':          return p<=1000?0:11;
+    case 'garden_pest':            return p<=1000?0:9;
+    case 'garden_equipment':       return p<=1000?0:6.5;
+    case 'garden_solar':           return p<=1000?0:8;
+    case 'garden_other':           return p<=1000?0:p<=15000?10:5;
+    default:                       return p<=1000?0:8;
   }
-  return slabs[slabs.length-1][1];
 }
 
-// Amazon closing fee (Easy Ship, effective Mar 16 2026)
-function getAmzClosingFee(price) {
-  if (price <= 300)  return 1;
-  if (price <= 500)  return 22;
-  if (price <= 1000) return 45;
+// Amazon closing fee — Easy Ship (effective March 16, 2026)
+function getAmzClosingFee(sellPrice) {
+  if (sellPrice <= 300)  return 1;
+  if (sellPrice <= 500)  return 22;
+  if (sellPrice <= 1000) return 45;
   return 76;
 }
 
