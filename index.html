@@ -4619,23 +4619,26 @@ async function savePnlModal() {
 function exportPnlExcel() {
   const settings = getPnlSettings();
   const header = ['Product','SKU','Your Cost (Rs)',
-    'Amazon SP','Amazon Ref%','Amazon Ref Fee','Amazon Closing','Amazon Courier','Amazon P/L','Amazon Margin%',
-    'Firstcry SP','Firstcry Dept','FC Comm%','FC Comm','FC GST on Comm','Firstcry P/L','Firstcry Margin%',
-    'Myntra SP','Myntra Cat','Myntra Comm%','Myntra Comm','Myntra Fixed Fee','Myntra Courier','Myntra P/L','Myntra Margin%',
-    'Shopify SP','Shopify Courier','Shopify P/L','Shopify Margin%'];
+    'Amazon SP','Amazon Ref%','Amazon Ref Fee','Amazon Closing Fee','Amazon Courier (net)','Amazon P/L','Amazon Margin%',
+    'Firstcry SP','Firstcry Dept','FC Comm%','FC Commission','Firstcry P/L','Firstcry Margin%',
+    'Myntra SP','Myntra Category','Myntra Comm%','Myntra Commission','Myntra Fixed Fee','Myntra Courier (net)','Myntra P/L','Myntra Margin%',
+    'Shopify SP','Shopify Courier (net)','Shopify P/L','Shopify Margin%',
+    'GST %'];
 
   const rows = DB.costSheets.map(s => {
-    const pnl = DB.pnlData.find(p=>p.sheetId===s.id)||{};
-    const amz = calcAmzPnl(s.finalCost, pnl.amzSellPrice||0, pnl.amzCat||'apparel_baby', settings);
-    const fc  = calcFcPnl(s.finalCost,  pnl.fcSellPrice||0,  pnl.fcDept||'healthcare',   settings);
-    const myn = calcMynPnl(s.finalCost, pnl.mynSellPrice||0, pnl.mynCat||'ACCESSORIES',   settings);
-    const shy = calcShyPnl(s.finalCost, pnl.shySellPrice||0,                              settings);
+    const pnl  = DB.pnlData.find(p=>p.sheetId===s.id)||{};
+    const gst  = getProductGst(s, pnl);
+    const amz  = calcAmzPnl(s.finalCost, pnl.amzSellPrice||0, pnl.amzCat||'apparel_baby', settings, gst);
+    const fc   = calcFcPnl(s.finalCost,  pnl.fcSellPrice||0,  pnl.fcDept||'healthcare',   settings, gst);
+    const myn  = calcMynPnl(s.finalCost, pnl.mynSellPrice||0, pnl.mynCat||'ACCESSORIES',  settings, gst);
+    const shy  = calcShyPnl(s.finalCost, pnl.shySellPrice||0,                             settings, gst);
     return [
       s.name, s.sku||'', s.finalCost,
-      amz?.sellPrice||'', amz?.refPct||'', amz?+amz.refFee.toFixed(2):'', amz?+amz.closingFee:'', amz?+amz.courier:'', amz?+amz.profit.toFixed(2):'', amz?+amz.margin.toFixed(1):'',
-      fc?.sellPrice||'', pnl.fcDept==='fashion'?'Fashion':'Healthcare', fc?.commPct||'', fc?+fc.commission.toFixed(2):'', fc?+fc.gstOnComm.toFixed(2):'', fc?+fc.profit.toFixed(2):'', fc?+fc.margin.toFixed(1):'',
-      myn?.sellPrice||'', pnl.mynCat||'', myn?.commPct||'', myn?+myn.commission.toFixed(2):'', myn?+myn.fixedFee:'', myn?+myn.courier:'', myn?+myn.profit.toFixed(2):'', myn?+myn.margin.toFixed(1):'',
-      shy?.sellPrice||'', shy?+shy.courier:'', shy?+shy.profit.toFixed(2):'', shy?+shy.margin.toFixed(1):''
+      amz?.sellPrice||'', amz?.refPct||'', amz?+amz.refFee.toFixed(2):'', amz?+amz.closingFee:'', amz?+amz.netCourier.toFixed(2):'', amz?+amz.profit.toFixed(2):'', amz?+amz.margin.toFixed(1):'',
+      fc?.sellPrice||'', pnl.fcDept==='fashion'?'Fashion':'Healthcare', fc?.commPct||'', fc?+fc.commission.toFixed(2):'', fc?+fc.profit.toFixed(2):'', fc?+fc.margin.toFixed(1):'',
+      myn?.sellPrice||'', pnl.mynCat||'', myn?.commPct||'', myn?+myn.commission.toFixed(2):'', myn?+myn.fixedFee:'', myn?+myn.netCourier.toFixed(2):'', myn?+myn.profit.toFixed(2):'', myn?+myn.margin.toFixed(1):'',
+      shy?.sellPrice||'', shy?+shy.netCourier.toFixed(2):'', shy?+shy.profit.toFixed(2):'', shy?+shy.margin.toFixed(1):'',
+      gst
     ];
   });
 
@@ -4645,7 +4648,7 @@ function exportPnlExcel() {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'P&L Dashboard');
   XLSX.writeFile(wb, `CostLink_PnL_${new Date().toISOString().slice(0,10)}.xlsx`);
-  toast('P&L exported');
+  toast('P&L exported ✓');
 }
 
 // ── BULK PNL IMPORT ─────────────────────────────
