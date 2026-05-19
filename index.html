@@ -426,9 +426,9 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
               <span style="font-size:.88rem;font-weight:700;color:var(--orange)" id="pnl-modal-cost"></span>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin-bottom:.5rem">
+              <div class="fg" style="margin-bottom:0"><label style="font-size:.6rem">SKU / Code</label><input type="text" id="pnl-sku" placeholder="e.g. PRD-001"/></div>
               <div class="fg" style="margin-bottom:0"><label style="font-size:.6rem">MRP (₹)</label><input type="number" id="pnl-mrp" placeholder="0.00" min="0" step=".01"/></div>
               <div class="fg" style="margin-bottom:0"><label style="font-size:.6rem">HSN Code</label><input type="text" id="pnl-hsn" placeholder="e.g. 6111"/></div>
-              <div></div>
             </div>
             <div style="display:flex;align-items:center;gap:.75rem;padding:.5rem .7rem;background:var(--blue-bg);border-radius:6px;border:1px solid rgba(44,95,168,.15)">
               <span style="font-size:.7rem;font-weight:600;color:var(--blue)">🏷 Product GST %</span>
@@ -1216,7 +1216,7 @@ const HDR_COSTS   = ['ID','Name','SKU','Category','ProductType','ProductItemID',
 const HDR_HISTORY = ['ID','SheetID','ProductName','SKU','ProductType','OldCost','NewCost','Diff','DiffPct','ChangedAt'];
 const HDR_INHOUSE = ['ID','ProductName','FabricItemID','FabricName','MetersPerUnit','WastagePct','FabricCostPerUnit','Stitching','Cutting','Finishing','JobWork','TotalLabour','TotalInhouseCost','Notes','UpdatedAt','CreatedAt','FabricRows','OtherExtras','ExtraTotal'];
 const HDR_COMBOS  = ['ID','ComboName','SKU','Notes','Items','ExtraCosts','TotalCost','MarginPct','SellPrice','UpdatedAt','CreatedAt'];
-const HDR_PNL     = ['SheetID','AmzSellPrice','AmzCommission','FcSellPrice','FcDept','UpdatedAt','AmzCat','MynSellPrice','MynCat','ShySellPrice','MRP','HSN','GstOverride'];
+const HDR_PNL     = ['SheetID','AmzSellPrice','AmzCommission','FcSellPrice','FcDept','UpdatedAt','AmzCat','MynSellPrice','MynCat','ShySellPrice','MRP','HSN','GstOverride','SKU'];
 
 // ══════════════════════════════════════════════════
 //  LOCAL DB (mirror of sheet)
@@ -1600,6 +1600,7 @@ function rowToPnl(row, h) {
     mrp:          +o.MRP||0,
     hsn:          o.HSN||'',
     gstOverride:  o.GstOverride ? +o.GstOverride : null,
+    sku:          o.SKU||'',
     updatedAt:    o.UpdatedAt||''
   };
 }
@@ -1622,7 +1623,8 @@ function pnlToRow(p) {
     p.shySellPrice,     // J
     p.mrp||0,           // K
     p.hsn||'',          // L
-    (p.gstOverride !== null && p.gstOverride !== undefined) ? p.gstOverride : ''  // M
+    (p.gstOverride !== null && p.gstOverride !== undefined) ? p.gstOverride : '',  // M
+    p.sku||''           // N
   ];
 }
 
@@ -4363,7 +4365,7 @@ function renderPnl() {
       return `<tr style="border-bottom:1px solid var(--bg2);${rowBg}" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='${isLoss?'rgba(201,58,26,.03)':''}'" >
         <td style="padding:.55rem .8rem">
           <div style="font-weight:600;font-size:.8rem">${sheet.name}${isLoss?' <span style="font-size:.55rem;color:#c93a1a;font-weight:700">●LOSS</span>':''}${changeBadge}</div>
-          ${sheet.sku?`<div style="font-size:.6rem;color:var(--ink3)">${sheet.sku}</div>`:''}
+          ${(pnl.sku||sheet.sku)?`<div style="font-size:.62rem;color:var(--blue);font-family:var(--mono)">${pnl.sku||sheet.sku}</div>`:''}
         </td>
         <td style="padding:.5rem .6rem;text-align:right;font-weight:600;font-size:.8rem">${fmt(sheet.finalCost)}${priceChanged?`<div style="font-size:.58rem;color:var(--ink3)">was ${fmt(sheet.prevFinalCost)}</div>`:''}
         </td>
@@ -4445,6 +4447,7 @@ function openPnlModal(sheetId) {
   sv('pnl-myn-sp',  pnl.mynSellPrice  || '');
   sv('pnl-myn-cat', pnl.mynCat        || 'ACCESSORIES');
   sv('pnl-shy-sp',  pnl.shySellPrice  || '');
+  sv('pnl-sku',     pnl.sku           || '');
   sv('pnl-mrp',     pnl.mrp           || '');
   sv('pnl-hsn',     pnl.hsn           || '');
 
@@ -4560,6 +4563,7 @@ async function savePnlModal() {
   rec.mynSellPrice = parseFloat(document.getElementById('pnl-myn-sp')?.value)  || 0;
   rec.mynCat       = document.getElementById('pnl-myn-cat')?.value             || 'ACCESSORIES';
   rec.shySellPrice = parseFloat(document.getElementById('pnl-shy-sp')?.value)  || 0;
+  rec.sku          = (document.getElementById('pnl-sku')?.value||'').trim();
   rec.mrp          = parseFloat(document.getElementById('pnl-mrp')?.value)     || 0;
   rec.hsn          = (document.getElementById('pnl-hsn')?.value||'').trim();
   const gstRaw     = document.getElementById('pnl-gst-override')?.value || 'auto_18';
@@ -4618,12 +4622,11 @@ async function savePnlModal() {
 
 function exportPnlExcel() {
   const settings = getPnlSettings();
-  const header = ['Product','SKU','Your Cost (Rs)',
+  const header = ['Product','SKU','MRP','HSN','GST%','Your Cost (Rs)',
     'Amazon SP','Amazon Ref%','Amazon Ref Fee','Amazon Closing Fee','Amazon Courier (net)','Amazon P/L','Amazon Margin%',
     'Firstcry SP','Firstcry Dept','FC Comm%','FC Commission','Firstcry P/L','Firstcry Margin%',
     'Myntra SP','Myntra Category','Myntra Comm%','Myntra Commission','Myntra Fixed Fee','Myntra Courier (net)','Myntra P/L','Myntra Margin%',
-    'Shopify SP','Shopify Courier (net)','Shopify P/L','Shopify Margin%',
-    'GST %'];
+    'Shopify SP','Shopify Courier (net)','Shopify P/L','Shopify Margin%'];
 
   const rows = DB.costSheets.map(s => {
     const pnl  = DB.pnlData.find(p=>p.sheetId===s.id)||{};
@@ -4633,18 +4636,17 @@ function exportPnlExcel() {
     const myn  = calcMynPnl(s.finalCost, pnl.mynSellPrice||0, pnl.mynCat||'ACCESSORIES',  settings, gst);
     const shy  = calcShyPnl(s.finalCost, pnl.shySellPrice||0,                             settings, gst);
     return [
-      s.name, s.sku||'', s.finalCost,
+      s.name, pnl.sku||s.sku||'', pnl.mrp||'', pnl.hsn||'', gst, s.finalCost,
       amz?.sellPrice||'', amz?.refPct||'', amz?+amz.refFee.toFixed(2):'', amz?+amz.closingFee:'', amz?+amz.netCourier.toFixed(2):'', amz?+amz.profit.toFixed(2):'', amz?+amz.margin.toFixed(1):'',
       fc?.sellPrice||'', pnl.fcDept==='fashion'?'Fashion':'Healthcare', fc?.commPct||'', fc?+fc.commission.toFixed(2):'', fc?+fc.profit.toFixed(2):'', fc?+fc.margin.toFixed(1):'',
       myn?.sellPrice||'', pnl.mynCat||'', myn?.commPct||'', myn?+myn.commission.toFixed(2):'', myn?+myn.fixedFee:'', myn?+myn.netCourier.toFixed(2):'', myn?+myn.profit.toFixed(2):'', myn?+myn.margin.toFixed(1):'',
-      shy?.sellPrice||'', shy?+shy.netCourier.toFixed(2):'', shy?+shy.profit.toFixed(2):'', shy?+shy.margin.toFixed(1):'',
-      gst
+      shy?.sellPrice||'', shy?+shy.netCourier.toFixed(2):'', shy?+shy.profit.toFixed(2):'', shy?+shy.margin.toFixed(1):''
     ];
   });
 
   const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
-  ws['!cols'] = Array(29).fill({wch:12});
-  ws['!cols'][0] = {wch:28}; ws['!cols'][1] = {wch:10};
+  ws['!cols'] = Array(31).fill({wch:12});
+  ws['!cols'][0] = {wch:28}; ws['!cols'][1] = {wch:12}; ws['!cols'][2] = {wch:10}; ws['!cols'][3] = {wch:10};
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'P&L Dashboard');
   XLSX.writeFile(wb, `CostLink_PnL_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -4663,10 +4665,10 @@ function openPnlImport() {
 }
 
 function downloadPnlTemplate() {
-  const header = ['Product Name','MRP','HSN','GST%','Amazon SP','Amazon Category','Firstcry SP','Firstcry Dept (healthcare/fashion)','Myntra SP','Myntra Category (ACCESSORIES/PERSONAL_CARE/APPAREL/HOME)','Shopify SP'];
+  const header = ['Product Name','SKU','MRP','HSN','GST%','Amazon SP','Amazon Category','Firstcry SP','Firstcry Dept (healthcare/fashion)','Myntra SP','Myntra Category (ACCESSORIES/PERSONAL_CARE/APPAREL/HOME)','Shopify SP'];
   const rows = DB.costSheets.map(s => {
     const pnl = DB.pnlData.find(p=>p.sheetId===s.id)||{};
-    return [s.name, pnl.mrp||'', pnl.hsn||'', pnl.gstOverride||'',
+    return [s.name, pnl.sku||s.sku||'', pnl.mrp||'', pnl.hsn||'', pnl.gstOverride||'',
       pnl.amzSellPrice||'', pnl.amzCat||'apparel_baby',
       pnl.fcSellPrice||'', pnl.fcDept||'healthcare',
       pnl.mynSellPrice||'', pnl.mynCat||'ACCESSORIES',
@@ -4703,6 +4705,7 @@ function handlePnlImport(input) {
         _pnlImportRows.push({
           sheetId:     sheet.id,
           name:        sheet.name,
+          sku:         String(row['SKU']||'').trim(),
           mrp:         parseFloat(row['MRP'])||0,
           hsn:         String(row['HSN']||'').trim(),
           gstOverride: row['GST%']?parseFloat(row['GST%']):null,
@@ -4725,10 +4728,12 @@ function handlePnlImport(input) {
       }
       prev.innerHTML = `
         <div style="font-size:.75rem;color:var(--ink3);margin-bottom:.4rem">Found <strong style="color:var(--ink)">${matched}</strong> matches · <strong>${skipped}</strong> skipped</div>
-        <div class="tw"><table><thead><tr><th>Product</th><th>MRP</th><th>GST%</th><th>Amazon SP</th><th>Firstcry SP</th><th>Myntra SP</th><th>Shopify SP</th></tr></thead><tbody>
+        <div class="tw"><table><thead><tr><th>Product</th><th>SKU</th><th>MRP</th><th>HSN</th><th>GST%</th><th>Amazon SP</th><th>Firstcry SP</th><th>Myntra SP</th><th>Shopify SP</th></tr></thead><tbody>
           ${_pnlImportRows.map(r=>`<tr>
             <td style="font-size:.75rem;font-weight:600">${r.name}</td>
+            <td style="font-size:.72rem;font-family:var(--mono)">${r.sku||'—'}</td>
             <td style="font-size:.72rem">${r.mrp||'—'}</td>
+            <td style="font-size:.72rem">${r.hsn||'—'}</td>
             <td style="font-size:.72rem">${r.gstOverride!=null?r.gstOverride+'%':'auto'}</td>
             <td style="font-size:.72rem">${r.amzSellPrice||'—'}</td>
             <td style="font-size:.72rem">${r.fcSellPrice||'—'}</td>
@@ -4762,10 +4767,10 @@ async function savePnlImport() {
       if (!rec) {
         rec = { sheetId:row.sheetId, amzSellPrice:0, amzCat:'apparel_baby', fcSellPrice:0,
                 fcDept:'healthcare', mynSellPrice:0, mynCat:'ACCESSORIES', shySellPrice:0,
-                mrp:0, hsn:'', gstOverride:null, updatedAt:today() };
+                sku:'', mrp:0, hsn:'', gstOverride:null, updatedAt:today() };
         DB.pnlData.push(rec);
       }
-      Object.assign(rec, { mrp:row.mrp, hsn:row.hsn, gstOverride:row.gstOverride,
+      Object.assign(rec, { sku:row.sku, mrp:row.mrp, hsn:row.hsn, gstOverride:row.gstOverride,
         amzSellPrice:row.amzSellPrice, amzCat:row.amzCat,
         fcSellPrice:row.fcSellPrice, fcDept:row.fcDept,
         mynSellPrice:row.mynSellPrice, mynCat:row.mynCat,
