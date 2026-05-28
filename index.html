@@ -4461,7 +4461,7 @@ function renderPnl() {
       <div>${q?`No products match`:'Click ✎ Edit on any product to enter selling prices'}</div>
     </td></tr>`;
   } else {
-    tbody.innerHTML = rows.map(({sheet,pnl,amz,fc,myn,shy,gst})=>{
+    tbody.innerHTML = rows.map(({sheet,pnl,amz,fc,myn,shy,mee,gst})=>{
       const isLoss=(amz&&amz.profit<0)||(fc&&fc.profit<0)||(myn&&myn.profit<0)||(shy&&shy.profit<0)||(mee&&mee.profit<0);
       const rowBg=isLoss?'background:rgba(201,58,26,.03)':'';
       // Price change badge
