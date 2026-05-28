@@ -1594,6 +1594,9 @@ async function loadAllFromSheet() {
   DB.inhouse      = await readTab(TAB_INHOUSE, HDR_INHOUSE, rowToInhouse);
   DB.combos       = await readTab(TAB_COMBOS,  HDR_COMBOS,  rowToCombo);
   DB.pnlData      = await readTab(TAB_PNL,     HDR_PNL,     rowToPnl);
+  console.log('DB loaded — costSheets:', DB.costSheets.length,
+    '| pnlData:', DB.pnlData.length,
+    '| sample pnl:', DB.pnlData[0] || 'none');
 }
 
 async function readTab(tab, headers, mapper) {
@@ -1616,7 +1619,7 @@ async function readTab(tab, headers, mapper) {
 
 function rowToObj(row, headers) {
   const obj = {};
-  headers.forEach((h, i) => obj[h] = row[i] || '');
+  headers.forEach((h, i) => obj[String(h||'').trim()] = row[i] || '');
   return obj;
 }
 
@@ -4031,14 +4034,15 @@ function loadPnlSettings() {
 
 function savePnlSettings() {
   try {
+    const gv2 = id => parseFloat(document.getElementById(id)?.value);
     localStorage.setItem('pnl_settings', JSON.stringify({
-      amzCourier:   parseFloat(document.getElementById('amz-courier')?.value)    || 70,
-      fcHealthPct:  parseFloat(document.getElementById('fc-health-pct')?.value)  || 37,
-      fcFashionPct: parseFloat(document.getElementById('fc-fashion-pct')?.value) || 45,
-      mynCourier:   parseFloat(document.getElementById('myn-courier')?.value)    || 80,
-      shyCourier:   parseFloat(document.getElementById('shy-courier')?.value)    || 85,
-      meeCourier:   parseFloat(document.getElementById('mee-courier')?.value)    || 0,
-      meeExtra:     parseFloat(document.getElementById('mee-extra')?.value)      || 0,
+      amzCourier:   isNaN(gv2('amz-courier'))   ? 70 : gv2('amz-courier'),
+      fcHealthPct:  isNaN(gv2('fc-health-pct'))  ? 37 : gv2('fc-health-pct'),
+      fcFashionPct: isNaN(gv2('fc-fashion-pct')) ? 45 : gv2('fc-fashion-pct'),
+      mynCourier:   isNaN(gv2('myn-courier'))   ? 80 : gv2('myn-courier'),
+      shyCourier:   isNaN(gv2('shy-courier'))   ? 85 : gv2('shy-courier'),
+      meeCourier:   isNaN(gv2('mee-courier'))   ? 0  : gv2('mee-courier'),
+      meeExtra:     isNaN(gv2('mee-extra'))     ? 0  : gv2('mee-extra'),
     }));
     renderPnl();
   } catch(e){}
