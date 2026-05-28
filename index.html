@@ -4375,8 +4375,10 @@ function getAmzClosingFee(sellPrice) {
 
 
 function renderPnl() {
-  loadPnlSettings();
-  const settings = getPnlSettings();
+  const tbody = document.getElementById('tbl-pnl-body');
+  try {
+    loadPnlSettings();
+    const settings = getPnlSettings();
   const q = (document.getElementById('pnl-search')?.value||'').toLowerCase();
 
   let rows = DB.costSheets.map(s => {
@@ -4504,6 +4506,13 @@ function renderPnl() {
   document.querySelectorAll('[id^="pnl-filt-"]').forEach(b=>{ b.style.background=''; b.style.color=''; });
   const el2 = document.getElementById('pnl-filt-'+_pnlFilter);
   if (el2) { el2.style.background='var(--ink2)'; el2.style.color='#fff'; }
+  } catch(e) {
+    console.error('renderPnl error:', e);
+    if (tbody) tbody.innerHTML = `<tr><td colspan="20" style="text-align:center;padding:2rem;color:#c93a1a">
+      <div style="font-size:.85rem">Error loading P&L data: ${e.message}</div>
+      <div style="font-size:.72rem;color:var(--ink3);margin-top:.3rem">Check console for details</div>
+    </td></tr>`;
+  }
 }
 
 function openPnlModal(sheetId) {
