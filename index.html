@@ -125,12 +125,14 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font);min-height:10
 #col-picker label{display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--ink2);padding:.2rem 0;cursor:pointer}
 #col-picker label:hover{color:var(--ink)}
 #col-picker input[type=checkbox]{width:13px;height:13px;cursor:pointer;accent-color:var(--blue)}
-#tbl-pnl td:first-child, #tbl-pnl th:first-child { position:sticky; left:0; z-index:2; background:var(--bg-panel); }
-#tbl-pnl tr:hover td:first-child { background:var(--bg); }
-#tbl-pnl td:last-child, #tbl-pnl th:last-child { position:sticky; right:0; z-index:2; background:var(--bg-panel); box-shadow:-2px 0 6px rgba(0,0,0,.06); }
-#tbl-pnl tr:hover td:last-child { background:var(--bg); }
+#tbl-pnl { border-collapse:separate; border-spacing:0; }
+#tbl-pnl td:first-child, #tbl-pnl th:first-child { position:sticky; left:0; z-index:3; background:var(--bg-panel); box-shadow:3px 0 8px -2px rgba(0,0,0,.10); }
+#tbl-pnl td:last-child,  #tbl-pnl th:last-child  { position:sticky; right:0; z-index:3; background:var(--bg-panel); box-shadow:-3px 0 8px -2px rgba(0,0,0,.10); }
+#tbl-pnl tr:hover td:first-child, #tbl-pnl tr:hover td:last-child { background:var(--bg); }
+#tbl-pnl thead th:first-child, #tbl-pnl thead th:last-child { z-index:6; background:var(--bg); }
+#tbl-pnl thead tr:nth-child(2) th { position:sticky; top:36px; z-index:4; }
 table{width:100%;border-collapse:collapse;}
-thead th{padding:.5rem .85rem;text-align:left;font-size:.58rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);background:var(--bg);white-space:nowrap;position:sticky;top:0;z-index:2;}
+thead th{padding:.5rem .85rem;text-align:left;font-size:.58rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);background:var(--bg);white-space:nowrap;position:sticky;top:0;z-index:4;}
 tbody tr{border-bottom:1px solid var(--bg2);transition:background .1s;}
 tbody tr:hover{background:var(--bg);}
 td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
@@ -392,7 +394,7 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
 
       <!-- MAIN TABLE -->
       <div class="panel">
-        <div class="tw" style="overflow-x:auto;border-radius:8px;">
+        <div style="overflow-x:auto;overflow-y:visible;border-radius:8px;-webkit-overflow-scrolling:touch;">
           <table id="tbl-pnl" style="min-width:1200px">
             <thead>
               <tr>
@@ -4416,7 +4418,7 @@ function renderPnl() {
         : '';
       const gstPct = gst || 18;
       return `<tr style="border-bottom:1px solid var(--bg2);${rowBg}" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='${isLoss?'rgba(201,58,26,.03)':''}'" >
-        <td style="padding:.55rem .8rem">
+        <td style="padding:.55rem .8rem;background:var(--bg-panel)">
           <div style="font-weight:600;font-size:.8rem">${sheet.name}${isLoss?' <span style="font-size:.55rem;color:#c93a1a;font-weight:700">●LOSS</span>':''}${changeBadge}</div>
           ${(pnl.sku||sheet.sku)?`<div style="font-size:.62rem;color:var(--blue);font-family:var(--mono)">${pnl.sku||sheet.sku}</div>`:''}
         </td>
@@ -4438,7 +4440,7 @@ function renderPnl() {
         <td data-col="shy_pl"   style="padding:.5rem .6rem;background:#F3E5F5">${plInner(shy)}</td>
         <td data-col="mee_sp"   style="padding:.5rem .6rem;background:#E8EAF6;border-left:2px solid #C5CAE9;${spStyle}">${pnl.meeSellPrice?fmt(pnl.meeSellPrice):'<span style="color:var(--ink3);font-size:.68rem">—</span>'}</td>
         <td data-col="mee_pl"   style="padding:.5rem .6rem;background:#E8EAF6">${plInner(mee)}</td>
-        <td style="padding:.5rem .6rem;text-align:center">
+        <td style="padding:.5rem .6rem;text-align:center;background:var(--bg-panel)">
           <button class="act" onclick="openPnlModal('${sheet.id}')">✎ Edit</button>
         </td>
       </tr>`;
@@ -4810,7 +4812,7 @@ function handlePnlImport(input) {
       }
       prev.innerHTML = `
         <div style="font-size:.75rem;color:var(--ink3);margin-bottom:.4rem">Found <strong style="color:var(--ink)">${matched}</strong> matches · <strong>${skipped}</strong> skipped</div>
-        <div class="tw"><table><thead><tr><th>Product</th><th>SKU</th><th>MRP</th><th>HSN</th><th>GST%</th><th>Amazon SP</th><th>Firstcry SP</th><th>Myntra SP</th><th>Shopify SP</th></tr></thead><tbody>
+        <div class="tw"><table><thead><tr><th>Product</th><th>SKU</th><th>MRP</th><th>HSN</th><th>GST%</th><th>Amazon SP</th><th>Firstcry SP</th><th>Myntra SP</th><th>Shopify SP</th><th>Meesho SP</th><th>Mee Courier</th><th>Mee Other</th></tr></thead><tbody>
           ${_pnlImportRows.map(r=>`<tr>
             <td style="font-size:.75rem;font-weight:600">${r.name}</td>
             <td style="font-size:.72rem;font-family:var(--mono)">${r.sku||'—'}</td>
@@ -4821,6 +4823,9 @@ function handlePnlImport(input) {
             <td style="font-size:.72rem">${r.fcSellPrice||'—'}</td>
             <td style="font-size:.72rem">${r.mynSellPrice||'—'}</td>
             <td style="font-size:.72rem">${r.shySellPrice||'—'}</td>
+            <td style="font-size:.72rem">${r.meeSellPrice||'—'}</td>
+            <td style="font-size:.72rem">${r.meeCourier||'—'}</td>
+            <td style="font-size:.72rem">${r.meeOther||'—'}</td>
           </tr>`).join('')}
         </tbody></table></div>`;
       document.getElementById('btn-pnl-import-save').style.display='';
