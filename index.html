@@ -1252,7 +1252,7 @@ const APP_CONFIG = {
   LISTING_EMAILS:  ['zikku.listing@gmail.com'],         // P&L only
 };
 
-const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
 const DISCOVERY = 'https://sheets.googleapis.com/$discovery/rest?version=v4';
 
 // Sheet tab names
@@ -1402,7 +1402,7 @@ function startSignIn() {
   if(btn){ btn.disabled=true; btn.innerHTML='<span>Opening Google sign-in…</span>'; }
   setLoginStatus('⏳ Opening Google sign-in popup…');
   try {
-    tokenClient.requestAccessToken({ prompt: 'consent' });
+    tokenClient.requestAccessToken({ prompt: 'consent', include_granted_scopes: true });
   } catch(e) {
     setLoginStatus('Error: ' + e.message, true);
     if(btn){
@@ -1485,12 +1485,19 @@ async function onSignedIn() {
 
 async function getGoogleUserInfo() {
   try {
+    // Try userinfo endpoint with current token
     const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
       headers: { Authorization: 'Bearer ' + gapi.client.getToken().access_token }
     });
     const d = await r.json();
     console.log('Google user info:', d);
-    return d.email || d.name || '';
+    if (d.email) return d.email;
+    // Fallback: try tokeninfo endpoint
+    const token = gapi.client.getToken().access_token;
+    const r2 = await fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${token}`);
+    const d2 = await r2.json();
+    console.log('Token info:', d2);
+    return d2.email || d2.sub || '';
   } catch(e) {
     console.error('getGoogleUserInfo failed:', e);
     return '';
