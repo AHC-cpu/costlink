@@ -315,7 +315,7 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
           <span style="font-size:.72rem;color:var(--ink3)" id="pnl-settings-toggle">▼ Show</span>
         </div>
         <div id="pnl-settings-body" style="display:none;padding:1rem;border-top:1px solid var(--line)">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1.2rem;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:1rem;">
             <div>
               <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;">🛒 Amazon</div>
               <div class="fg"><label>Courier (₹/order)</label><input type="number" id="amz-courier" value="70" min="0" step="1" oninput="savePnlSettings()"/></div>
@@ -339,6 +339,12 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
               <div class="fg"><label>Courier (₹/order)</label><input type="number" id="shy-courier" value="85" min="0" step="1" oninput="savePnlSettings()"/></div>
               <div style="font-size:.62rem;color:var(--ink3)">No commission. Only courier charges deducted.</div>
             </div>
+            <div>
+              <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;">🛍 Meesho</div>
+              <div class="fg"><label>Courier (₹/order)</label><input type="number" id="mee-courier" value="0" min="0" step="1" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Other Charges (₹/order)</label><input type="number" id="mee-other" value="0" min="0" step=".01" oninput="savePnlSettings()"/></div>
+              <div style="font-size:.62rem;color:var(--ink3)">No commission. Courier + other charges only.</div>
+            </div>
           </div>
         </div>
       </div>
@@ -352,6 +358,7 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
         <button class="btn btn-s" id="pnl-filt-firstcry" onclick="setPnlFilter('firstcry')" style="font-size:.72rem;padding:.35rem .75rem">Firstcry</button>
         <button class="btn btn-s" id="pnl-filt-myntra"   onclick="setPnlFilter('myntra')"   style="font-size:.72rem;padding:.35rem .75rem">Myntra</button>
         <button class="btn btn-s" id="pnl-filt-shopify"  onclick="setPnlFilter('shopify')"  style="font-size:.72rem;padding:.35rem .75rem">Shopify</button>
+        <button class="btn btn-s" id="pnl-filt-meesho"   onclick="setPnlFilter('meesho')"   style="font-size:.72rem;padding:.35rem .75rem">Meesho</button>
         <div class="t-search"><span class="si">⌕</span><input type="text" id="pnl-search" placeholder="Search..." oninput="renderPnl()"/></div>
         <div style="margin-left:auto;display:flex;gap:.5rem">
           <button class="btn btn-s" onclick="openPnlImport()" style="font-size:.72rem;padding:.35rem .8rem">📤 Bulk Import SP</button>
@@ -361,11 +368,12 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
       </div>
 
       <!-- KPI CARDS -->
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.65rem;margin-bottom:1rem;">
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:.55rem;margin-bottom:1rem;">
         <div class="panel" style="margin-bottom:0;padding:.75rem .85rem"><div style="font-size:.55rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em">Total Products</div><div style="font-size:1.5rem;font-weight:800;color:var(--ink);margin-top:.1rem" id="pnl-kv-total">—</div></div>
         <div class="panel" style="margin-bottom:0;padding:.75rem .85rem"><div style="font-size:.55rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em">Loss — Amazon</div><div style="font-size:1.5rem;font-weight:800;color:#c93a1a;margin-top:.1rem" id="pnl-kv-amz-loss">—</div></div>
         <div class="panel" style="margin-bottom:0;padding:.75rem .85rem"><div style="font-size:.55rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em">Loss — Firstcry</div><div style="font-size:1.5rem;font-weight:800;color:#c93a1a;margin-top:.1rem" id="pnl-kv-fc-loss">—</div></div>
         <div class="panel" style="margin-bottom:0;padding:.75rem .85rem"><div style="font-size:.55rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em">Loss — Myntra</div><div style="font-size:1.5rem;font-weight:800;color:#c93a1a;margin-top:.1rem" id="pnl-kv-myn-loss">—</div></div>
+        <div class="panel" style="margin-bottom:0;padding:.75rem .85rem"><div style="font-size:.55rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em">Loss — Meesho</div><div style="font-size:1.5rem;font-weight:800;color:#c93a1a;margin-top:.1rem" id="pnl-kv-mee-loss">—</div></div>
         <div class="panel" style="margin-bottom:0;padding:.75rem .85rem"><div style="font-size:.55rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em">Configured</div><div style="font-size:1.5rem;font-weight:800;color:var(--blue);margin-top:.1rem" id="pnl-kv-configured">—</div></div>
       </div>
 
@@ -384,6 +392,7 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
                 <th colspan="3" style="text-align:center;background:#E8F5E9;border-left:2px solid #81C784">🛍 Firstcry</th>
                 <th colspan="3" style="text-align:center;background:#FCE4EC;border-left:2px solid #F48FB1">🏪 Myntra</th>
                 <th colspan="3" style="text-align:center;background:#F3E5F5;border-left:2px solid #CE93D8">🛒 Shopify</th>
+                <th colspan="2" style="text-align:center;background:#E8EAF6;border-left:2px solid #9FA8DA">🛍 Meesho</th>
                 <th rowspan="2" style="vertical-align:middle;text-align:center;min-width:60px">Edit</th>
               </tr>
               <tr>
@@ -399,10 +408,12 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
                 <th style="background:#F3E5F5;text-align:right;font-size:.6rem">SP</th>
                 <th style="background:#F3E5F5;text-align:right;font-size:.6rem">Courier</th>
                 <th style="background:#F3E5F5;text-align:right;font-weight:700;font-size:.6rem">P/L</th>
+                <th style="background:#E8EAF6;text-align:right;font-size:.6rem;border-left:2px solid #9FA8DA">SP</th>
+                <th style="background:#E8EAF6;text-align:right;font-weight:700;font-size:.6rem">P/L</th>
               </tr>
             </thead>
             <tbody id="tbl-pnl-body">
-              <tr><td colspan="18" style="text-align:center;padding:2rem;color:var(--ink3)">
+              <tr><td colspan="22" style="text-align:center;padding:2rem;color:var(--ink3)">
                 <div style="font-size:1.5rem;opacity:.3;margin-bottom:.5rem">📊</div>
                 Sign in to load your products
               </td></tr>
@@ -683,6 +694,14 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
               <div class="fg"><label>Selling Price (₹)</label><input type="number" id="pnl-shy-sp" placeholder="0.00" min="0" step=".01" oninput="calcPnlPreview()"/></div>
               <div style="font-size:.68rem;color:var(--ink3);margin-bottom:.5rem">No commission — only courier charges deducted</div>
               <div class="calc-preview" style="margin-top:.3rem" id="shy-preview">
+                <div class="calc-row"><span style="color:var(--ink3)">Enter selling price to calculate</span><span></span></div>
+              </div>
+            </div>
+            <div class="cost-section" style="background:#E8EAF6;border-color:#9FA8DA;margin-bottom:0">
+              <div class="cs-title"><div class="dot" style="background:#3F51B5"></div>🛍 Meesho</div>
+              <div class="fg"><label>Selling Price (₹)</label><input type="number" id="pnl-mee-sp" placeholder="0.00" min="0" step=".01" oninput="calcPnlPreview()"/></div>
+              <div style="font-size:.68rem;color:var(--ink3);margin-bottom:.5rem">No commission — courier + other charges from Settings</div>
+              <div class="calc-preview" style="margin-top:.3rem" id="mee-preview">
                 <div class="calc-row"><span style="color:var(--ink3)">Enter selling price to calculate</span><span></span></div>
               </div>
             </div>
@@ -1216,7 +1235,7 @@ const HDR_COSTS   = ['ID','Name','SKU','Category','ProductType','ProductItemID',
 const HDR_HISTORY = ['ID','SheetID','ProductName','SKU','ProductType','OldCost','NewCost','Diff','DiffPct','ChangedAt'];
 const HDR_INHOUSE = ['ID','ProductName','FabricItemID','FabricName','MetersPerUnit','WastagePct','FabricCostPerUnit','Stitching','Cutting','Finishing','JobWork','TotalLabour','TotalInhouseCost','Notes','UpdatedAt','CreatedAt','FabricRows','OtherExtras','ExtraTotal'];
 const HDR_COMBOS  = ['ID','ComboName','SKU','Notes','Items','ExtraCosts','TotalCost','MarginPct','SellPrice','UpdatedAt','CreatedAt'];
-const HDR_PNL     = ['SheetID','AmzSellPrice','AmzCommission','FcSellPrice','FcDept','UpdatedAt','AmzCat','MynSellPrice','MynCat','ShySellPrice','MRP','HSN','GstOverride','SKU'];
+const HDR_PNL     = ['SheetID','AmzSellPrice','AmzCommission','FcSellPrice','FcDept','UpdatedAt','AmzCat','MynSellPrice','MynCat','ShySellPrice','MRP','HSN','GstOverride','SKU','MeeShopSellPrice'];
 
 // ══════════════════════════════════════════════════
 //  LOCAL DB (mirror of sheet)
@@ -1597,6 +1616,7 @@ function rowToPnl(row, h) {
     mynSellPrice: +o.MynSellPrice||0,
     mynCat:       o.MynCat||'ACCESSORIES',
     shySellPrice: +o.ShySellPrice||0,
+    meeSellPrice: +o.MeeShopSellPrice||0,
     mrp:          +o.MRP||0,
     hsn:          o.HSN||'',
     gstOverride:  o.GstOverride ? +o.GstOverride : null,
@@ -3944,6 +3964,8 @@ function loadPnlSettings() {
     set('fc-fashion-pct', s.fcFashionPct ?? 45);
     set('myn-courier',    s.mynCourier   ?? 80);
     set('shy-courier',    s.shyCourier   ?? 85);
+    set('mee-courier',    s.meeCourier   ?? 0);
+    set('mee-other',      s.meeOther     ?? 0);
   } catch(e){}
 }
 
@@ -3955,6 +3977,8 @@ function savePnlSettings() {
       fcFashionPct: parseFloat(document.getElementById('fc-fashion-pct')?.value) || 45,
       mynCourier:   parseFloat(document.getElementById('myn-courier')?.value)    || 80,
       shyCourier:   parseFloat(document.getElementById('shy-courier')?.value)    || 85,
+      meeCourier:   parseFloat(document.getElementById('mee-courier')?.value)    || 0,
+      meeOther:     parseFloat(document.getElementById('mee-other')?.value)      || 0,
     }));
     renderPnl();
   } catch(e){}
@@ -3969,8 +3993,10 @@ function getPnlSettings() {
       fcFashionPct: s.fcFashionPct ?? 45,
       mynCourier:   s.mynCourier   ?? 80,
       shyCourier:   s.shyCourier   ?? 85,
+      meeCourier:   s.meeCourier   ?? 0,
+      meeOther:     s.meeOther     ?? 0,
     };
-  } catch(e) { return { amzCourier:70, fcHealthPct:37, fcFashionPct:45, mynCourier:80, shyCourier:85 }; }
+  } catch(e) { return { amzCourier:70, fcHealthPct:37, fcFashionPct:45, mynCourier:80, shyCourier:85, meeCourier:0, meeOther:0 }; }
 }
 
 function togglePnlSettings() {
@@ -4063,6 +4089,19 @@ function calcShyPnl(cost, sellPrice, settings, gstPct) {
   const profit     = netSP - totalDeduct;
   return { sellPrice, netSP, gstPct, totalComm,
     courier: settings.shyCourier, netCourier, totalDeduct, profit,
+    margin: netSP>0 ? (profit/netSP*100) : 0 };
+}
+
+function calcMeePnl(cost, sellPrice, settings, gstPct) {
+  if (!sellPrice) return null;
+  const netSP      = sellPrice / (1 + gstPct/100);
+  const netCourier = settings.meeCourier > 0 ? settings.meeCourier / 1.18 : 0;
+  const other      = settings.meeOther || 0;
+  const totalComm  = 0;
+  const totalDeduct= netCourier + other + cost;
+  const profit     = netSP - totalDeduct;
+  return { sellPrice, netSP, gstPct, totalComm,
+    courier: settings.meeCourier, netCourier, other, totalDeduct, profit,
     margin: netSP>0 ? (profit/netSP*100) : 0 };
 }
 // Myntra commission % by master category + price slab (ZIKKU brand from CTA)
@@ -4283,7 +4322,8 @@ function renderPnl() {
     const fc   = calcFcPnl(s.finalCost,  pnl.fcSellPrice||0,  pnl.fcDept||'healthcare',   settings, gst);
     const myn  = calcMynPnl(s.finalCost, pnl.mynSellPrice||0, pnl.mynCat||'ACCESSORIES',   settings, gst);
     const shy  = calcShyPnl(s.finalCost, pnl.shySellPrice||0,                              settings, gst);
-    return { sheet:s, pnl, amz, fc, myn, shy, gst };
+    const mee  = calcMeePnl(s.finalCost, pnl.meeSellPrice||0,                              settings, gst);
+    return { sheet:s, pnl, amz, fc, myn, shy, mee, gst };
   });
 
   if (q) rows = rows.filter(r =>
@@ -4292,16 +4332,17 @@ function renderPnl() {
     (r.pnl.hsn||'').toLowerCase().includes(q) ||
     (r.sheet.category||'').toLowerCase().includes(q)
   );
-  if (_pnlFilter==='loss')     rows = rows.filter(r=>(r.amz&&r.amz.profit<0)||(r.fc&&r.fc.profit<0)||(r.myn&&r.myn.profit<0)||(r.shy&&r.shy.profit<0));
-  if (_pnlFilter==='profit')   rows = rows.filter(r=>(r.amz&&r.amz.profit>=0)||(r.fc&&r.fc.profit>=0)||(r.myn&&r.myn.profit>=0)||(r.shy&&r.shy.profit>=0));
+  if (_pnlFilter==='loss')     rows = rows.filter(r=>(r.amz&&r.amz.profit<0)||(r.fc&&r.fc.profit<0)||(r.myn&&r.myn.profit<0)||(r.shy&&r.shy.profit<0)||(r.mee&&r.mee.profit<0));
+  if (_pnlFilter==='profit')   rows = rows.filter(r=>(r.amz&&r.amz.profit>=0)||(r.fc&&r.fc.profit>=0)||(r.myn&&r.myn.profit>=0)||(r.shy&&r.shy.profit>=0)||(r.mee&&r.mee.profit>=0));
   if (_pnlFilter==='amazon')   rows = rows.filter(r=>r.pnl.amzSellPrice>0);
   if (_pnlFilter==='firstcry') rows = rows.filter(r=>r.pnl.fcSellPrice>0);
   if (_pnlFilter==='myntra')   rows = rows.filter(r=>r.pnl.mynSellPrice>0);
   if (_pnlFilter==='shopify')  rows = rows.filter(r=>r.pnl.shySellPrice>0);
+  if (_pnlFilter==='meesho')   rows = rows.filter(r=>r.pnl.meeSellPrice>0);
 
   rows.sort((a,b)=>{
-    const aMin = Math.min(a.amz?.profit??Infinity,a.fc?.profit??Infinity,a.myn?.profit??Infinity,a.shy?.profit??Infinity);
-    const bMin = Math.min(b.amz?.profit??Infinity,b.fc?.profit??Infinity,b.myn?.profit??Infinity,b.shy?.profit??Infinity);
+    const aMin = Math.min(a.amz?.profit??Infinity,a.fc?.profit??Infinity,a.myn?.profit??Infinity,a.shy?.profit??Infinity,a.mee?.profit??Infinity);
+    const bMin = Math.min(b.amz?.profit??Infinity,b.fc?.profit??Infinity,b.myn?.profit??Infinity,b.shy?.profit??Infinity,b.mee?.profit??Infinity);
     if (aMin<0&&bMin>=0) return -1;
     if (bMin<0&&aMin>=0) return 1;
     if (aMin<0&&bMin<0)  return aMin-bMin;
@@ -4316,13 +4357,15 @@ function renderPnl() {
       amz:  calcAmzPnl(s.finalCost, p.amzSellPrice||0, p.amzCat||'apparel_baby', settings, gst),
       fc:   calcFcPnl(s.finalCost,  p.fcSellPrice||0,  p.fcDept||'healthcare',   settings, gst),
       myn:  calcMynPnl(s.finalCost, p.mynSellPrice||0, p.mynCat||'ACCESSORIES',   settings, gst),
-      configured: (p.amzSellPrice||p.fcSellPrice||p.mynSellPrice||p.shySellPrice)>0
+      mee:  calcMeePnl(s.finalCost, p.meeSellPrice||0, settings, gst),
+      configured: (p.amzSellPrice||p.fcSellPrice||p.mynSellPrice||p.shySellPrice||p.meeSellPrice)>0
     };
   });
   document.getElementById('pnl-kv-total').textContent       = DB.costSheets.length;
   document.getElementById('pnl-kv-amz-loss').textContent    = all.filter(r=>r.amz&&r.amz.profit<0).length;
   document.getElementById('pnl-kv-fc-loss').textContent     = all.filter(r=>r.fc&&r.fc.profit<0).length;
   document.getElementById('pnl-kv-myn-loss').textContent    = all.filter(r=>r.myn&&r.myn.profit<0).length;
+  document.getElementById('pnl-kv-mee-loss').textContent    = all.filter(r=>r.mee&&r.mee.profit<0).length;
   document.getElementById('pnl-kv-configured').textContent  = all.filter(r=>r.configured).length;
 
   const plCell = (result, bgClass) => {
@@ -4352,8 +4395,8 @@ function renderPnl() {
       <div>${q?`No products match`:'Click ✎ Edit on any product to enter selling prices'}</div>
     </td></tr>`;
   } else {
-    tbody.innerHTML = rows.map(({sheet,pnl,amz,fc,myn,shy,gst})=>{
-      const isLoss=(amz&&amz.profit<0)||(fc&&fc.profit<0)||(myn&&myn.profit<0)||(shy&&shy.profit<0);
+    tbody.innerHTML = rows.map(({sheet,pnl,amz,fc,myn,shy,mee,gst})=>{
+      const isLoss=(amz&&amz.profit<0)||(fc&&fc.profit<0)||(myn&&myn.profit<0)||(shy&&shy.profit<0)||(mee&&mee.profit<0);
       const rowBg=isLoss?'background:rgba(201,58,26,.03)':'';
       // Price change badge
       const priceChanged = sheet.prevFinalCost!=null && Math.abs(sheet.finalCost-sheet.prevFinalCost)>0.001;
@@ -4384,6 +4427,8 @@ function renderPnl() {
         ${spCell(pnl.shySellPrice||0, 'background:#F3E5F5;border-left:2px solid #E1BEE7;')}
         ${commCell(shy, 'background:#F3E5F5;')}
         ${plCell(shy, 'background:#F3E5F5;')}
+        ${spCell(pnl.meeSellPrice||0, 'background:#E8EAF6;border-left:2px solid #C5CAE9;')}
+        ${plCell(mee, 'background:#E8EAF6;')}
         <td style="padding:.5rem .6rem;text-align:center">
           <button class="act" onclick="openPnlModal('${sheet.id}')">✎ Edit</button>
         </td>
@@ -4447,6 +4492,7 @@ function openPnlModal(sheetId) {
   sv('pnl-myn-sp',  pnl.mynSellPrice  || '');
   sv('pnl-myn-cat', pnl.mynCat        || 'ACCESSORIES');
   sv('pnl-shy-sp',  pnl.shySellPrice  || '');
+  sv('pnl-mee-sp',  pnl.meeSellPrice  || '');
   sv('pnl-sku',     pnl.sku           || '');
   sv('pnl-mrp',     pnl.mrp           || '');
   sv('pnl-hsn',     pnl.hsn           || '');
@@ -4538,6 +4584,19 @@ function calcPnlPreview() {
       <div class="calc-row"><span style="color:var(--ink3)">− Your Cost</span><span>−${fmt(cost)}</span></div>`,
       sh.profit, sh.margin);
   } else showPreview('shy-preview', null);
+
+  // MEESHO
+  const meeSP = parseFloat(document.getElementById('pnl-mee-sp')?.value)||0;
+  if (meeSP>0) {
+    const me = calcMeePnl(cost, meeSP, settings, gstPct);
+    showPreview('mee-preview', `
+      <div class="calc-row"><span>Selling Price (incl. ${gstPct}% GST)</span><span style="font-weight:600">${fmt(meeSP)}</span></div>
+      <div class="calc-row"><span style="color:var(--ink3)">Net Revenue (excl. GST)</span><span>${fmt(me.netSP)}</span></div>
+      ${me.netCourier>0?`<div class="calc-row"><span style="color:var(--ink3)">− Courier (net of GST)</span><span>−${fmt(me.netCourier)}</span></div>`:''}
+      ${me.other>0?`<div class="calc-row"><span style="color:var(--ink3)">− Other Charges</span><span>−${fmt(me.other)}</span></div>`:''}
+      <div class="calc-row"><span style="color:var(--ink3)">− Your Cost</span><span>−${fmt(cost)}</span></div>`,
+      me.profit, me.margin);
+  } else showPreview('mee-preview', null);
 }
 
 async function savePnlModal() {
@@ -4626,7 +4685,8 @@ function exportPnlExcel() {
     'Amazon SP','Amazon Ref%','Amazon Ref Fee','Amazon Closing Fee','Amazon Courier (net)','Amazon P/L','Amazon Margin%',
     'Firstcry SP','Firstcry Dept','FC Comm%','FC Commission','Firstcry P/L','Firstcry Margin%',
     'Myntra SP','Myntra Category','Myntra Comm%','Myntra Commission','Myntra Fixed Fee','Myntra Courier (net)','Myntra P/L','Myntra Margin%',
-    'Shopify SP','Shopify Courier (net)','Shopify P/L','Shopify Margin%'];
+    'Shopify SP','Shopify Courier (net)','Shopify P/L','Shopify Margin%',
+    'Meesho SP','Meesho P/L','Meesho Margin%'];
 
   const rows = DB.costSheets.map(s => {
     const pnl  = DB.pnlData.find(p=>p.sheetId===s.id)||{};
@@ -4635,12 +4695,14 @@ function exportPnlExcel() {
     const fc   = calcFcPnl(s.finalCost,  pnl.fcSellPrice||0,  pnl.fcDept||'healthcare',   settings, gst);
     const myn  = calcMynPnl(s.finalCost, pnl.mynSellPrice||0, pnl.mynCat||'ACCESSORIES',  settings, gst);
     const shy  = calcShyPnl(s.finalCost, pnl.shySellPrice||0,                             settings, gst);
+    const mee  = calcMeePnl(s.finalCost, pnl.meeSellPrice||0,                             settings, gst);
     return [
       s.name, pnl.sku||s.sku||'', pnl.mrp||'', pnl.hsn||'', gst, s.finalCost,
       amz?.sellPrice||'', amz?.refPct||'', amz?+amz.refFee.toFixed(2):'', amz?+amz.closingFee:'', amz?+amz.netCourier.toFixed(2):'', amz?+amz.profit.toFixed(2):'', amz?+amz.margin.toFixed(1):'',
       fc?.sellPrice||'', pnl.fcDept==='fashion'?'Fashion':'Healthcare', fc?.commPct||'', fc?+fc.commission.toFixed(2):'', fc?+fc.profit.toFixed(2):'', fc?+fc.margin.toFixed(1):'',
       myn?.sellPrice||'', pnl.mynCat||'', myn?.commPct||'', myn?+myn.commission.toFixed(2):'', myn?+myn.fixedFee:'', myn?+myn.netCourier.toFixed(2):'', myn?+myn.profit.toFixed(2):'', myn?+myn.margin.toFixed(1):'',
-      shy?.sellPrice||'', shy?+shy.netCourier.toFixed(2):'', shy?+shy.profit.toFixed(2):'', shy?+shy.margin.toFixed(1):''
+      shy?.sellPrice||'', shy?+shy.netCourier.toFixed(2):'', shy?+shy.profit.toFixed(2):'', shy?+shy.margin.toFixed(1):'',
+      mee?.sellPrice||'', mee?+mee.profit.toFixed(2):'', mee?+mee.margin.toFixed(1):''
     ];
   });
 
@@ -4672,7 +4734,7 @@ function downloadPnlTemplate() {
       pnl.amzSellPrice||'', pnl.amzCat||'apparel_baby',
       pnl.fcSellPrice||'', pnl.fcDept||'healthcare',
       pnl.mynSellPrice||'', pnl.mynCat||'ACCESSORIES',
-      pnl.shySellPrice||''];
+      pnl.shySellPrice||'', pnl.meeSellPrice||''];
   });
   const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
   ws['!cols'] = [{wch:30},{wch:10},{wch:10},{wch:8},{wch:12},{wch:20},{wch:12},{wch:28},{wch:12},{wch:40},{wch:12}];
@@ -4716,6 +4778,7 @@ function handlePnlImport(input) {
           mynSellPrice:parseFloat(row['Myntra SP'])||0,
           mynCat:      (row['Myntra Category (ACCESSORIES/PERSONAL_CARE/APPAREL/HOME)']||'ACCESSORIES').trim(),
           shySellPrice:parseFloat(row['Shopify SP'])||0,
+          meeSellPrice:parseFloat(row['Meesho SP'])||0,
         });
         matched++;
       });
@@ -4774,7 +4837,7 @@ async function savePnlImport() {
         amzSellPrice:row.amzSellPrice, amzCat:row.amzCat,
         fcSellPrice:row.fcSellPrice, fcDept:row.fcDept,
         mynSellPrice:row.mynSellPrice, mynCat:row.mynCat,
-        shySellPrice:row.shySellPrice, updatedAt:today() });
+        shySellPrice:row.shySellPrice, meeSellPrice:row.meeSellPrice||0, updatedAt:today() });
       if (isNew) {
         await appendRow(TAB_PNL, pnlToRow(rec));
         allIds.push(row.sheetId); // keep local list in sync
