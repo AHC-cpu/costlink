@@ -1248,6 +1248,8 @@ const APP_CONFIG = {
   SHEET_ID:        '1LKFNAnYrYaSQxWSeLpzU1QHXx1xKBgqGjaUQ6IxPVhI',
   OAUTH_CLIENT_ID: '289842293194-e3f0hqkkc1snbof9r7pot4314ufdbe7f.apps.googleusercontent.com',
   COMPANY_NAME:    'My Manufacturing Co.',
+  ADMIN_EMAILS:    ['healthcareassociated@gmail.com'],  // full access
+  LISTING_EMAILS:  ['zikku.listing@gmail.com'],         // P&L only
 };
 
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
@@ -1314,6 +1316,8 @@ let tokenClient = null;
 let gapiReady   = false;
 let gisReady    = false;
 let isSignedIn  = false;
+let userRole    = 'blocked';   // 'admin' | 'listing' | 'blocked'
+let userEmail   = '';
 
 function loadGAPI() { preloadGAPI(); }
 
@@ -1419,20 +1423,55 @@ async function onSignedIn() {
     setLoading(100);
     setTimeout(()=>setLoading(0), 500);
 
-    // Update UI
+    // Detect role from email
     const profile = await getGoogleUserInfo();
+    userEmail = (profile || '').toLowerCase().trim();
+
+    if (APP_CONFIG.ADMIN_EMAILS.includes(userEmail)) {
+      userRole = 'admin';
+    } else if (APP_CONFIG.LISTING_EMAILS.includes(userEmail)) {
+      userRole = 'listing';
+    } else {
+      // Unknown email — block access and sign out
+      userRole = 'blocked';
+      if (gapi.client.getToken()) {
+        google.accounts.oauth2.revoke(gapi.client.getToken().access_token, () => {});
+        gapi.client.setToken(null);
+      }
+      isSignedIn = false;
+      setLoading(0);
+      toast('Access denied. This account is not authorised to use CostLink.', 'err');
+      setSyncStatus('err', 'Access denied');
+      return;
+    }
+
+    // Update UI based on role
     document.getElementById('sb-user').textContent = profile || APP_CONFIG.COMPANY_NAME;
     document.getElementById('sb-signout').style.display = '';
-    document.getElementById('btn-main').style.display = '';
-    document.getElementById('btn-backup').style.display = '';
-    document.getElementById('backup-status').style.display = '';
-    updateBackupUI();
+
+    if (userRole === 'admin') {
+      document.getElementById('btn-main').style.display = '';
+      document.getElementById('btn-backup').style.display = '';
+      document.getElementById('backup-status').style.display = '';
+      updateBackupUI();
+    } else {
+      // listing: hide owner-only items
+      document.getElementById('btn-main').style.display   = 'none';
+      document.getElementById('btn-backup').style.display = 'none';
+      document.getElementById('backup-status').style.display = 'none';
+    }
+
+    applyRoleUI();
 
     setSyncStatus('ok', 'Synced with Google Sheets');
-    toast('Connected! Data loaded from Google Sheets ✓');
-    goto('board');
-    // Check if auto backup is due (runs silently in background)
-    setTimeout(() => checkAutoBackup(), 3000);
+    toast(`Connected ✓  (${userRole === 'admin' ? 'Admin' : 'Listing'} access)`);
+
+    if (userRole === 'listing') {
+      goto('pnl');
+    } else {
+      goto('board');
+      setTimeout(() => checkAutoBackup(), 3000);
+    }
   } catch(e) {
     console.error(e);
     toast('Error connecting to sheet: ' + e.message, 'err');
@@ -1451,17 +1490,82 @@ async function getGoogleUserInfo() {
   } catch { return ''; }
 }
 
+function applyRoleUI() {
+  const isListing = userRole === 'listing';
+
+  // Show/hide sidebar nav items
+  const ownerOnlyNavs = ['nav-board','nav-purchases','nav-materials','nav-costing','nav-inhouse','nav-combos','nav-history'];
+  ownerOnlyNavs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isListing ? 'none' : '';
+  });
+
+  // Hide sidebar section headings for listing
+  document.querySelectorAll('.sb-section').forEach(el => {
+    el.style.display = isListing ? 'none' : '';
+  });
+
+  // Add/remove listing badge in sidebar
+  const existing = document.getElementById('listing-badge');
+  if (isListing && !existing) {
+    const badge = document.createElement('div');
+    badge.id = 'listing-badge';
+    badge.innerHTML = '🏷 Listing View';
+    badge.style.cssText = 'background:rgba(255,152,0,.15);border:1px solid rgba(255,152,0,.3);border-radius:6px;padding:.35rem .6rem;margin:.4rem .7rem 0;font-size:.65rem;color:#FF9800;font-weight:600;text-align:center';
+    document.querySelector('.sb-footer')?.insertAdjacentElement('beforebegin', badge);
+  } else if (!isListing && existing) {
+    existing.remove();
+  }
+}
+
+function goto(p) {
+  // Role guard — listing users can only access P&L
+  const restricted = ['board','purchases','materials','costing','inhouse','combos','history'];
+  if (userRole === 'listing' && restricted.includes(p)) p = 'pnl';
+
+  document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(x => x.classList.remove('active'));
+  document.getElementById('page-' + p)?.classList.add('active');
+  document.getElementById('nav-' + p)?.classList.add('active');
+
+  const m = PAGE_META[p] || {};
+  document.getElementById('pg-title').textContent = m.title || '';
+  document.getElementById('pg-sub').textContent   = m.sub   || '';
+  if (userRole === 'listing') {
+    document.getElementById('btn-main').style.display = 'none';
+  } else {
+    document.getElementById('btn-main').textContent   = m.main || '';
+    document.getElementById('btn-main').style.display = m.main ? '' : 'none';
+  }
+
+  if (p === 'board')     renderBoard();
+  else if (p === 'pnl')       renderPnl();
+  else if (p === 'purchases') renderPurchases();
+  else if (p === 'materials') renderMaterials();
+  else if (p === 'costing')   renderCostingForm();
+  else if (p === 'inhouse')   renderInhousePage();
+  else if (p === 'combos')    renderCombosPage();
+  else if (p === 'history')   renderHistory();
+}
+
 function signOut() {
   if (gapi.client.getToken()) {
     google.accounts.oauth2.revoke(gapi.client.getToken().access_token, () => {});
     gapi.client.setToken(null);
   }
   isSignedIn = false;
-  DB = { items:[], costSheets:[], costHistory:[] };
+  userRole   = 'blocked';
+  userEmail  = '';
+  DB = { items:[], costSheets:[], costHistory:[], inhouse:[], combos:[], pnlData:[] };
   document.getElementById('sb-user').textContent = 'Not signed in';
   document.getElementById('sb-signout').style.display = 'none';
   document.getElementById('btn-backup').style.display = 'none';
   document.getElementById('backup-status').style.display = 'none';
+  document.getElementById('listing-badge')?.remove();
+  // Restore all nav items
+  ['nav-board','nav-purchases','nav-materials','nav-costing','nav-inhouse','nav-combos','nav-history','nav-pnl']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.style.display=''; });
+  document.querySelectorAll('.sb-section').forEach(el => el.style.display = '');
   setSyncStatus('', 'Not signed in');
   goto('login');
   toast('Signed out');
@@ -1810,26 +1914,6 @@ const PAGE_META = {
   inhouse:  {title:'In-House Production',sub:'Calculate fabric + labour cost per product',  main:'+ New Product Cost'},
   history:  {title:'Cost Change History',sub:'All price changes over time',                main:''},
 };
-
-function goto(p) {
-  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
-  document.getElementById('page-'+p)?.classList.add('active');
-  document.getElementById('nav-'+p)?.classList.add('active');
-  const m = PAGE_META[p] || {};
-  document.getElementById('pg-title').textContent = m.title||'';
-  document.getElementById('pg-sub').textContent = m.sub||'';
-  document.getElementById('btn-main').textContent = m.main||'';
-  document.getElementById('btn-main').style.display = m.main ? '' : 'none';
-  if(p==='board')     renderBoard();
-  if(p==='pnl')       renderPnl();
-  if(p==='purchases') renderPurchases();
-  if(p==='materials') renderMaterials();
-  if(p==='costing')   renderCostingForm();
-  if(p==='inhouse')   renderInhousePage();
-  if(p==='combos')    renderCombosPage();
-  if(p==='history')   renderHistory();
-}
 
 function mainAction() {
   const p = document.querySelector('.page.active')?.id.replace('page-','');
