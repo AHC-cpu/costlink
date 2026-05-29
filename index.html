@@ -1426,6 +1426,9 @@ async function onSignedIn() {
     // Detect role from email
     const profile = await getGoogleUserInfo();
     userEmail = (profile || '').toLowerCase().trim();
+    console.log('Signed in email:', JSON.stringify(userEmail));
+    console.log('Admin list:', APP_CONFIG.ADMIN_EMAILS);
+    console.log('Is admin:', APP_CONFIG.ADMIN_EMAILS.includes(userEmail));
 
     if (APP_CONFIG.ADMIN_EMAILS.includes(userEmail)) {
       userRole = 'admin';
@@ -1440,7 +1443,7 @@ async function onSignedIn() {
       }
       isSignedIn = false;
       setLoading(0);
-      toast('Access denied. This account is not authorised to use CostLink.', 'err');
+      toast(`Access denied: "${userEmail}" is not authorised. Contact admin.`, 'err');
       setSyncStatus('err', 'Access denied');
       return;
     }
@@ -1486,8 +1489,12 @@ async function getGoogleUserInfo() {
       headers: { Authorization: 'Bearer ' + gapi.client.getToken().access_token }
     });
     const d = await r.json();
+    console.log('Google user info:', d);
     return d.email || d.name || '';
-  } catch { return ''; }
+  } catch(e) {
+    console.error('getGoogleUserInfo failed:', e);
+    return '';
+  }
 }
 
 function applyRoleUI() {
