@@ -121,16 +121,30 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font);min-height:10
 .panel-title{font-family:var(--font);font-size:.85rem;font-weight:700;color:var(--ink);}
 .panel-body{padding:1rem 1.1rem;}
 .tw{overflow-x:auto;}
-.col-hidden{display:none !important;}
+.pnl-sticky { position:sticky; background:#fff !important; }
+.pnl-sticky-l { left:0;  z-index:3 !important; box-shadow: 3px 0 6px -1px rgba(0,0,0,.12) !important; }
+.pnl-sticky-r { right:0; z-index:3 !important; box-shadow:-3px 0 6px -1px rgba(0,0,0,.12) !important; }
 #col-picker label{display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--ink2);padding:.2rem 0;cursor:pointer}
 #col-picker label:hover{color:var(--ink)}
 #col-picker input[type=checkbox]{width:13px;height:13px;cursor:pointer;accent-color:var(--blue)}
 #tbl-pnl { border-collapse:separate; border-spacing:0; }
-#tbl-pnl td:first-child, #tbl-pnl th:first-child { position:sticky; left:0; z-index:3; background:var(--bg-panel); box-shadow:3px 0 8px -2px rgba(0,0,0,.10); }
-#tbl-pnl td:last-child,  #tbl-pnl th:last-child  { position:sticky; right:0; z-index:3; background:var(--bg-panel); box-shadow:-3px 0 8px -2px rgba(0,0,0,.10); }
-#tbl-pnl tr:hover td:first-child, #tbl-pnl tr:hover td:last-child { background:var(--bg); }
-#tbl-pnl thead th:first-child, #tbl-pnl thead th:last-child { z-index:6; background:var(--bg); }
-#tbl-pnl thead tr:nth-child(2) th { position:sticky; top:36px; z-index:4; }
+#tbl-pnl td:first-child, #tbl-pnl th:first-child {
+  position:sticky; left:0; z-index:3;
+  background:#fff;
+  box-shadow:3px 0 6px -1px rgba(0,0,0,.12);
+  min-width:180px; max-width:220px;
+}
+#tbl-pnl td:last-child, #tbl-pnl th:last-child {
+  position:sticky; right:0; z-index:3;
+  background:#fff;
+  box-shadow:-3px 0 6px -1px rgba(0,0,0,.12);
+}
+#tbl-pnl thead th:first-child, #tbl-pnl thead th:last-child { z-index:6; background:#fff; }
+#tbl-pnl thead th { position:sticky; top:0; z-index:4; background:#fff; }
+#tbl-pnl tr:nth-child(even) td:first-child,
+#tbl-pnl tr:nth-child(even) td:last-child { background:#fafafa; }
+#tbl-pnl tr:hover td:first-child,
+#tbl-pnl tr:hover td:last-child { background:#f5f5f5; }
 table{width:100%;border-collapse:collapse;}
 thead th{padding:.5rem .85rem;text-align:left;font-size:.58rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line);background:var(--bg);white-space:nowrap;position:sticky;top:0;z-index:4;}
 tbody tr{border-bottom:1px solid var(--bg2);transition:background .1s;}
@@ -398,7 +412,7 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
           <table id="tbl-pnl" style="min-width:1200px">
             <thead>
               <tr>
-                <th rowspan="2" style="vertical-align:middle;min-width:160px">Product</th>
+                <th class="pnl-sticky pnl-sticky-l" rowspan="2" style="vertical-align:middle;min-width:180px">Product</th>
                 <th rowspan="2" data-col="cost" style="vertical-align:middle;text-align:right;font-size:.62rem">Cost</th>
                 <th rowspan="2" data-col="mrp" style="vertical-align:middle;text-align:right;font-size:.62rem">MRP</th>
                 <th rowspan="2" data-col="hsn" style="vertical-align:middle;text-align:right;font-size:.62rem">HSN</th>
@@ -408,7 +422,7 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
                 <th colspan="3" data-col-group="myn" style="text-align:center;background:#FCE4EC;border-left:2px solid #F48FB1">🏪 Myntra</th>
                 <th colspan="3" data-col-group="shy" style="text-align:center;background:#F3E5F5;border-left:2px solid #CE93D8">🛒 Shopify</th>
                 <th colspan="2" data-col-group="mee" style="text-align:center;background:#E8EAF6;border-left:2px solid #9FA8DA">🛍 Meesho</th>
-                <th rowspan="2" style="vertical-align:middle;text-align:center;min-width:60px">Edit</th>
+                <th class="pnl-sticky pnl-sticky-r" rowspan="2" style="vertical-align:middle;text-align:center;min-width:60px">Edit</th>
               </tr>
               <tr>
                 <th data-col="amz_sp"   style="background:#FFF8F0;text-align:right;font-size:.6rem">SP</th>
@@ -4418,7 +4432,7 @@ function renderPnl() {
         : '';
       const gstPct = gst || 18;
       return `<tr style="border-bottom:1px solid var(--bg2);${rowBg}" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='${isLoss?'rgba(201,58,26,.03)':''}'" >
-        <td style="padding:.55rem .8rem;background:var(--bg-panel)">
+        <td class="pnl-sticky pnl-sticky-l" style="padding:.55rem .8rem;">
           <div style="font-weight:600;font-size:.8rem">${sheet.name}${isLoss?' <span style="font-size:.55rem;color:#c93a1a;font-weight:700">●LOSS</span>':''}${changeBadge}</div>
           ${(pnl.sku||sheet.sku)?`<div style="font-size:.62rem;color:var(--blue);font-family:var(--mono)">${pnl.sku||sheet.sku}</div>`:''}
         </td>
@@ -4440,7 +4454,7 @@ function renderPnl() {
         <td data-col="shy_pl"   style="padding:.5rem .6rem;background:#F3E5F5">${plInner(shy)}</td>
         <td data-col="mee_sp"   style="padding:.5rem .6rem;background:#E8EAF6;border-left:2px solid #C5CAE9;${spStyle}">${pnl.meeSellPrice?fmt(pnl.meeSellPrice):'<span style="color:var(--ink3);font-size:.68rem">—</span>'}</td>
         <td data-col="mee_pl"   style="padding:.5rem .6rem;background:#E8EAF6">${plInner(mee)}</td>
-        <td style="padding:.5rem .6rem;text-align:center;background:var(--bg-panel)">
+        <td class="pnl-sticky pnl-sticky-r" style="padding:.5rem .6rem;text-align:center;">
           <button class="act" onclick="openPnlModal('${sheet.id}')">✎ Edit</button>
         </td>
       </tr>`;
