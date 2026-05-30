@@ -4969,12 +4969,16 @@ async function savePnlImport() {
   btn.textContent='Saving...'; btn.disabled=true;
   try {
     setSyncStatus('syncing','Saving...');
-    // Read all SheetID values from column A once (avoid N API calls)
-    const sheetData = await gapi.client.sheets.spreadsheets.values.get({
+
+    // Read all existing SheetIDs from column A in one call
+    const colA = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId: APP_CONFIG.SHEET_ID,
       range: `${TAB_PNL}!A:A`
     });
-    const allIds = (sheetData.result.values || []).map(r => r[0]||'');
+    const allIds = (colA.result.values || []).map(r => (r[0]||'').trim());
+
+    const toUpdate = [];  // { rowNum, data }
+    const toAppend = [];  // data rows
 
     for (const row of _pnlImportRows) {
       let rec = DB.pnlData.find(p=>p.sheetId===row.sheetId);
@@ -4992,27 +4996,61 @@ async function savePnlImport() {
         mynSellPrice:row.mynSellPrice, mynCat:row.mynCat,
         shySellPrice:row.shySellPrice, meeSellPrice:row.meeSellPrice||0,
         meeCourier:row.meeCourier||0, meeOther:row.meeOther||0, updatedAt:today() });
+
       if (isNew) {
-        await appendRow(TAB_PNL, pnlToRow(rec));
-        allIds.push(row.sheetId); // keep local list in sync
+        toAppend.push(pnlToRow(rec));
       } else {
         const sheetRowIdx = allIds.findIndex((v,i) => i>0 && v===row.sheetId);
         if (sheetRowIdx > 0) {
-          const range = `${TAB_PNL}!A${sheetRowIdx + 1}`;
-          await gapi.client.sheets.spreadsheets.values.update({
-            spreadsheetId: APP_CONFIG.SHEET_ID, range,
-            valueInputOption: 'RAW', resource: { values: [pnlToRow(rec)] }
-          });
+          toUpdate.push({ rowNum: sheetRowIdx + 1, data: pnlToRow(rec) });
         } else {
-          await appendRow(TAB_PNL, pnlToRow(rec));
+          toAppend.push(pnlToRow(rec));
         }
       }
     }
+
+    // 1. Batch append all new rows in ONE API call
+    if (toAppend.length) {
+      await gapi.client.sheets.spreadsheets.values.append({
+        spreadsheetId: APP_CONFIG.SHEET_ID,
+        range: `${TAB_PNL}!A1`,
+        valueInputOption: 'RAW',
+        insertDataOption: 'INSERT_ROWS',
+        resource: { values: toAppend }
+      });
+    }
+
+    // 2. Update existing rows in batches using batchUpdate
+    if (toUpdate.length) {
+      // Split into chunks of 50 to avoid rate limits
+      const chunkSize = 50;
+      for (let i = 0; i < toUpdate.length; i += chunkSize) {
+        const chunk = toUpdate.slice(i, i + chunkSize);
+        const data  = chunk.map(u => ({
+          range: `${TAB_PNL}!A${u.rowNum}`,
+          values: [u.data]
+        }));
+        await gapi.client.sheets.spreadsheets.values.batchUpdate({
+          spreadsheetId: APP_CONFIG.SHEET_ID,
+          resource: { valueInputOption: 'RAW', data }
+        });
+        // Small delay between chunks to avoid 429
+        if (i + chunkSize < toUpdate.length) {
+          btn.textContent = `Saving... ${Math.min(i+chunkSize, toUpdate.length)}/${toUpdate.length}`;
+          await new Promise(r => setTimeout(r, 500));
+        }
+      }
+    }
+
     setSyncStatus('ok','Saved');
     toast(`${_pnlImportRows.length} products updated ✓`);
     closeM('modal-pnl-import');
     renderPnl();
-  } catch(e) { toast('Error: '+e.message,'err'); setSyncStatus('err','Error'); }
+  } catch(e) {
+    console.error('savePnlImport error:', e);
+    toast('Error: ' + (e.result?.error?.message || e.message || String(e)), 'err');
+    setSyncStatus('err','Error');
+  }
   finally { btn.textContent='Save All Changes'; btn.disabled=false; }
 }
 
