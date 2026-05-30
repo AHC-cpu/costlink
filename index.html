@@ -4929,6 +4929,7 @@ function handlePnlImport(input) {
       if (skipNames.length) console.log('Skipped names:', skipNames);
 
       const prev = document.getElementById('pnl-import-preview');
+      if (!prev) { toast('Please open the import modal first','err'); return; }
       if (!_pnlImportRows.length) {
         prev.innerHTML = `<div style="color:#c93a1a;font-size:.78rem;padding:.5rem">No products matched. Check product names match exactly.<br/><small>Skipped: ${skipNames.slice(0,5).join(', ')}</small></div>`;
         document.getElementById('btn-pnl-import-save').style.display='none';
@@ -4952,10 +4953,10 @@ function handlePnlImport(input) {
             <td style="font-size:.72rem">${r.meeOther||'—'}</td>
           </tr>`).join('')}
         </tbody></table></div>`;
-      document.getElementById('btn-pnl-import-save').style.display='';
+      document.getElementById('btn-pnl-import-save')?.style && (document.getElementById('btn-pnl-import-save').style.display='');
     } catch(err) {
       console.error('Import error:', err);
-      toast('Import error: ' + err.message, 'err');
+      toast('Import error: ' + (err?.message || String(err)), 'err');
     }
   };
   reader.readAsBinaryString(file);
