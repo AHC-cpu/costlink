@@ -4975,6 +4975,7 @@ async function savePnlImport() {
       if (!rec) {
         rec = { sheetId:row.sheetId, amzSellPrice:0, amzCat:'apparel_baby', fcSellPrice:0,
                 fcDept:'healthcare', mynSellPrice:0, mynCat:'ACCESSORIES', shySellPrice:0,
+                meeSellPrice:0, meeCourier:0, meeOther:0,
                 sku:'', mrp:0, hsn:'', gstOverride:null, updatedAt:today() };
         DB.pnlData.push(rec);
       }
