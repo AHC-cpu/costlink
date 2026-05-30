@@ -4858,17 +4858,26 @@ function openPnlImport() {
 }
 
 function downloadPnlTemplate() {
-  const header = ['Product Name','SKU','MRP','HSN','GST%','Amazon SP','Amazon Category','Firstcry SP','Firstcry Dept (healthcare/fashion)','Myntra SP','Myntra Category (ACCESSORIES/PERSONAL_CARE/APPAREL/HOME)','Shopify SP'];
+  const header = ['Product Name','SKU','MRP','HSN','GST%',
+    'Amazon SP','Amazon Category',
+    'Firstcry SP','Firstcry Dept (healthcare/fashion)',
+    'Myntra SP','Myntra Category (ACCESSORIES/PERSONAL_CARE/APPAREL/HOME)',
+    'Shopify SP',
+    'Meesho SP','Meesho Courier','Meesho Other Charges'];
   const rows = DB.costSheets.map(s => {
     const pnl = DB.pnlData.find(p=>p.sheetId===s.id)||{};
     return [s.name, pnl.sku||s.sku||'', pnl.mrp||'', pnl.hsn||'', pnl.gstOverride||'',
       pnl.amzSellPrice||'', pnl.amzCat||'apparel_baby',
       pnl.fcSellPrice||'', pnl.fcDept||'healthcare',
       pnl.mynSellPrice||'', pnl.mynCat||'ACCESSORIES',
-      pnl.shySellPrice||'', pnl.meeSellPrice||'', pnl.meeCourier||'', pnl.meeOther||''];
+      pnl.shySellPrice||'',
+      pnl.meeSellPrice||'', pnl.meeCourier||'', pnl.meeOther||''];
   });
   const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
-  ws['!cols'] = [{wch:30},{wch:10},{wch:10},{wch:8},{wch:12},{wch:20},{wch:12},{wch:28},{wch:12},{wch:40},{wch:12}];
+  ws['!cols'] = [{wch:30},{wch:10},{wch:8},{wch:8},{wch:6},
+    {wch:12},{wch:22},{wch:12},{wch:30},
+    {wch:12},{wch:42},{wch:12},
+    {wch:12},{wch:14},{wch:18}];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'PnL Import');
   XLSX.writeFile(wb, 'CostLink_PnL_Template.xlsx');
