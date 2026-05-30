@@ -4896,13 +4896,13 @@ function handlePnlImport(input) {
       if (!data.length) { toast('No data found in file','err'); return; }
 
       _pnlImportRows = [];
-      let matched=0, skipped=0;
+      let matched=0, skipped=0, skipNames=[];
 
-      data.forEach(row => {
+      data.forEach((row, ri) => {
         const name = (row['Product Name']||'').trim();
         if (!name) { skipped++; return; }
         const sheet = DB.costSheets.find(s=>s.name.toLowerCase()===name.toLowerCase());
-        if (!sheet) { skipped++; return; }
+        if (!sheet) { skipped++; skipNames.push(name); return; }
 
         _pnlImportRows.push({
           sheetId:     sheet.id,
@@ -4925,9 +4925,12 @@ function handlePnlImport(input) {
         matched++;
       });
 
+      console.log('Import parsed:', matched, 'matched,', skipped, 'skipped');
+      if (skipNames.length) console.log('Skipped names:', skipNames);
+
       const prev = document.getElementById('pnl-import-preview');
       if (!_pnlImportRows.length) {
-        prev.innerHTML = `<div style="color:#c93a1a;font-size:.78rem;padding:.5rem">No products matched. Check product names match exactly.</div>`;
+        prev.innerHTML = `<div style="color:#c93a1a;font-size:.78rem;padding:.5rem">No products matched. Check product names match exactly.<br/><small>Skipped: ${skipNames.slice(0,5).join(', ')}</small></div>`;
         document.getElementById('btn-pnl-import-save').style.display='none';
         return;
       }
@@ -4950,7 +4953,10 @@ function handlePnlImport(input) {
           </tr>`).join('')}
         </tbody></table></div>`;
       document.getElementById('btn-pnl-import-save').style.display='';
-    } catch(e) { toast('Error reading file: '+e.message,'err'); }
+    } catch(err) {
+      console.error('Import error:', err);
+      toast('Import error: ' + err.message, 'err');
+    }
   };
   reader.readAsBinaryString(file);
 }
