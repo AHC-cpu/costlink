@@ -872,6 +872,23 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
 
               <!-- EXTRA COST -->
               <div class="cost-section">
+                <div class="cs-title"><div class="dot" style="background:var(--blue)"></div>Packing Costs</div>
+                <div class="fr2">
+                  <div class="fg">
+                    <label>Product Packing <span class="link-tag">from Item Master</span></label>
+                    <select id="cmb-ppi" onchange="calcCombo()"><option value="">— No packing —</option></select>
+                    <div class="mini-label" id="cmb-ppi-cost" style="margin-top:.2rem;color:var(--ink3)"></div>
+                  </div>
+                  <div class="fg">
+                    <label>Courier Packing <span class="link-tag">from Item Master</span></label>
+                    <select id="cmb-cpi" onchange="calcCombo()"><option value="">— No courier packing —</option></select>
+                    <div class="mini-label" id="cmb-cpi-cost" style="margin-top:.2rem;color:var(--ink3)"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- EXTRA COST -->
+              <div class="cost-section">
                 <div class="cs-title"><div class="dot" style="background:var(--blue)"></div>Additional Costs <span style="font-weight:400;color:var(--ink3);text-transform:none;letter-spacing:0">(optional)</span></div>
                 <div id="cmb-extras-wrap"></div>
                 <button onclick="addComboExtra()" class="btn btn-s" style="width:100%;margin-top:.4rem;font-size:.76rem;padding:.4rem">+ Add Extra Cost</button>
@@ -1265,10 +1282,10 @@ const TAB_PNL     = 'PnlData';
 
 // Headers for each tab
 const HDR_ITEMS   = ['ID','ItemCode','Name','Category','Rate','Qty','Unit','GST','GSTAmount','Transport','TransportPerUnit','IsImported','CustomDuty','CustomDutyPerUnit','ImportTransport','ImportTransportPerUnit','EffectiveCost','Supplier','Notes','PurchaseDate','UpdatedAt','CreatedAt'];
-const HDR_COSTS   = ['ID','Name','SKU','Category','ProductType','ProductItemID','InhouseCost','InhouseDesc','TagItemID','ProdPackItemID','LabelItemID','CourierPackItemID','CourierLabelItemID','ProductCost','TagCost','ProdPackCost','LabelCost','CourierPackCost','CourierLabelCost','ExtraItems','ExtraTotal','FinalCost','PrevFinalCost','CostChangedAt','UpdatedAt','CreatedAt','InhouseID','ComboQty','PackBrochureItemID','TapeItemID','StickerItemID','PackBrochureCost','TapeCost','StickerCost'];
+const HDR_COSTS   = ['ID','Name','SKU','Category','ProductType','ProductItemID','InhouseCost','InhouseDesc','TagItemID','ProdPackItemID','LabelItemID','CourierPackItemID','CourierLabelItemID','ProductCost','TagCost','ProdPackCost','LabelCost','CourierPackCost','CourierLabelCost','ExtraItems','ExtraTotal','FinalCost','PrevFinalCost','CostChangedAt','UpdatedAt','CreatedAt','InhouseID','ComboQty','PackBrochureItemID','TapeItemID','StickerItemID','PackBrochureCost','TapeCost','StickerCost','ExtraPackings'];
 const HDR_HISTORY = ['ID','SheetID','ProductName','SKU','ProductType','OldCost','NewCost','Diff','DiffPct','ChangedAt'];
 const HDR_INHOUSE = ['ID','ProductName','FabricItemID','FabricName','MetersPerUnit','WastagePct','FabricCostPerUnit','Stitching','Cutting','Finishing','JobWork','TotalLabour','TotalInhouseCost','Notes','UpdatedAt','CreatedAt','FabricRows','OtherExtras','ExtraTotal'];
-const HDR_COMBOS  = ['ID','ComboName','SKU','Notes','Items','ExtraCosts','TotalCost','MarginPct','SellPrice','UpdatedAt','CreatedAt'];
+const HDR_COMBOS  = ['ID','ComboName','SKU','Notes','Items','ExtraCosts','TotalCost','MarginPct','SellPrice','UpdatedAt','CreatedAt','ProdPackItemID','CourierPackItemID'];
 const HDR_PNL     = ['SheetID','AmzSellPrice','AmzCommission','FcSellPrice','FcDept','UpdatedAt','AmzCat','MynSellPrice','MynCat','ShySellPrice','MRP','HSN','GstOverride','SKU','MeeShopSellPrice','MeeCourier','MeeOther'];
 
 // ══════════════════════════════════════════════════
@@ -1749,9 +1766,17 @@ function rowToCombo(row, h) {
   let items = [], extraCosts = [];
   try { items     = JSON.parse(o.Items     || '[]'); } catch(e){}
   try { extraCosts= JSON.parse(o.ExtraCosts|| '[]'); } catch(e){}
+  const prodPackItemId   = o.ProdPackItemID||'';
+  const courierPackItemId= o.CourierPackItemID||'';
+  const ppi = DB.items.find(x=>x.id===prodPackItemId);
+  const cpi = DB.items.find(x=>x.id===courierPackItemId);
+  const prodPackCost   = ppi?.effectiveCost||0;
+  const courierPackCost= cpi?.effectiveCost||0;
+  const baseTotal = +o.TotalCost||0;
   return { id:o.ID, comboName:o.ComboName, sku:o.SKU||'', notes:o.Notes||'',
     items, extraCosts,
-    totalCost:+o.TotalCost||0, marginPct:+o.MarginPct||0, sellPrice:+o.SellPrice||0,
+    prodPackItemId, courierPackItemId, prodPackCost, courierPackCost,
+    totalCost: baseTotal, marginPct:+o.MarginPct||0, sellPrice:+o.SellPrice||0,
     updatedAt:o.UpdatedAt, createdAt:o.CreatedAt };
 }
 
@@ -1807,7 +1832,8 @@ function comboToRow(c) {
   return [c.id, c.comboName, c.sku||'', c.notes||'',
     JSON.stringify(c.items), JSON.stringify(c.extraCosts),
     c.totalCost, c.marginPct, c.sellPrice,
-    c.updatedAt, c.createdAt];
+    c.updatedAt, c.createdAt,
+    c.prodPackItemId||'', c.courierPackItemId||''];
 }
 
 function rowToCost(row, h) {
@@ -1829,7 +1855,8 @@ function rowToCost(row, h) {
     packBrochureItemId:o.PackBrochureItemID||'',
     tapeItemId:o.TapeItemID||'', stickerItemId:o.StickerItemID||'',
     packBrochureCost:+o.PackBrochureCost||0,
-    tapeCost:+o.TapeCost||0, stickerCost:+o.StickerCost||0
+    tapeCost:+o.TapeCost||0, stickerCost:+o.StickerCost||0,
+    extraPackings:o.ExtraPackings||'[]'
   };
 }
 
@@ -1848,7 +1875,8 @@ function costToRow(s) {
     // New fields at end — safe for old rows (just empty)
     s.inhouseId||'', s.comboQty||1,
     s.packBrochureItemId||'', s.tapeItemId||'', s.stickerItemId||'',
-    s.packBrochureCost||0, s.tapeCost||0, s.stickerCost||0
+    s.packBrochureCost||0, s.tapeCost||0, s.stickerCost||0,
+    s.extraPackings||'[]'
   ];
 }
 
@@ -2172,8 +2200,11 @@ function renderCostingForm(sheetId=null) {
     .sort((a,b)=>a.name.localeCompare(b.name))
     .map(i=>`<option value="${i.id}" ${i.id===val?'selected':''}>${i.name} — ${fmt(i.effectiveCost)}/${i.unit}</option>`).join('');
 
-  // Restore saved extra items from sheet
-  const savedExtras = sheet?.extraItems ? JSON.parse(sheet.extraItems) : [];
+  // Restore saved extra items and extra packings from sheet
+  const savedExtras    = sheet?.extraItems    ? JSON.parse(sheet.extraItems)    : [];
+  const savedPackings  = sheet?.extraPackings ? JSON.parse(sheet.extraPackings) : [];
+  _extraCount   = 0;
+  _packingCount = 0;
 
   document.getElementById('cost-form-body').innerHTML = `
     <div class="fg"><label>Product Name *</label><input type="text" id="cs-name" placeholder="e.g. Nursing Pad 6pcs" value="${sheet?.name||''}"/></div>
@@ -2216,10 +2247,9 @@ function renderCostingForm(sheetId=null) {
 
     <div class="cost-section">
       <div class="cs-title"><div class="dot" style="background:var(--blue)"></div>B. Product Packing Cost</div>
-      <div class="fg"><label>Packing Item <span class="link-tag">from Purchase — latest price</span></label>
-        <select id="cs-ppi" onchange="calcCP()"><option value="">— No packing —</option>${opts('Product Packing',sheet?.prodPackItemId||'')}</select>
-      </div>
-      <div class="fr2" style="margin-top:.4rem">
+      <div id="cs-packings-wrap"></div>
+      <button onclick="addPackingRow()" class="btn btn-s" style="width:100%;margin-top:.4rem;font-size:.76rem;padding:.35rem">+ Add Packing Item</button>
+      <div class="fr2" style="margin-top:.6rem">
         <div>
           <div class="mini-label">Product Label (optional)</div>
           <div class="fg"><select id="cs-li" onchange="calcCP()"><option value="">— No label —</option>${opts('Product Label',sheet?.labelItemId||'')}</select></div>
@@ -2275,10 +2305,92 @@ function renderCostingForm(sheetId=null) {
     </div>`;
 
   document.getElementById('cost-form-title').textContent = sheetId ? '✎ Edit Cost Sheet' : '⚙ Build Cost Sheet';
-  togglePT(); calcCP();
+  togglePT();
+  // Restore extra packing rows
+  setTimeout(() => {
+    if (savedPackings.length) {
+      savedPackings.forEach(p => addPackingRow(p));
+    } else {
+      addPackingRow(); // start with one blank row
+    }
+    calcCP();
+  }, 50);
 }
 
-let _extraCount = 0;
+let _extraCount   = 0;
+let _packingCount = 0;
+
+function addPackingRow(saved={}) {
+  const wrap = document.getElementById('cs-packings-wrap');
+  if (!wrap) return;
+  const i = _packingCount++;
+  const div = document.createElement('div');
+  div.id = `cs-packing-${i}`;
+  div.style.cssText = 'background:var(--bg2);border-radius:8px;padding:.6rem;margin-bottom:.4rem;border:1px solid var(--line);';
+
+  // Build item master options for Product Packing category
+  const packItems = DB.items.filter(x=>x.category==='Product Packing');
+  const packOpts  = '<option value="">— Select packing item —</option>' +
+    packItems.map(x=>`<option value="${x.id}" ${x.id===(saved.itemId||'')?'selected':''}>${x.name} — ${fmt(x.effectiveCost)}/pc</option>`).join('');
+
+  // Is it a manual entry?
+  const isManual = saved.manual || false;
+
+  div.innerHTML = `
+    <div style="display:grid;grid-template-columns:auto 1fr 100px auto;gap:.4rem;align-items:end;">
+      <div class="fg" style="margin-bottom:0">
+        <select id="cs-pk-type-${i}" onchange="togglePackingType(${i})" style="font-size:.72rem;padding:.3rem .4rem;border:1px solid var(--line2);border-radius:5px;background:#fff">
+          <option value="item" ${!isManual?'selected':''}>From Item Master</option>
+          <option value="manual" ${isManual?'selected':''}>Manual Amount</option>
+        </select>
+      </div>
+      <div id="cs-pk-item-wrap-${i}" style="${isManual?'display:none':''}">
+        <select id="cs-pk-item-${i}" onchange="calcCP()" style="font-size:.76rem;width:100%">${packOpts}</select>
+      </div>
+      <div id="cs-pk-manual-wrap-${i}" style="${!isManual?'display:none':''}">
+        <input type="number" id="cs-pk-manual-${i}" value="${saved.manual||''}" placeholder="₹ amount" min="0" step=".01" oninput="calcCP()" style="width:100%;font-size:.8rem"/>
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <div id="cs-pk-cost-${i}" style="font-size:.75rem;font-weight:600;color:var(--orange);padding:.35rem 0">${saved.cost?fmt(saved.cost):''}</div>
+      </div>
+      <button onclick="removePackingRow(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:1rem;padding:.2rem .4rem">✕</button>
+    </div>`;
+  wrap.appendChild(div);
+  calcCP();
+}
+
+function removePackingRow(i) {
+  document.getElementById(`cs-packing-${i}`)?.remove();
+  calcCP();
+}
+
+function togglePackingType(i) {
+  const type = document.getElementById(`cs-pk-type-${i}`)?.value;
+  document.getElementById(`cs-pk-item-wrap-${i}`).style.display   = type==='item'   ? '' : 'none';
+  document.getElementById(`cs-pk-manual-wrap-${i}`).style.display = type==='manual' ? '' : 'none';
+  calcCP();
+}
+
+function getExtraPackings() {
+  const results = [];
+  document.querySelectorAll('[id^="cs-packing-"]').forEach(div => {
+    const i    = div.id.replace('cs-packing-','');
+    const type = document.getElementById(`cs-pk-type-${i}`)?.value||'item';
+    if (type==='item') {
+      const itemId = document.getElementById(`cs-pk-item-${i}`)?.value||'';
+      if (!itemId) return;
+      const item = DB.items.find(x=>x.id===itemId);
+      if (!item) return;
+      results.push({ itemId, name:item.name, cost:item.effectiveCost, manual:false });
+    } else {
+      const amount = parseFloat(document.getElementById(`cs-pk-manual-${i}`)?.value)||0;
+      if (!amount) return;
+      results.push({ itemId:'', name:'Manual', cost:amount, manual:amount });
+    }
+  });
+  return results;
+}
+
 function addExtraItem() {
   const wrap = document.getElementById('cs-extras-wrap');
   const i = _extraCount++;
@@ -2308,6 +2420,11 @@ function removeExtraItem(i) {
 function resetCostForm() { editSheetId=null; renderCostingForm(); }
 
 // Fix 1: Navigate to costing tab and load the cost sheet for editing
+function editComboFromBoard(comboId) {
+  goto('combos');
+  setTimeout(() => { editCombo(comboId); }, 100);
+}
+
 function editSheetFromBoard(id) {
   // Set editSheetId BEFORE calling goto so the costing page
   // renders with the correct sheet data immediately — no reset, no race condition
@@ -2363,18 +2480,36 @@ function calcCP() {
   const tape = gi(gv('cs-tape'));
   const stk  = gi(gv('cs-sticker'));
 
-  const ppc  = ppi?.effectiveCost||0;
+  const ppc  = ppi?.effectiveCost||0;  // keep for backward compat if cs-ppi exists
   const lc   = li?.effectiveCost||0;
   const pbc  = pbi?.effectiveCost||0;
   const cc   = cpi?.effectiveCost||0;
   const tapc = tape?.effectiveCost||0;
   const stkc = stk?.effectiveCost||0;
 
+  // Extra packings (multi-packing rows)
+  const extraPackings    = getExtraPackings();
+  const extraPackingTotal= extraPackings.reduce((s,p)=>s+p.cost,0);
+  // Update per-row cost display
+  document.querySelectorAll('[id^="cs-packing-"]').forEach(div => {
+    const i    = div.id.replace('cs-packing-','');
+    const type = document.getElementById(`cs-pk-type-${i}`)?.value||'item';
+    const costEl = document.getElementById(`cs-pk-cost-${i}`);
+    if (!costEl) return;
+    if (type==='item') {
+      const item = gi(document.getElementById(`cs-pk-item-${i}`)?.value||'');
+      costEl.textContent = item ? fmt(item.effectiveCost) : '';
+    } else {
+      const v = parseFloat(document.getElementById(`cs-pk-manual-${i}`)?.value)||0;
+      costEl.textContent = v ? fmt(v) : '';
+    }
+  });
+
   const extras    = getExtraItems();
   const extraTotal= extras.reduce((s,e)=>s+e.cost,0);
 
   const tpc  = pc;
-  const tpp  = ppc + lc + pbc;
+  const tpp  = ppc + lc + pbc + extraPackingTotal;
   const tcp  = cc + tapc + stkc;
   const grand= tpc + tpp + tcp + extraTotal;
 
@@ -2384,7 +2519,7 @@ function calcCP() {
       total:tpc },
     { head:'B. Product Packing',
       items:[
-        ...(ppi?[{l:ppi.name,v:ppc,s:'Packing'}]:[]),
+        ...extraPackings.map(p=>({l:p.name,v:p.cost,s:p.manual?'Manual':'Item Master'})),
         ...(li?[{l:li.name,v:lc,s:'Product Label'}]:[]),
         ...(pbi?[{l:pbi.name,v:pbc,s:'Tag/Brochure'}]:[])
       ], total:tpp },
@@ -2446,7 +2581,9 @@ async function saveCostSheet() {
   const cc=cpi?.effectiveCost||0, tapc=tape?.effectiveCost||0, stkc=stk?.effectiveCost||0;
   const extras=getExtraItems();
   const extraTotal=extras.reduce((s,e)=>s+e.cost,0);
-  const finalCost=pc+ppc+lc+pbc+cc+tapc+stkc+extraTotal;
+  const extraPackings=getExtraPackings();
+  const extraPackingTotal=extraPackings.reduce((s,p)=>s+p.cost,0);
+  const finalCost=pc+ppc+lc+pbc+cc+tapc+stkc+extraTotal+extraPackingTotal;
 
   const existing=editSheetId?DB.costSheets.find(x=>x.id===editSheetId):null;
   const oldCost=existing?.finalCost||0;
@@ -2462,6 +2599,7 @@ async function saveCostSheet() {
     productCost:pc, tagCost:0, prodPackCost:ppc, labelCost:lc, packBrochureCost:pbc,
     courierPackCost:cc, courierLabelCost:0, tapeCost:tapc, stickerCost:stkc,
     extraItems:JSON.stringify(extras), extraTotal,
+    extraPackings:JSON.stringify(extraPackings),
     finalCost, prevFinalCost:changed?oldCost:(existing?.prevFinalCost||null),
     costChangedAt:changed?today():(existing?.costChangedAt||today()),
     updatedAt:today(), createdAt:existing?.createdAt||today()
@@ -2474,7 +2612,22 @@ async function saveCostSheet() {
     setSyncStatus('syncing','Saving…');
     if(editSheetId) {
       const idx=DB.costSheets.findIndex(x=>x.id===editSheetId);
-      if(idx>=0){DB.costSheets[idx]=rec; await updateRow(TAB_COSTS,idx,costToRow(rec));}
+      if(idx>=0){
+        DB.costSheets[idx]=rec;
+        // ID-based row lookup to prevent index mismatch
+        const colA = await gapi.client.sheets.spreadsheets.values.get({
+          spreadsheetId:APP_CONFIG.SHEET_ID, range:`${TAB_COSTS}!A:A`
+        });
+        const ids=(colA.result.values||[]).map(r=>(r[0]||'').trim());
+        let targetRow=-1;
+        for(let i=1;i<ids.length;i++){if(ids[i]===editSheetId){targetRow=i+1;break;}}
+        if(targetRow>0){
+          await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId:APP_CONFIG.SHEET_ID, range:`${TAB_COSTS}!A${targetRow}`,
+            valueInputOption:'RAW', resource:{values:[costToRow(rec)]}
+          });
+        } else { await appendRow(TAB_COSTS,costToRow(rec)); }
+      }
     } else {
       DB.costSheets.push(rec);
       await appendRow(TAB_COSTS,costToRow(rec));
@@ -2634,6 +2787,19 @@ function renderBoard() {
   const q = (document.getElementById('gsearch')?.value||'').toLowerCase().trim();
   let sheets = [...DB.costSheets];
 
+  // Include combos as board items
+  const comboSheets = DB.combos.map(c => ({
+    id: c.id, name: c.comboName, sku: c.sku||'', category:'Combo',
+    productType:'combo', finalCost: c.totalCost, prevFinalCost: null,
+    costChangedAt:'', updatedAt: c.updatedAt, createdAt: c.createdAt,
+    productCost: c.items.reduce((s,x)=>s+x.lineCost,0),
+    prodPackCost: c.prodPackCost||0, labelCost:0, packBrochureCost:0,
+    courierPackCost: c.courierPackCost||0, courierLabelCost:0, tapeCost:0, stickerCost:0,
+    extraTotal: c.extraCosts.reduce((s,x)=>s+x.cost,0),
+    _isCombo: true, _comboId: c.id
+  }));
+  sheets = [...sheets, ...comboSheets];
+
   // Apply search
   if (q) sheets = sheets.filter(s =>
     s.name.toLowerCase().includes(q) ||
@@ -2703,7 +2869,9 @@ function renderBoard() {
               </td>
               <td style="padding:.65rem .9rem;font-size:.72rem;color:var(--ink3)">${s.sku||'—'}</td>
               <td style="padding:.65rem .9rem;">
-                <span class="${s.productType==='inhouse'?'type-inhouse':'type-outside'}">${s.productType==='inhouse'?'In-House':'Procured'}</span>
+                ${s._isCombo
+                  ? '<span class="type-inhouse" style="background:#7c3aed;color:#fff">Combo</span>'
+                  : `<span class="${s.productType==='inhouse'?'type-inhouse':'type-outside'}">${s.productType==='inhouse'?'In-House':'Procured'}</span>`}
               </td>
               <td style="padding:.65rem .9rem;text-align:right;font-size:.8rem;">${fmt(s.productCost)}</td>
               <td style="padding:.65rem .9rem;text-align:right;font-size:.8rem;color:var(--ink3);cursor:help" title="${packTitle}">${fmt(packTotal)}${(s.labelCost||0)>0?` <span style="font-size:.6rem;color:var(--blue)">+lbl</span>`:''}</td>
@@ -2717,8 +2885,10 @@ function renderBoard() {
                 ${isC ? `<span class="badge ${diff>=0?'br':'bg'}">${diff>=0?'▲':'▼'}${Math.abs(dp).toFixed(1)}%</span>` : '<span style="font-size:.7rem;color:var(--ink3)">—</span>'}
               </td>
               <td style="padding:.65rem .9rem;white-space:nowrap;">
-                <button class="act" onclick="editSheetFromBoard('${s.id}')">✎ Edit</button>
-                <button class="act del" onclick="deleteCostSheet('${s.id}')" style="margin-left:3px">✕</button>
+                ${s._isCombo
+                  ? `<button class="act" onclick="editComboFromBoard('${s._comboId}')">✎ Edit</button>`
+                  : `<button class="act" onclick="editSheetFromBoard('${s.id}')">✎ Edit</button>
+                     <button class="act del" onclick="deleteCostSheet('${s.id}')" style="margin-left:3px">✕</button>`}
               </td>
             </tr>`;
           }).join('')}
@@ -3441,6 +3611,11 @@ function calcInhouse() {
       ${totalLabour===0?'<div class="calc-row"><span style="color:var(--ink3)">No labour costs entered</span><span>₹0.00</span></div>':''}
       <div class="calc-row" style="background:var(--bg);padding:.2rem .4rem;border-radius:4px;margin-top:.2rem"><span style="font-weight:600">Subtotal</span><span style="font-weight:600">${fmt(totalLabour)}</span></div>
     </div>
+    ${packTotal>0?`<div style="margin-bottom:.8rem">
+      <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;padding-bottom:.3rem;border-bottom:1px solid var(--bg2)">Packing</div>
+      ${prodPackCost>0?`<div class="calc-row"><span style="color:var(--ink3)">Product Packing</span><span>${fmt(prodPackCost)}</span></div>`:''}
+      ${courierPackCost>0?`<div class="calc-row"><span style="color:var(--ink3)">Courier Packing</span><span>${fmt(courierPackCost)}</span></div>`:''}
+    </div>`:''}
     ${extraTotal>0?`<div style="margin-bottom:.8rem">
       <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;padding-bottom:.3rem;border-bottom:1px solid var(--bg2)">Other Costs</div>
       ${extras.map(e=>`<div class="calc-row"><span style="color:var(--ink3)">${e.desc||'Other'}</span><span>${fmt(e.cost)}</span></div>`).join('')}
@@ -3800,6 +3975,23 @@ function renderCombosPage() {
     sel.innerHTML = buildProductOpts(cur);
     sel.value = cur;
   });
+  // Populate packing dropdowns
+  const ppiSel = document.getElementById('cmb-ppi');
+  const cpiSel = document.getElementById('cmb-cpi');
+  if (ppiSel) {
+    const curPpi = ppiSel.value;
+    ppiSel.innerHTML = '<option value="">— No packing —</option>' +
+      DB.items.filter(x=>x.category==='Product Packing')
+        .map(x=>`<option value="${x.id}" ${x.id===curPpi?'selected':''}>${x.name} — ${fmt(x.effectiveCost)}/pc</option>`).join('');
+    ppiSel.value = curPpi;
+  }
+  if (cpiSel) {
+    const curCpi = cpiSel.value;
+    cpiSel.innerHTML = '<option value="">— No courier packing —</option>' +
+      DB.items.filter(x=>x.category==='Courier Packing')
+        .map(x=>`<option value="${x.id}" ${x.id===curCpi?'selected':''}>${x.name} — ${fmt(x.effectiveCost)}/pc</option>`).join('');
+    cpiSel.value = curCpi;
+  }
   renderComboList();
 }
 
@@ -3912,7 +4104,20 @@ function calcCombo() {
 
   const productTotal = items.reduce((s,x)=>s+x.lineCost, 0);
   const extraTotal   = extras.reduce((s,x)=>s+x.cost, 0);
-  const totalCost    = productTotal + extraTotal;
+  // Packing costs
+  const ppiId  = document.getElementById('cmb-ppi')?.value||'';
+  const cpiId  = document.getElementById('cmb-cpi')?.value||'';
+  const ppiItem= ppiId ? DB.items.find(x=>x.id===ppiId) : null;
+  const cpiItem= cpiId ? DB.items.find(x=>x.id===cpiId) : null;
+  const prodPackCost   = ppiItem?.effectiveCost||0;
+  const courierPackCost= cpiItem?.effectiveCost||0;
+  const packTotal = prodPackCost + courierPackCost;
+  // Update packing cost labels
+  const ppiCostEl = document.getElementById('cmb-ppi-cost');
+  const cpiCostEl = document.getElementById('cmb-cpi-cost');
+  if (ppiCostEl) ppiCostEl.textContent = ppiItem ? `Cost: ${fmt(prodPackCost)}/pc` : '';
+  if (cpiCostEl) cpiCostEl.textContent = cpiItem ? `Cost: ${fmt(courierPackCost)}/pc` : '';
+  const totalCost    = productTotal + extraTotal + packTotal;
   const margin       = parseFloat(document.getElementById('cmb-margin')?.value)||0;
   const sellPrice    = margin > 0 ? totalCost / (1 - margin/100) : totalCost;
 
@@ -3941,6 +4146,11 @@ function calcCombo() {
         <span style="font-weight:600">Products Subtotal</span><span style="font-weight:600">${fmt(productTotal)}</span>
       </div>
     </div>
+    ${packTotal>0?`<div style="margin-bottom:.8rem">
+      <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;padding-bottom:.3rem;border-bottom:1px solid var(--bg2)">Packing</div>
+      ${prodPackCost>0?`<div class="calc-row"><span style="color:var(--ink3)">Product Packing</span><span>${fmt(prodPackCost)}</span></div>`:''}
+      ${courierPackCost>0?`<div class="calc-row"><span style="color:var(--ink3)">Courier Packing</span><span>${fmt(courierPackCost)}</span></div>`:''}
+    </div>`:''}
     ${extraTotal>0?`<div style="margin-bottom:.8rem">
       <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;padding-bottom:.3rem;border-bottom:1px solid var(--bg2)">Additional Costs</div>
       ${extras.map(x=>`<div class="calc-row"><span style="color:var(--ink3)">${x.desc||'Extra'}</span><span>${fmt(x.cost)}</span></div>`).join('')}
@@ -3967,7 +4177,11 @@ function resetComboForm() {
   _comboItemCount  = 0;
   _comboExtraCount = 0;
   sv('cmb-name',''); sv('cmb-sku',''); sv('cmb-notes',''); sv('cmb-margin','0');
-  sv('cmb-sell-price','');
+  sv('cmb-sell-price',''); sv('cmb-ppi',''); sv('cmb-cpi','');
+  const ppiCostEl2 = document.getElementById('cmb-ppi-cost');
+  const cpiCostEl2 = document.getElementById('cmb-cpi-cost');
+  if(ppiCostEl2) ppiCostEl2.textContent='';
+  if(cpiCostEl2) cpiCostEl2.textContent='';
   document.getElementById('cmb-items-wrap').innerHTML  = '';
   document.getElementById('cmb-extras-wrap').innerHTML = '';
   document.getElementById('combo-form-title').textContent = '🎁 New Combo';
@@ -3983,7 +4197,13 @@ async function saveCombo() {
   if (!items.length) { toast('Add at least one product','err'); return; }
 
   const extras     = getComboExtras();
-  const totalCost  = items.reduce((s,x)=>s+x.lineCost,0) + extras.reduce((s,x)=>s+x.cost,0);
+  const ppiId2     = document.getElementById('cmb-ppi')?.value||'';
+  const cpiId2     = document.getElementById('cmb-cpi')?.value||'';
+  const ppiItem2   = ppiId2 ? DB.items.find(x=>x.id===ppiId2) : null;
+  const cpiItem2   = cpiId2 ? DB.items.find(x=>x.id===cpiId2) : null;
+  const prodPackCost2   = ppiItem2?.effectiveCost||0;
+  const courierPackCost2= cpiItem2?.effectiveCost||0;
+  const totalCost  = items.reduce((s,x)=>s+x.lineCost,0) + extras.reduce((s,x)=>s+x.cost,0) + prodPackCost2 + courierPackCost2;
   const margin     = parseFloat(document.getElementById('cmb-margin')?.value)||0;
   const sellPrice  = margin>0 ? totalCost/(1-margin/100) : totalCost;
 
@@ -3991,6 +4211,8 @@ async function saveCombo() {
     id: editComboId||uid(),
     comboName, sku:gv('cmb-sku'), notes:gv('cmb-notes'),
     items, extraCosts:extras,
+    prodPackItemId:ppiId2, courierPackItemId:cpiId2,
+    prodPackCost:prodPackCost2, courierPackCost:courierPackCost2,
     totalCost, marginPct:margin, sellPrice,
     updatedAt:today(),
     createdAt: editComboId?(DB.combos.find(x=>x.id===editComboId)?.createdAt||today()):today()
@@ -4003,7 +4225,21 @@ async function saveCombo() {
     setSyncStatus('syncing','Saving…');
     if (editComboId) {
       const idx = DB.combos.findIndex(x=>x.id===editComboId);
-      if (idx>=0) { DB.combos[idx]=rec; await updateRow(TAB_COMBOS,idx,comboToRow(rec)); }
+      if (idx>=0) {
+        DB.combos[idx]=rec;
+        const colA2 = await gapi.client.sheets.spreadsheets.values.get({
+          spreadsheetId:APP_CONFIG.SHEET_ID, range:`${TAB_COMBOS}!A:A`
+        });
+        const ids2=(colA2.result.values||[]).map(r=>(r[0]||'').trim());
+        let tRow=-1;
+        for(let i=1;i<ids2.length;i++){if(ids2[i]===editComboId){tRow=i+1;break;}}
+        if(tRow>0){
+          await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId:APP_CONFIG.SHEET_ID, range:`${TAB_COMBOS}!A${tRow}`,
+            valueInputOption:'RAW', resource:{values:[comboToRow(rec)]}
+          });
+        } else { await appendRow(TAB_COMBOS,comboToRow(rec)); }
+      }
       toast(`"${comboName}" updated ✓`);
     } else {
       DB.combos.push(rec);
@@ -4032,6 +4268,11 @@ function editCombo(id) {
   sv('cmb-notes', c.notes||'');
   sv('cmb-margin',c.marginPct||0);
   document.getElementById('combo-form-title').textContent = '✎ Edit Combo';
+  // Restore packing selections
+  setTimeout(() => {
+    sv('cmb-ppi', c.prodPackItemId||'');
+    sv('cmb-cpi', c.courierPackItemId||'');
+  }, 100);
   // Restore items
   document.getElementById('cmb-items-wrap').innerHTML  = '';
   document.getElementById('cmb-extras-wrap').innerHTML = '';
@@ -4896,13 +5137,13 @@ function handlePnlImport(input) {
       if (!data.length) { toast('No data found in file','err'); return; }
 
       _pnlImportRows = [];
-      let matched=0, skipped=0;
+      let matched=0, skipped=0, skipNames=[];
 
-      data.forEach(row => {
+      data.forEach((row, ri) => {
         const name = (row['Product Name']||'').trim();
         if (!name) { skipped++; return; }
         const sheet = DB.costSheets.find(s=>s.name.toLowerCase()===name.toLowerCase());
-        if (!sheet) { skipped++; return; }
+        if (!sheet) { skipped++; skipNames.push(name); return; }
 
         _pnlImportRows.push({
           sheetId:     sheet.id,
@@ -4925,9 +5166,13 @@ function handlePnlImport(input) {
         matched++;
       });
 
+      console.log('Import parsed:', matched, 'matched,', skipped, 'skipped');
+      if (skipNames.length) console.log('Skipped names:', skipNames);
+
       const prev = document.getElementById('pnl-import-preview');
+      if (!prev) { toast('Please open the import modal first','err'); return; }
       if (!_pnlImportRows.length) {
-        prev.innerHTML = `<div style="color:#c93a1a;font-size:.78rem;padding:.5rem">No products matched. Check product names match exactly.</div>`;
+        prev.innerHTML = `<div style="color:#c93a1a;font-size:.78rem;padding:.5rem">No products matched. Check product names match exactly.<br/><small>Skipped: ${skipNames.slice(0,5).join(', ')}</small></div>`;
         document.getElementById('btn-pnl-import-save').style.display='none';
         return;
       }
@@ -4949,8 +5194,11 @@ function handlePnlImport(input) {
             <td style="font-size:.72rem">${r.meeOther||'—'}</td>
           </tr>`).join('')}
         </tbody></table></div>`;
-      document.getElementById('btn-pnl-import-save').style.display='';
-    } catch(e) { toast('Error reading file: '+e.message,'err'); }
+      document.getElementById('btn-pnl-import-save')?.style && (document.getElementById('btn-pnl-import-save').style.display='');
+    } catch(err) {
+      console.error('Import error:', err);
+      toast('Import error: ' + (err?.message || String(err)), 'err');
+    }
   };
   reader.readAsBinaryString(file);
 }
@@ -4962,12 +5210,16 @@ async function savePnlImport() {
   btn.textContent='Saving...'; btn.disabled=true;
   try {
     setSyncStatus('syncing','Saving...');
-    // Read all SheetID values from column A once (avoid N API calls)
-    const sheetData = await gapi.client.sheets.spreadsheets.values.get({
+
+    // Read all existing SheetIDs from column A in one call
+    const colA = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId: APP_CONFIG.SHEET_ID,
       range: `${TAB_PNL}!A:A`
     });
-    const allIds = (sheetData.result.values || []).map(r => r[0]||'');
+    const allIds = (colA.result.values || []).map(r => (r[0]||'').trim());
+
+    const toUpdate = [];  // { rowNum, data }
+    const toAppend = [];  // data rows
 
     for (const row of _pnlImportRows) {
       let rec = DB.pnlData.find(p=>p.sheetId===row.sheetId);
@@ -4985,27 +5237,61 @@ async function savePnlImport() {
         mynSellPrice:row.mynSellPrice, mynCat:row.mynCat,
         shySellPrice:row.shySellPrice, meeSellPrice:row.meeSellPrice||0,
         meeCourier:row.meeCourier||0, meeOther:row.meeOther||0, updatedAt:today() });
+
       if (isNew) {
-        await appendRow(TAB_PNL, pnlToRow(rec));
-        allIds.push(row.sheetId); // keep local list in sync
+        toAppend.push(pnlToRow(rec));
       } else {
         const sheetRowIdx = allIds.findIndex((v,i) => i>0 && v===row.sheetId);
         if (sheetRowIdx > 0) {
-          const range = `${TAB_PNL}!A${sheetRowIdx + 1}`;
-          await gapi.client.sheets.spreadsheets.values.update({
-            spreadsheetId: APP_CONFIG.SHEET_ID, range,
-            valueInputOption: 'RAW', resource: { values: [pnlToRow(rec)] }
-          });
+          toUpdate.push({ rowNum: sheetRowIdx + 1, data: pnlToRow(rec) });
         } else {
-          await appendRow(TAB_PNL, pnlToRow(rec));
+          toAppend.push(pnlToRow(rec));
         }
       }
     }
+
+    // 1. Batch append all new rows in ONE API call
+    if (toAppend.length) {
+      await gapi.client.sheets.spreadsheets.values.append({
+        spreadsheetId: APP_CONFIG.SHEET_ID,
+        range: `${TAB_PNL}!A1`,
+        valueInputOption: 'RAW',
+        insertDataOption: 'INSERT_ROWS',
+        resource: { values: toAppend }
+      });
+    }
+
+    // 2. Update existing rows in batches using batchUpdate
+    if (toUpdate.length) {
+      // Split into chunks of 50 to avoid rate limits
+      const chunkSize = 50;
+      for (let i = 0; i < toUpdate.length; i += chunkSize) {
+        const chunk = toUpdate.slice(i, i + chunkSize);
+        const data  = chunk.map(u => ({
+          range: `${TAB_PNL}!A${u.rowNum}`,
+          values: [u.data]
+        }));
+        await gapi.client.sheets.spreadsheets.values.batchUpdate({
+          spreadsheetId: APP_CONFIG.SHEET_ID,
+          resource: { valueInputOption: 'RAW', data }
+        });
+        // Small delay between chunks to avoid 429
+        if (i + chunkSize < toUpdate.length) {
+          btn.textContent = `Saving... ${Math.min(i+chunkSize, toUpdate.length)}/${toUpdate.length}`;
+          await new Promise(r => setTimeout(r, 500));
+        }
+      }
+    }
+
     setSyncStatus('ok','Saved');
     toast(`${_pnlImportRows.length} products updated ✓`);
     closeM('modal-pnl-import');
     renderPnl();
-  } catch(e) { toast('Error: '+e.message,'err'); setSyncStatus('err','Error'); }
+  } catch(e) {
+    console.error('savePnlImport error:', e);
+    toast('Error: ' + (e.result?.error?.message || e.message || String(e)), 'err');
+    setSyncStatus('err','Error');
+  }
   finally { btn.textContent='Save All Changes'; btn.disabled=false; }
 }
 
