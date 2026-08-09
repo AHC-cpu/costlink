@@ -3811,25 +3811,32 @@ function renderInhouseList() {
     tb.innerHTML=`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🏭</div><div class="empty-p">No in-house production costs yet. Fill the form on the left to add one.</div></div></td></tr>`;
     return;
   }
-  tb.innerHTML = [...DB.inhouse].sort((a,b)=>a.productName.localeCompare(b.productName)).map(r=>{
-    let fabRows = [];
-    try { fabRows = r.fabricRows ? JSON.parse(r.fabricRows) : []; } catch(e){}
-    const fabricSummary = fabRows.length
-      ? fabRows.map(f=>`${f.fabricName||'?'} (${f.metersPerUnit||0}${f.unit||''} +${f.wastagePct||0}%)`).join(', ')
-      : (r.fabricName||'—');
-    return `<tr>
-      <td><div class="tn">${r.productName}</div></td>
-      <td style="color:var(--ink3);font-size:.72rem;max-width:180px;white-space:normal;line-height:1.4">${fabricSummary}</td>
-      <td style="font-weight:500;color:var(--blue)">${fmt(r.fabricCostPerUnit)}</td>
-      <td style="font-weight:500;color:var(--orange)">${fmt(r.totalLabour)}</td>
-      <td style="font-weight:700">${fmt(r.totalInhouseCost)}</td>
-      <td style="color:var(--ink3);font-size:.72rem">${r.updatedAt}</td>
-      <td style="white-space:nowrap">
-        <button class="act" onclick="editInhouse('${r.id}')">✎</button>
-        <button class="act del" onclick="deleteInhouse('${r.id}')" style="margin-left:3px">✕</button>
-      </td>
-    </tr>`;
-  }).join('');
+  try {
+    tb.innerHTML = [...DB.inhouse]
+      .filter(r => r.id && r.productName)
+      .sort((a,b)=>(a.productName||'').localeCompare(b.productName||'')).map(r=>{
+      let fabRows = [];
+      try { fabRows = r.fabricRows ? JSON.parse(r.fabricRows) : []; } catch(e){}
+      const fabricSummary = fabRows.length
+        ? fabRows.map(f=>`${f.fabricName||'?'} (${f.metersPerUnit||0}${f.unit||''} +${f.wastagePct||0}%)`).join(', ')
+        : (r.fabricName||'—');
+      return `<tr>
+        <td><div class="tn">${r.productName}</div></td>
+        <td style="color:var(--ink3);font-size:.72rem;max-width:180px;white-space:normal;line-height:1.4">${fabricSummary}</td>
+        <td style="font-weight:500;color:var(--blue)">${fmt(r.fabricCostPerUnit)}</td>
+        <td style="font-weight:500;color:var(--orange)">${fmt(r.totalLabour)}</td>
+        <td style="font-weight:700">${fmt(r.totalInhouseCost)}</td>
+        <td style="color:var(--ink3);font-size:.72rem">${r.updatedAt||''}</td>
+        <td style="white-space:nowrap">
+          <button class="act" onclick="editInhouse('${r.id}')">✎</button>
+          <button class="act del" onclick="deleteInhouse('${r.id}')" style="margin-left:3px">✕</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    console.error('renderInhouseList error:', e);
+    tb.innerHTML = `<tr><td colspan="7" style="color:#c93a1a;padding:1rem">Error rendering list: ${e.message}</td></tr>`;
+  }
 }
 
 
