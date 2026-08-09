@@ -1705,12 +1705,21 @@ async function ensureSheetTabs() {
 //  READ FROM SHEET
 // ══════════════════════════════════════════════════
 async function loadAllFromSheet() {
-  DB.items        = await readTab(TAB_ITEMS,   HDR_ITEMS,   rowToItem);
-  DB.costSheets   = await readTab(TAB_COSTS,   HDR_COSTS,   rowToCost);
-  DB.costHistory  = await readTab(TAB_HISTORY, HDR_HISTORY, rowToHistory);
-  DB.inhouse      = await readTab(TAB_INHOUSE, HDR_INHOUSE, rowToInhouse);
-  DB.combos       = await readTab(TAB_COMBOS,  HDR_COMBOS,  rowToCombo);
-  DB.pnlData      = await readTab(TAB_PNL,     HDR_PNL,     rowToPnl);
+  const load = async (tab, hdr, mapper, key) => {
+    try {
+      const result = await readTab(tab, hdr, mapper);
+      DB[key] = result;
+      console.log(`Loaded ${key}: ${result.length} rows`);
+    } catch(e) { console.error(`Failed to load ${key}:`, e); DB[key] = []; }
+  };
+  await load(TAB_ITEMS,   HDR_ITEMS,   rowToItem,    'items');
+  await load(TAB_COSTS,   HDR_COSTS,   rowToCost,    'costSheets');
+  await load(TAB_HISTORY, HDR_HISTORY, rowToHistory, 'costHistory');
+  await load(TAB_INHOUSE, HDR_INHOUSE, rowToInhouse, 'inhouse');
+  await load(TAB_COMBOS,  HDR_COMBOS,  rowToCombo,   'combos');
+  await load(TAB_PNL,     HDR_PNL,     rowToPnl,     'pnlData');
+  console.log('DB loaded — items:', DB.items.length, '| costSheets:', DB.costSheets.length,
+    '| inhouse:', DB.inhouse.length, '| combos:', DB.combos.length, '| pnlData:', DB.pnlData.length);
 }
 
 async function readTab(tab, headers, mapper) {
