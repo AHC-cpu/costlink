@@ -3620,11 +3620,6 @@ function calcInhouse() {
       ${totalLabour===0?'<div class="calc-row"><span style="color:var(--ink3)">No labour costs entered</span><span>₹0.00</span></div>':''}
       <div class="calc-row" style="background:var(--bg);padding:.2rem .4rem;border-radius:4px;margin-top:.2rem"><span style="font-weight:600">Subtotal</span><span style="font-weight:600">${fmt(totalLabour)}</span></div>
     </div>
-    ${packTotal>0?`<div style="margin-bottom:.8rem">
-      <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;padding-bottom:.3rem;border-bottom:1px solid var(--bg2)">Packing</div>
-      ${prodPackCost>0?`<div class="calc-row"><span style="color:var(--ink3)">Product Packing</span><span>${fmt(prodPackCost)}</span></div>`:''}
-      ${courierPackCost>0?`<div class="calc-row"><span style="color:var(--ink3)">Courier Packing</span><span>${fmt(courierPackCost)}</span></div>`:''}
-    </div>`:''}
     ${extraTotal>0?`<div style="margin-bottom:.8rem">
       <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;padding-bottom:.3rem;border-bottom:1px solid var(--bg2)">Other Costs</div>
       ${extras.map(e=>`<div class="calc-row"><span style="color:var(--ink3)">${e.desc||'Other'}</span><span>${fmt(e.cost)}</span></div>`).join('')}
@@ -3806,6 +3801,8 @@ async function deleteInhouse(id) {
 function renderInhouseList() {
   const tb    = document.getElementById('tbl-inhouse');
   const count = document.getElementById('inh-list-count');
+  console.log('renderInhouseList called, DB.inhouse.length=', DB.inhouse.length);
+  if (DB.inhouse.length > 0) console.log('First record:', JSON.stringify(DB.inhouse[0]).slice(0,200));
   if(count) count.textContent = DB.inhouse.length + ' products';
   if(!DB.inhouse.length) {
     tb.innerHTML=`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🏭</div><div class="empty-p">No in-house production costs yet. Fill the form on the left to add one.</div></div></td></tr>`;
