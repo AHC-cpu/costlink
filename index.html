@@ -4387,19 +4387,31 @@ function loadPnlSettings() {
   } catch(e){}
 }
 
+let _pnlSettingsTimer = null;
 function savePnlSettings() {
   try {
+    const gv2 = id => { const v = parseFloat(document.getElementById(id)?.value); return isNaN(v) ? null : v; };
     localStorage.setItem('pnl_settings', JSON.stringify({
-      amzCourier:   parseFloat(document.getElementById('amz-courier')?.value)    || 70,
-      fcHealthPct:  parseFloat(document.getElementById('fc-health-pct')?.value)  || 37,
-      fcFashionPct: parseFloat(document.getElementById('fc-fashion-pct')?.value) || 45,
-      mynCourier:   parseFloat(document.getElementById('myn-courier')?.value)    || 80,
-      shyCourier:   parseFloat(document.getElementById('shy-courier')?.value)    || 85,
-      meeCourier:   parseFloat(document.getElementById('mee-courier')?.value)    || 0,
-      meeOther:     parseFloat(document.getElementById('mee-other')?.value)      || 0,
+      amzCourier:      gv2('amz-courier')       ?? 70,
+      amzAdPct:        gv2('amz-ad-pct')        ?? 0,
+      fcHealthPct:     gv2('fc-health-pct')      ?? 37,
+      fcFashionPct:    gv2('fc-fashion-pct')     ?? 45,
+      mynCourier:      gv2('myn-courier')        ?? 80,
+      mynAdPct:        gv2('myn-ad-pct')         ?? 0,
+      shyCourier:      gv2('shy-courier')        ?? 85,
+      shyPlatformPct:  gv2('shy-platform-pct')   ?? 1,
+      shyGatewayPct:   gv2('shy-gateway-pct')    ?? 0,
+      shyAdPct:        gv2('shy-ad-pct')         ?? 0,
+      meeShipping:     gv2('mee-shipping')       ?? 0,
+      meePlatformPct:  gv2('mee-platform-pct')   ?? 0,
+      meeAdPct:        gv2('mee-ad-pct')         ?? 0,
+      profitTargetPct: gv2('profit-target-pct')  ?? 20,
+      overheadCost:    gv2('overhead-cost')       ?? 0,
     }));
-    renderPnl();
-  } catch(e){}
+    // Debounce — recalculate 600ms after last keystroke so typing isn't interrupted
+    clearTimeout(_pnlSettingsTimer);
+    _pnlSettingsTimer = setTimeout(() => renderPnl(), 600);
+  } catch(e) {}
 }
 
 function getPnlSettings() {
@@ -4433,6 +4445,7 @@ function togglePnlSettings() {
   const open   = body.style.display === 'none';
   body.style.display = open ? '' : 'none';
   toggle.textContent = open ? '▲ Hide' : '▼ Show';
+  if (open) loadPnlSettings(); // always restore saved values when opening
 }
 
 function setPnlFilter(f) {
@@ -4753,7 +4766,6 @@ function getAmzClosingFee(sellPrice) {
 
 
 function renderPnl() {
-  loadPnlSettings();
   const settings = getPnlSettings();
   const q = (document.getElementById('pnl-search')?.value||'').toLowerCase();
 
