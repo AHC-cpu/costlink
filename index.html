@@ -329,34 +329,34 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
     <div class="page" id="page-pnl">
 
       <!-- SETTINGS BAR -->
-      <div class="panel" style="margin-bottom:1rem">
+      <div class="panel" style="margin-bottom:1rem;position:relative;z-index:10;">
         <div class="panel-hd" style="cursor:pointer" onclick="togglePnlSettings()">
           <div class="panel-title">⚙ Platform Settings <span style="font-size:.65rem;font-weight:400;color:var(--ink3)">(click to edit default rates)</span></div>
           <span style="font-size:.72rem;color:var(--ink3)" id="pnl-settings-toggle">▼ Show</span>
         </div>
-        <div id="pnl-settings-body" style="display:none;padding:1rem;border-top:1px solid var(--line)">
+        <div id="pnl-settings-body" style="display:none;padding:1rem;border-top:1px solid var(--line)" onclick="event.stopPropagation()">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:.8rem;">
             <!-- Amazon -->
             <div style="background:var(--bg2);border-radius:8px;padding:.7rem">
               <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">🛒 Amazon</div>
-              <div class="fg"><label>Courier (₹/order)</label><input type="number" id="amz-courier" value="70" min="0" step="1" oninput="savePnlSettings()"/></div>
-              <div class="fg"><label>Ad Spend % of SP</label><input type="number" id="amz-ad-pct" value="0" min="0" step=".1" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Courier (₹/order)</label><input type="number" id="amz-courier" value="70" min="0" step="1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Ad Spend % of SP</label><input type="number" id="amz-ad-pct" value="0" min="0" step=".1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
               <div style="font-size:.6rem;color:var(--ink3)">Referral+GST+Closing fee auto. Ad spend on gross SP.</div>
             </div>
             <!-- Firstcry -->
             <div style="background:var(--bg2);border-radius:8px;padding:.7rem">
               <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">🛍 Firstcry</div>
               <div class="fr2" style="gap:.4rem">
-                <div class="fg"><label>Healthcare %</label><input type="number" id="fc-health-pct" value="37" min="0" max="100" step=".1" oninput="savePnlSettings()"/></div>
-                <div class="fg"><label>Fashion %</label><input type="number" id="fc-fashion-pct" value="45" min="0" max="100" step=".1" oninput="savePnlSettings()"/></div>
+                <div class="fg"><label>Healthcare %</label><input type="number" id="fc-health-pct" value="37" min="0" max="100" step=".1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
+                <div class="fg"><label>Fashion %</label><input type="number" id="fc-fashion-pct" value="45" min="0" max="100" step=".1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
               </div>
               <div style="font-size:.6rem;color:var(--ink3)">18% GST on commission auto-applied.</div>
             </div>
             <!-- Myntra -->
             <div style="background:var(--bg2);border-radius:8px;padding:.7rem">
               <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">🏪 Myntra</div>
-              <div class="fg"><label>Courier (₹/order)</label><input type="number" id="myn-courier" value="80" min="0" step="1" oninput="savePnlSettings()"/></div>
-              <div class="fg"><label>Ad Spend % of SP</label><input type="number" id="myn-ad-pct" value="0" min="0" step=".1" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Courier (₹/order)</label><input type="number" id="myn-courier" value="80" min="0" step="1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Ad Spend % of SP</label><input type="number" id="myn-ad-pct" value="0" min="0" step=".1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
               <div style="font-size:.6rem;color:var(--ink3)">Commission+Fixed Fee+18% GST on fees auto. Ad on gross SP.</div>
             </div>
           </div>
@@ -364,24 +364,24 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
             <!-- Shopify -->
             <div style="background:var(--bg2);border-radius:8px;padding:.7rem">
               <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">🛒 Shopify</div>
-              <div class="fg"><label>Courier (₹/order)</label><input type="number" id="shy-courier" value="85" min="0" step="1" oninput="savePnlSettings()"/></div>
-              <div class="fg"><label>Platform Fee % of SP</label><input type="number" id="shy-platform-pct" value="1" min="0" step=".1" oninput="savePnlSettings()"/></div>
-              <div class="fg"><label>Payment Gateway % of SP</label><input type="number" id="shy-gateway-pct" value="0" min="0" step=".1" oninput="savePnlSettings()"/></div>
-              <div class="fg"><label>Ad Spend % of SP</label><input type="number" id="shy-ad-pct" value="0" min="0" step=".1" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Courier (₹/order)</label><input type="number" id="shy-courier" value="85" min="0" step="1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Platform Fee % of SP</label><input type="number" id="shy-platform-pct" value="1" min="0" step=".1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Payment Gateway % of SP</label><input type="number" id="shy-gateway-pct" value="0" min="0" step=".1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Ad Spend % of SP</label><input type="number" id="shy-ad-pct" value="0" min="0" step=".1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
             </div>
             <!-- Meesho -->
             <div style="background:var(--bg2);border-radius:8px;padding:.7rem">
               <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">🛍 Meesho</div>
-              <div class="fg"><label>Shipping Fee (₹/order)</label><input type="number" id="mee-shipping" value="0" min="0" step="1" oninput="savePnlSettings()"/></div>
-              <div class="fg"><label>Platform Fee % of SP</label><input type="number" id="mee-platform-pct" value="0" min="0" step=".1" oninput="savePnlSettings()"/></div>
-              <div class="fg"><label>Ad Spend % of SP</label><input type="number" id="mee-ad-pct" value="0" min="0" step=".1" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Shipping Fee (₹/order)</label><input type="number" id="mee-shipping" value="0" min="0" step="1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Platform Fee % of SP</label><input type="number" id="mee-platform-pct" value="0" min="0" step=".1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Ad Spend % of SP</label><input type="number" id="mee-ad-pct" value="0" min="0" step=".1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
               <div style="font-size:.6rem;color:var(--ink3)">Other charges entered per product in Edit modal.</div>
             </div>
             <!-- Profit Target + Overhead -->
             <div style="background:var(--bg2);border-radius:8px;padding:.7rem;border:2px solid var(--orange)">
               <div style="font-size:.65rem;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">🎯 Profit Target &amp; Overhead</div>
-              <div class="fg"><label>Target Net Profit %</label><input type="number" id="profit-target-pct" value="20" min="0" step="1" oninput="savePnlSettings()"/></div>
-              <div class="fg"><label>Overhead Cost (₹/order)</label><input type="number" id="overhead-cost" value="0" min="0" step=".01" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Target Net Profit %</label><input type="number" id="profit-target-pct" value="20" min="0" step="1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Overhead Cost (₹/order)</label><input type="number" id="overhead-cost" value="0" min="0" step=".01" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
               <div style="font-size:.6rem;color:var(--ink3)">🟢 ≥ Target &nbsp;|&nbsp; 🟠 0% to Target &nbsp;|&nbsp; 🔴 Loss<br/>Overhead added to all platforms equally.</div>
             </div>
           </div>
