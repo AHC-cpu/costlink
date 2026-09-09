@@ -335,33 +335,54 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
           <span style="font-size:.72rem;color:var(--ink3)" id="pnl-settings-toggle">▼ Show</span>
         </div>
         <div id="pnl-settings-body" style="display:none;padding:1rem;border-top:1px solid var(--line)">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:1rem;">
-            <div>
-              <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;">🛒 Amazon</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:.8rem;">
+            <!-- Amazon -->
+            <div style="background:var(--bg2);border-radius:8px;padding:.7rem">
+              <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">🛒 Amazon</div>
               <div class="fg"><label>Courier (₹/order)</label><input type="number" id="amz-courier" value="70" min="0" step="1" oninput="savePnlSettings()"/></div>
-              <div style="font-size:.62rem;color:var(--ink3)">+Closing fee auto from price slab. Referral % by category.</div>
+              <div class="fg"><label>Ad Spend % of SP</label><input type="number" id="amz-ad-pct" value="0" min="0" step=".1" oninput="savePnlSettings()"/></div>
+              <div style="font-size:.6rem;color:var(--ink3)">Referral+GST+Closing fee auto. Ad spend on gross SP.</div>
             </div>
-            <div>
-              <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;">🛍 Firstcry</div>
+            <!-- Firstcry -->
+            <div style="background:var(--bg2);border-radius:8px;padding:.7rem">
+              <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">🛍 Firstcry</div>
               <div class="fr2" style="gap:.4rem">
                 <div class="fg"><label>Healthcare %</label><input type="number" id="fc-health-pct" value="37" min="0" max="100" step=".1" oninput="savePnlSettings()"/></div>
                 <div class="fg"><label>Fashion %</label><input type="number" id="fc-fashion-pct" value="45" min="0" max="100" step=".1" oninput="savePnlSettings()"/></div>
               </div>
-              <div style="font-size:.62rem;color:var(--ink3)">18% GST on commission auto-applied.</div>
+              <div style="font-size:.6rem;color:var(--ink3)">18% GST on commission auto-applied.</div>
             </div>
-            <div>
-              <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;">🏪 Myntra</div>
+            <!-- Myntra -->
+            <div style="background:var(--bg2);border-radius:8px;padding:.7rem">
+              <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">🏪 Myntra</div>
               <div class="fg"><label>Courier (₹/order)</label><input type="number" id="myn-courier" value="80" min="0" step="1" oninput="savePnlSettings()"/></div>
-              <div style="font-size:.62rem;color:var(--ink3)">Commission % + Fixed Fee auto from category & price slab.</div>
+              <div class="fg"><label>Ad Spend % of SP</label><input type="number" id="myn-ad-pct" value="0" min="0" step=".1" oninput="savePnlSettings()"/></div>
+              <div style="font-size:.6rem;color:var(--ink3)">Commission+Fixed Fee+18% GST on fees auto. Ad on gross SP.</div>
             </div>
-            <div>
-              <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;">🛒 Shopify</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:.8rem;">
+            <!-- Shopify -->
+            <div style="background:var(--bg2);border-radius:8px;padding:.7rem">
+              <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">🛒 Shopify</div>
               <div class="fg"><label>Courier (₹/order)</label><input type="number" id="shy-courier" value="85" min="0" step="1" oninput="savePnlSettings()"/></div>
-              <div style="font-size:.62rem;color:var(--ink3)">No commission. Only courier charges deducted.</div>
+              <div class="fg"><label>Platform Fee % of SP</label><input type="number" id="shy-platform-pct" value="1" min="0" step=".1" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Payment Gateway % of SP</label><input type="number" id="shy-gateway-pct" value="0" min="0" step=".1" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Ad Spend % of SP</label><input type="number" id="shy-ad-pct" value="0" min="0" step=".1" oninput="savePnlSettings()"/></div>
             </div>
-            <div>
-              <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;">🛍 Meesho</div>
-              <div style="font-size:.68rem;color:var(--ink3);padding:.5rem .6rem;background:var(--bg);border-radius:6px;border:1px solid var(--line)">No commission. Courier &amp; other charges entered <strong>per product</strong> in the Edit modal.</div>
+            <!-- Meesho -->
+            <div style="background:var(--bg2);border-radius:8px;padding:.7rem">
+              <div style="font-size:.65rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">🛍 Meesho</div>
+              <div class="fg"><label>Shipping Fee (₹/order)</label><input type="number" id="mee-shipping" value="0" min="0" step="1" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Platform Fee % of SP</label><input type="number" id="mee-platform-pct" value="0" min="0" step=".1" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Ad Spend % of SP</label><input type="number" id="mee-ad-pct" value="0" min="0" step=".1" oninput="savePnlSettings()"/></div>
+              <div style="font-size:.6rem;color:var(--ink3)">Other charges entered per product in Edit modal.</div>
+            </div>
+            <!-- Profit Target + Overhead -->
+            <div style="background:var(--bg2);border-radius:8px;padding:.7rem;border:2px solid var(--orange)">
+              <div style="font-size:.65rem;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">🎯 Profit Target &amp; Overhead</div>
+              <div class="fg"><label>Target Net Profit %</label><input type="number" id="profit-target-pct" value="20" min="0" step="1" oninput="savePnlSettings()"/></div>
+              <div class="fg"><label>Overhead Cost (₹/order)</label><input type="number" id="overhead-cost" value="0" min="0" step=".01" oninput="savePnlSettings()"/></div>
+              <div style="font-size:.6rem;color:var(--ink3)">🟢 ≥ Target &nbsp;|&nbsp; 🟠 0% to Target &nbsp;|&nbsp; 🔴 Loss<br/>Overhead added to all platforms equally.</div>
             </div>
           </div>
         </div>
@@ -729,10 +750,10 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
             <div class="cost-section" style="background:#E8EAF6;border-color:#9FA8DA;margin-bottom:0">
               <div class="cs-title"><div class="dot" style="background:#3F51B5"></div>🛍 Meesho</div>
               <div class="fg"><label>Selling Price (₹)</label><input type="number" id="pnl-mee-sp" placeholder="0.00" min="0" step=".01" oninput="calcPnlPreview()"/></div>
-              <div class="fr2" style="gap:.4rem">
-                <div class="fg"><label>Courier (₹)</label><input type="number" id="pnl-mee-courier" placeholder="0.00" min="0" step=".01" oninput="calcPnlPreview()"/></div>
-                <div class="fg"><label>Other Charges (₹)</label><input type="number" id="pnl-mee-other" placeholder="0.00" min="0" step=".01" oninput="calcPnlPreview()"/></div>
+              <div class="fg"><label>Other Charges ₹ <span style="color:var(--ink3);font-weight:400;font-size:.62rem">(per product, e.g. extra handling)</span></label>
+                <input type="number" id="pnl-mee-other" placeholder="0.00" min="0" step=".01" oninput="calcPnlPreview()"/>
               </div>
+              <div style="font-size:.62rem;color:var(--ink3)">Shipping fee, Platform fee, Ad spend set globally in Settings.</div>
               <div class="calc-preview" style="margin-top:.3rem" id="mee-preview">
                 <div class="calc-row"><span style="color:var(--ink3)">Enter selling price to calculate</span><span></span></div>
               </div>
@@ -4348,13 +4369,21 @@ function loadPnlSettings() {
   try {
     const s = JSON.parse(localStorage.getItem('pnl_settings')||'{}');
     const set = (id, val) => { const el=document.getElementById(id); if(el) el.value=val; };
-    set('amz-courier',    s.amzCourier   ?? 70);
-    set('fc-health-pct',  s.fcHealthPct  ?? 37);
-    set('fc-fashion-pct', s.fcFashionPct ?? 45);
-    set('myn-courier',    s.mynCourier   ?? 80);
-    set('shy-courier',    s.shyCourier   ?? 85);
-    set('mee-courier',    s.meeCourier   ?? 0);
-    set('mee-other',      s.meeOther     ?? 0);
+    set('amz-courier',       s.amzCourier      ?? 70);
+    set('amz-ad-pct',        s.amzAdPct        ?? 0);
+    set('fc-health-pct',     s.fcHealthPct     ?? 37);
+    set('fc-fashion-pct',    s.fcFashionPct    ?? 45);
+    set('myn-courier',       s.mynCourier      ?? 80);
+    set('myn-ad-pct',        s.mynAdPct        ?? 0);
+    set('shy-courier',       s.shyCourier      ?? 85);
+    set('shy-platform-pct',  s.shyPlatformPct  ?? 1);
+    set('shy-gateway-pct',   s.shyGatewayPct   ?? 0);
+    set('shy-ad-pct',        s.shyAdPct        ?? 0);
+    set('mee-shipping',      s.meeShipping     ?? 0);
+    set('mee-platform-pct',  s.meePlatformPct  ?? 0);
+    set('mee-ad-pct',        s.meeAdPct        ?? 0);
+    set('profit-target-pct', s.profitTargetPct ?? 20);
+    set('overhead-cost',      s.overheadCost     ?? 0);
   } catch(e){}
 }
 
@@ -4377,15 +4406,25 @@ function getPnlSettings() {
   try {
     const s = JSON.parse(localStorage.getItem('pnl_settings')||'{}');
     return {
-      amzCourier:   s.amzCourier   ?? 70,
-      fcHealthPct:  s.fcHealthPct  ?? 37,
-      fcFashionPct: s.fcFashionPct ?? 45,
-      mynCourier:   s.mynCourier   ?? 80,
-      shyCourier:   s.shyCourier   ?? 85,
-      meeCourier:   s.meeCourier   ?? 0,
-      meeOther:     s.meeOther     ?? 0,
+      amzCourier:     s.amzCourier      ?? 70,
+      amzAdPct:       s.amzAdPct        ?? 0,
+      fcHealthPct:    s.fcHealthPct     ?? 37,
+      fcFashionPct:   s.fcFashionPct    ?? 45,
+      mynCourier:     s.mynCourier      ?? 80,
+      mynAdPct:       s.mynAdPct        ?? 0,
+      shyCourier:     s.shyCourier      ?? 85,
+      shyPlatformPct: s.shyPlatformPct  ?? 1,
+      shyGatewayPct:  s.shyGatewayPct   ?? 0,
+      shyAdPct:       s.shyAdPct        ?? 0,
+      meeShipping:    s.meeShipping     ?? 0,
+      meePlatformPct: s.meePlatformPct  ?? 0,
+      meeAdPct:       s.meeAdPct        ?? 0,
+      profitTargetPct:s.profitTargetPct ?? 20,
+      overheadCost:   s.overheadCost    ?? 0,
     };
-  } catch(e) { return { amzCourier:70, fcHealthPct:37, fcFashionPct:45, mynCourier:80, shyCourier:85, meeCourier:0, meeOther:0 }; }
+  } catch(e) { return { amzCourier:70, amzAdPct:0, fcHealthPct:37, fcFashionPct:45,
+    mynCourier:80, mynAdPct:0, shyCourier:85, shyPlatformPct:1, shyGatewayPct:0, shyAdPct:0,
+    meeShipping:0, meePlatformPct:0, meeAdPct:0, profitTargetPct:20, overheadCost:0 }; }
 }
 
 function togglePnlSettings() {
@@ -4427,17 +4466,19 @@ function getProductGst(sheet, pnlRec) {
 function calcAmzPnl(cost, sellPrice, cat, settings, gstPct) {
   if (!sellPrice) return null;
   const netSP      = sellPrice / (1 + gstPct/100);
-  const refPct     = getAmzReferralPct(cat, netSP);   // referral on net revenue
+  const refPct     = getAmzReferralPct(cat, netSP);
   const refFee     = netSP * (refPct/100);
   const gstOnRef   = refFee * 0.18;
-  const closingFee = getAmzClosingFee(sellPrice);       // closing fee based on SP slab
+  const closingFee = getAmzClosingFee(sellPrice);
   const gstOnClose = closingFee * 0.18;
   const netCourier = settings.amzCourier / 1.18;
+  const adSpend    = sellPrice * ((settings.amzAdPct||0) / 100);
+  const overhead   = settings.overheadCost || 0;
   const totalComm  = refFee + gstOnRef + closingFee + gstOnClose;
-  const totalDeduct= totalComm + netCourier + cost;
+  const totalDeduct= totalComm + netCourier + adSpend + overhead + cost;
   const profit     = netSP - totalDeduct;
   return { sellPrice, netSP, gstPct, refPct, refFee, gstOnRef,
-    closingFee, gstOnClose, totalComm,
+    closingFee, gstOnClose, totalComm, adSpend, overhead,
     courier: settings.amzCourier, netCourier, totalDeduct, profit,
     margin: netSP>0 ? (profit/netSP*100) : 0 };
 }
@@ -4446,51 +4487,63 @@ function calcFcPnl(cost, sellPrice, dept, settings, gstPct) {
   if (!sellPrice) return null;
   const netSP      = sellPrice / (1 + gstPct/100);
   const commPct    = dept==='fashion' ? settings.fcFashionPct : settings.fcHealthPct;
-  const commission = netSP * (commPct/100);   // on net revenue, NO GST on commission
+  const commission = netSP * (commPct/100);
+  const overhead   = settings.overheadCost || 0;
   const totalComm  = commission;
-  const totalDeduct= commission + cost;
+  const totalDeduct= commission + overhead + cost;
   const profit     = netSP - totalDeduct;
-  return { sellPrice, netSP, gstPct, commPct, commission, totalComm, totalDeduct, profit,
+  return { sellPrice, netSP, gstPct, commPct, commission, totalComm, overhead, totalDeduct, profit,
     margin: netSP>0 ? (profit/netSP*100) : 0 };
 }
 
 function calcMynPnl(cost, sellPrice, cat, settings, gstPct) {
   if (!sellPrice) return null;
   const netSP      = sellPrice / (1 + gstPct/100);
-  const commPct    = getMynCommPct(cat, netSP);        // commission on net revenue
+  const commPct    = getMynCommPct(cat, netSP);
   const commission = netSP * (commPct/100);
-  const fixedFee   = getMynFixedFee(cat, sellPrice);   // fixed fee slab on SP
-  const totalComm  = commission + fixedFee;
+  const fixedFee   = getMynFixedFee(cat, sellPrice);
+  const gstOnFees  = (commission + fixedFee) * 0.18;  // 18% GST on Myntra fees
+  const adSpend    = sellPrice * ((settings.mynAdPct||0) / 100);
+  const overhead   = settings.overheadCost || 0;
+  const totalComm  = commission + fixedFee + gstOnFees;
   const netCourier = settings.mynCourier / 1.18;
-  const totalDeduct= totalComm + netCourier + cost;
+  const totalDeduct= totalComm + netCourier + adSpend + overhead + cost;
   const profit     = netSP - totalDeduct;
-  return { sellPrice, netSP, gstPct, commPct, commission, fixedFee, totalComm,
-    courier: settings.mynCourier, netCourier, totalDeduct, profit,
+  return { sellPrice, netSP, gstPct, commPct, commission, fixedFee, gstOnFees, totalComm,
+    adSpend, overhead, courier: settings.mynCourier, netCourier, totalDeduct, profit,
     margin: netSP>0 ? (profit/netSP*100) : 0 };
 }
 
 function calcShyPnl(cost, sellPrice, settings, gstPct) {
   if (!sellPrice) return null;
-  const netSP      = sellPrice / (1 + gstPct/100);
-  const netCourier = settings.shyCourier / 1.18;
-  const totalComm  = 0;
-  const totalDeduct= netCourier + cost;
-  const profit     = netSP - totalDeduct;
+  const netSP       = sellPrice / (1 + gstPct/100);
+  const netCourier  = settings.shyCourier / 1.18;
+  const platformFee = sellPrice * ((settings.shyPlatformPct||1) / 100);  // on gross SP
+  const gatewayFee  = sellPrice * ((settings.shyGatewayPct||0) / 100);   // on gross SP
+  const adSpend     = sellPrice * ((settings.shyAdPct||0) / 100);
+  const overhead    = settings.overheadCost || 0;
+  const totalComm   = platformFee + gatewayFee;
+  const totalDeduct = netCourier + platformFee + gatewayFee + adSpend + overhead + cost;
+  const profit      = netSP - totalDeduct;
   return { sellPrice, netSP, gstPct, totalComm,
+    platformFee, gatewayFee, adSpend, overhead,
     courier: settings.shyCourier, netCourier, totalDeduct, profit,
     margin: netSP>0 ? (profit/netSP*100) : 0 };
 }
 
-function calcMeePnl(cost, sellPrice, meeCourier, meeOther, gstPct) {
+function calcMeePnl(cost, sellPrice, meeOther, settings, gstPct) {
   if (!sellPrice) return null;
-  const netSP      = sellPrice / (1 + gstPct/100);
-  const netCourier = meeCourier > 0 ? meeCourier / 1.18 : 0;
-  const other      = meeOther || 0;
-  const totalComm  = 0;
-  const totalDeduct= netCourier + other + cost;
-  const profit     = netSP - totalDeduct;
+  const netSP       = sellPrice / (1 + gstPct/100);
+  const shipping    = settings.meeShipping || 0;        // global shipping fee ₹
+  const platformFee = sellPrice * ((settings.meePlatformPct||0) / 100);  // on gross SP
+  const adSpend     = sellPrice * ((settings.meeAdPct||0) / 100);        // on gross SP
+  const other       = meeOther || 0;
+  const overhead    = settings.overheadCost || 0;
+  const totalComm   = platformFee;
+  const totalDeduct = shipping + platformFee + adSpend + other + overhead + cost;
+  const profit      = netSP - totalDeduct;
   return { sellPrice, netSP, gstPct, totalComm,
-    courier: meeCourier, netCourier, other, totalDeduct, profit,
+    shipping, platformFee, adSpend, other, overhead, totalDeduct, profit,
     margin: netSP>0 ? (profit/netSP*100) : 0 };
 }
 // Myntra commission % by master category + price slab (ZIKKU brand from CTA)
@@ -4711,7 +4764,7 @@ function renderPnl() {
     const fc   = calcFcPnl(s.finalCost,  pnl.fcSellPrice||0,  pnl.fcDept||'healthcare',   settings, gst);
     const myn  = calcMynPnl(s.finalCost, pnl.mynSellPrice||0, pnl.mynCat||'ACCESSORIES',   settings, gst);
     const shy  = calcShyPnl(s.finalCost, pnl.shySellPrice||0,                              settings, gst);
-    const mee  = calcMeePnl(s.finalCost, pnl.meeSellPrice||0, pnl.meeCourier||0, pnl.meeOther||0, gst);
+    const mee  = calcMeePnl(s.finalCost, pnl.meeSellPrice||0, pnl.meeOther||0, settings, gst);
     return { sheet:s, pnl, amz, fc, myn, shy, mee, gst };
   });
 
@@ -4746,7 +4799,7 @@ function renderPnl() {
       amz:  calcAmzPnl(s.finalCost, p.amzSellPrice||0, p.amzCat||'apparel_baby', settings, gst),
       fc:   calcFcPnl(s.finalCost,  p.fcSellPrice||0,  p.fcDept||'healthcare',   settings, gst),
       myn:  calcMynPnl(s.finalCost, p.mynSellPrice||0, p.mynCat||'ACCESSORIES',   settings, gst),
-      mee:  calcMeePnl(s.finalCost, p.meeSellPrice||0, p.meeCourier||0, p.meeOther||0, gst),
+      mee:  calcMeePnl(s.finalCost, p.meeSellPrice||0, p.meeOther||0, settings, gst),
       configured: (p.amzSellPrice||p.fcSellPrice||p.mynSellPrice||p.shySellPrice||p.meeSellPrice)>0
     };
   });
@@ -4758,12 +4811,17 @@ function renderPnl() {
   document.getElementById('pnl-kv-configured').textContent  = all.filter(r=>r.configured).length;
 
   const spStyle = 'text-align:right;font-weight:500;font-size:.8rem;';
+  const target  = settings.profitTargetPct ?? 20;
   const plInner = result => {
     if (!result || !result.sellPrice) return '<span style="color:var(--ink3);font-size:.68rem">—</span>';
-    const col = result.profit>=0?'#2e7d32':'#c93a1a';
+    const m = result.margin;
+    const col = m >= target ? '#2e7d32' : m >= 0 ? '#e65100' : '#c93a1a';
+    const bg  = m >= target ? 'rgba(46,125,50,.08)' : m >= 0 ? 'rgba(230,81,0,.08)' : 'rgba(201,58,26,.08)';
     const sym = result.profit>=0?'▲':'▼';
-    return `<div style="font-weight:700;color:${col};font-size:.82rem;text-align:right">${sym} ${fmt(Math.abs(result.profit))}</div>
-            <div style="font-size:.58rem;color:${col};text-align:right">${result.margin>=0?'+':''}${result.margin.toFixed(1)}%</div>`;
+    return `<div style="background:${bg};border-radius:4px;padding:.2rem .4rem;text-align:right">
+      <div style="font-weight:700;color:${col};font-size:.82rem">${sym} ${fmt(Math.abs(result.profit))}</div>
+      <div style="font-size:.58rem;color:${col}">${m>=0?'+':''}${m.toFixed(1)}%</div>
+    </div>`;
   };
 
   const tbody = document.getElementById('tbl-pnl-body');
@@ -4870,9 +4928,8 @@ function openPnlModal(sheetId) {
   sv('pnl-myn-sp',  pnl.mynSellPrice  || '');
   sv('pnl-myn-cat', pnl.mynCat        || 'ACCESSORIES');
   sv('pnl-shy-sp',  pnl.shySellPrice  || '');
-  sv('pnl-mee-sp',      pnl.meeSellPrice  || '');
-  sv('pnl-mee-courier', pnl.meeCourier    || '');
-  sv('pnl-mee-other',   pnl.meeOther      || '');
+  sv('pnl-mee-sp',    pnl.meeSellPrice  || '');
+  sv('pnl-mee-other',  pnl.meeOther      || '');
   sv('pnl-sku',     pnl.sku           || '');
   sv('pnl-mrp',     pnl.mrp           || '');
   sv('pnl-hsn',     pnl.hsn           || '');
@@ -4918,6 +4975,8 @@ function calcPnlPreview() {
       <div class="calc-row"><span style="color:var(--ink3)">− Closing Fee</span><span>−${fmt(a.closingFee)}</span></div>
       <div class="calc-row"><span style="color:var(--ink3)">− GST on Closing (18%)</span><span>−${fmt(a.gstOnClose)}</span></div>
       <div class="calc-row"><span style="color:var(--ink3)">− Courier (net of GST)</span><span>−${fmt(a.netCourier)}</span></div>
+      ${a.adSpend>0?`<div class="calc-row"><span style="color:var(--ink3)">− Ad Spend (${settings.amzAdPct}%)</span><span>−${fmt(a.adSpend)}</span></div>`:''}
+      ${a.overhead>0?`<div class="calc-row"><span style="color:var(--ink3)">− Overhead</span><span>−${fmt(a.overhead)}</span></div>`:''}
       <div class="calc-row"><span style="color:var(--ink3)">− Your Cost</span><span>−${fmt(cost)}</span></div>`,
       a.profit, a.margin);
   } else showPreview('amz-preview', null);
@@ -4933,6 +4992,7 @@ function calcPnlPreview() {
       <div class="calc-row"><span style="color:var(--ink3)">Net Revenue (excl. GST)</span><span>${fmt(f2.netSP)}</span></div>
       <div class="calc-row"><span style="color:var(--ink3)">− Commission (${f2.commPct}%)</span><span>−${fmt(f2.commission)}</span></div>
       <div class="calc-row"><span style="color:var(--ink3)">− GST on Comm (18%)</span><span>−${fmt(f2.gstOnComm)}</span></div>
+      ${f2.overhead>0?`<div class="calc-row"><span style="color:var(--ink3)">− Overhead</span><span>−${fmt(f2.overhead)}</span></div>`:''}
       <div class="calc-row"><span style="color:var(--ink3)">− Your Cost</span><span>−${fmt(cost)}</span></div>`,
       f2.profit, f2.margin);
   } else showPreview('fc-preview', null);
@@ -4949,6 +5009,8 @@ function calcPnlPreview() {
       <div class="calc-row"><span style="color:var(--ink3)">− Fixed Fee</span><span>−${fmt(m.fixedFee)}</span></div>
       <div class="calc-row"><span style="color:var(--ink3)">− GST on Fees (18%)</span><span>−${fmt(m.gstOnFees)}</span></div>
       <div class="calc-row"><span style="color:var(--ink3)">− Courier (net of GST)</span><span>−${fmt(m.netCourier)}</span></div>
+      ${m.adSpend>0?`<div class="calc-row"><span style="color:var(--ink3)">− Ad Spend (${settings.mynAdPct}%)</span><span>−${fmt(m.adSpend)}</span></div>`:''}
+      ${m.overhead>0?`<div class="calc-row"><span style="color:var(--ink3)">− Overhead</span><span>−${fmt(m.overhead)}</span></div>`:''}
       <div class="calc-row"><span style="color:var(--ink3)">− Your Cost</span><span>−${fmt(cost)}</span></div>`,
       m.profit, m.margin);
   } else showPreview('myn-preview', null);
@@ -4961,6 +5023,10 @@ function calcPnlPreview() {
       <div class="calc-row"><span>Selling Price (incl. ${gstPct}% GST)</span><span style="font-weight:600">${fmt(shySP)}</span></div>
       <div class="calc-row"><span style="color:var(--ink3)">Net Revenue (excl. GST)</span><span>${fmt(sh.netSP)}</span></div>
       <div class="calc-row"><span style="color:var(--ink3)">− Courier (net of GST)</span><span>−${fmt(sh.netCourier)}</span></div>
+      ${sh.platformFee>0?`<div class="calc-row"><span style="color:var(--ink3)">− Platform Fee (${settings.shyPlatformPct}%)</span><span>−${fmt(sh.platformFee)}</span></div>`:''}
+      ${sh.gatewayFee>0?`<div class="calc-row"><span style="color:var(--ink3)">− Payment Gateway (${settings.shyGatewayPct}%)</span><span>−${fmt(sh.gatewayFee)}</span></div>`:''}
+      ${sh.adSpend>0?`<div class="calc-row"><span style="color:var(--ink3)">− Ad Spend (${settings.shyAdPct}%)</span><span>−${fmt(sh.adSpend)}</span></div>`:''}
+      ${sh.overhead>0?`<div class="calc-row"><span style="color:var(--ink3)">− Overhead</span><span>−${fmt(sh.overhead)}</span></div>`:''}
       <div class="calc-row"><span style="color:var(--ink3)">− Your Cost</span><span>−${fmt(cost)}</span></div>`,
       sh.profit, sh.margin);
   } else showPreview('shy-preview', null);
@@ -4968,14 +5034,16 @@ function calcPnlPreview() {
   // MEESHO
   const meeSP = parseFloat(document.getElementById('pnl-mee-sp')?.value)||0;
   if (meeSP>0) {
-    const meeC = parseFloat(document.getElementById('pnl-mee-courier')?.value)||0;
-    const meeO = parseFloat(document.getElementById('pnl-mee-other')?.value)||0;
-    const me = calcMeePnl(cost, meeSP, meeC, meeO, gstPct);
+    const meeOther2 = parseFloat(document.getElementById('pnl-mee-other')?.value)||0;
+    const me = calcMeePnl(cost, meeSP, meeOther2, settings, gstPct);
     showPreview('mee-preview', `
       <div class="calc-row"><span>Selling Price (incl. ${gstPct}% GST)</span><span style="font-weight:600">${fmt(meeSP)}</span></div>
       <div class="calc-row"><span style="color:var(--ink3)">Net Revenue (excl. GST)</span><span>${fmt(me.netSP)}</span></div>
-      ${me.netCourier>0?`<div class="calc-row"><span style="color:var(--ink3)">− Courier (net of GST)</span><span>−${fmt(me.netCourier)}</span></div>`:''}
+      ${me.shipping>0?`<div class="calc-row"><span style="color:var(--ink3)">− Shipping Fee</span><span>−${fmt(me.shipping)}</span></div>`:''}
+      ${me.platformFee>0?`<div class="calc-row"><span style="color:var(--ink3)">− Platform Fee</span><span>−${fmt(me.platformFee)}</span></div>`:''}
+      ${me.adSpend>0?`<div class="calc-row"><span style="color:var(--ink3)">− Ad Spend</span><span>−${fmt(me.adSpend)}</span></div>`:''}
       ${me.other>0?`<div class="calc-row"><span style="color:var(--ink3)">− Other Charges</span><span>−${fmt(me.other)}</span></div>`:''}
+      ${me.overhead>0?`<div class="calc-row"><span style="color:var(--ink3)">− Overhead</span><span>−${fmt(me.overhead)}</span></div>`:''}
       <div class="calc-row"><span style="color:var(--ink3)">− Your Cost</span><span>−${fmt(cost)}</span></div>`,
       me.profit, me.margin);
   } else showPreview('mee-preview', null);
@@ -5004,9 +5072,8 @@ async function savePnlModal() {
   rec.mynSellPrice = parseFloat(document.getElementById('pnl-myn-sp')?.value)  || 0;
   rec.mynCat       = document.getElementById('pnl-myn-cat')?.value             || 'ACCESSORIES';
   rec.shySellPrice = parseFloat(document.getElementById('pnl-shy-sp')?.value)      || 0;
-  rec.meeSellPrice = parseFloat(document.getElementById('pnl-mee-sp')?.value)      || 0;
-  rec.meeCourier   = parseFloat(document.getElementById('pnl-mee-courier')?.value) || 0;
-  rec.meeOther     = parseFloat(document.getElementById('pnl-mee-other')?.value)   || 0;
+  rec.meeSellPrice = parseFloat(document.getElementById('pnl-mee-sp')?.value)    || 0;
+  rec.meeOther     = parseFloat(document.getElementById('pnl-mee-other')?.value)  || 0;
   rec.sku          = (document.getElementById('pnl-sku')?.value||'').trim();
   rec.mrp          = parseFloat(document.getElementById('pnl-mrp')?.value)     || 0;
   rec.hsn          = (document.getElementById('pnl-hsn')?.value||'').trim();
@@ -5080,7 +5147,7 @@ function exportPnlExcel() {
     const fc   = calcFcPnl(s.finalCost,  pnl.fcSellPrice||0,  pnl.fcDept||'healthcare',   settings, gst);
     const myn  = calcMynPnl(s.finalCost, pnl.mynSellPrice||0, pnl.mynCat||'ACCESSORIES',  settings, gst);
     const shy  = calcShyPnl(s.finalCost, pnl.shySellPrice||0,                             settings, gst);
-    const mee  = calcMeePnl(s.finalCost, pnl.meeSellPrice||0, pnl.meeCourier||0, pnl.meeOther||0, gst);
+    const mee  = calcMeePnl(s.finalCost, pnl.meeSellPrice||0, pnl.meeOther||0, settings, gst);
     return [
       s.name, pnl.sku||s.sku||'', pnl.mrp||'', pnl.hsn||'', gst, s.finalCost,
       amz?.sellPrice||'', amz?.refPct||'', amz?+amz.refFee.toFixed(2):'', amz?+amz.closingFee:'', amz?+amz.netCourier.toFixed(2):'', amz?+amz.profit.toFixed(2):'', amz?+amz.margin.toFixed(1):'',
