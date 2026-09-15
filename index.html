@@ -381,7 +381,11 @@ td{padding:.6rem .85rem;font-size:.76rem;vertical-align:middle;}
             <div style="background:var(--bg2);border-radius:8px;padding:.7rem;border:2px solid var(--orange)">
               <div style="font-size:.65rem;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">🎯 Profit Target &amp; Overhead</div>
               <div class="fg"><label>Target Net Profit %</label><input type="number" id="profit-target-pct" value="20" min="0" step="1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
-              <div class="fg"><label>Overhead Cost % of SP</label><input type="number" id="overhead-cost" value="0" min="0" step=".1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
+              <div class="fr2" style="gap:.4rem">
+                <div class="fg"><label>Overhead % of SP</label><input type="number" id="overhead-pct" value="12" min="0" step=".1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
+                <div class="fg"><label>Overhead Cap (₹)</label><input type="number" id="overhead-cap" value="60" min="0" step="1" onchange="savePnlSettings()" oninput="savePnlSettings()"/></div>
+              </div>
+              <div style="font-size:.6rem;color:var(--ink3)">MIN(% × SP, Cap ₹) — scales with cheap items, capped for expensive ones.</div>
               <div style="font-size:.6rem;color:var(--ink3)">🟢 ≥ Target &nbsp;|&nbsp; 🟠 0% to Target &nbsp;|&nbsp; 🔴 Loss<br/>Overhead added to all platforms equally.</div>
             </div>
           </div>
@@ -4383,7 +4387,8 @@ function loadPnlSettings() {
     set('mee-platform-pct',  s.meePlatformPct  ?? 0);
     set('mee-ad-pct',        s.meeAdPct        ?? 0);
     set('profit-target-pct', s.profitTargetPct ?? 20);
-    set('overhead-cost',      s.overheadCost     ?? 0);
+    set('overhead-pct',  s.overheadPct  ?? 12);
+    set('overhead-cap',  s.overheadCap  ?? 60);
   } catch(e){}
 }
 
@@ -4406,7 +4411,8 @@ function savePnlSettings() {
       meePlatformPct:  gv2('mee-platform-pct')   ?? 0,
       meeAdPct:        gv2('mee-ad-pct')         ?? 0,
       profitTargetPct: gv2('profit-target-pct')  ?? 20,
-      overheadCost:    gv2('overhead-cost')       ?? 0,
+      overheadPct:     gv2('overhead-pct')        ?? 12,
+      overheadCap:     gv2('overhead-cap')        ?? 60,
     }));
     // Debounce — recalculate 600ms after last keystroke so typing isn't interrupted
     clearTimeout(_pnlSettingsTimer);
@@ -4432,11 +4438,12 @@ function getPnlSettings() {
       meePlatformPct: s.meePlatformPct  ?? 0,
       meeAdPct:       s.meeAdPct        ?? 0,
       profitTargetPct:s.profitTargetPct ?? 20,
-      overheadCost:   s.overheadCost    ?? 0,
+      overheadPct:    s.overheadPct     ?? 12,
+      overheadCap:    s.overheadCap     ?? 60,
     };
   } catch(e) { return { amzCourier:70, amzAdPct:0, fcHealthPct:37, fcFashionPct:45,
     mynCourier:80, mynAdPct:0, shyCourier:85, shyPlatformPct:1, shyGatewayPct:0, shyAdPct:0,
-    meeShipping:0, meePlatformPct:0, meeAdPct:0, profitTargetPct:20, overheadCost:0 }; }
+    meeShipping:0, meePlatformPct:0, meeAdPct:0, profitTargetPct:20, overheadPct:12, overheadCap:60 }; }
 }
 
 function togglePnlSettings() {
@@ -4486,7 +4493,7 @@ function calcAmzPnl(cost, sellPrice, cat, settings, gstPct) {
   const gstOnClose = closingFee * 0.18;
   const netCourier = settings.amzCourier / 1.18;
   const adSpend    = sellPrice * ((settings.amzAdPct||0) / 100);
-  const overhead   = sellPrice * ((settings.overheadCost||0) / 100);
+  const overhead   = Math.min(sellPrice * ((settings.overheadPct||12) / 100), settings.overheadCap ?? 60);
   const totalComm  = refFee + gstOnRef + closingFee + gstOnClose;
   const totalDeduct= totalComm + netCourier + adSpend + overhead + cost;
   const profit     = netSP - totalDeduct;
@@ -4501,7 +4508,7 @@ function calcFcPnl(cost, sellPrice, dept, settings, gstPct) {
   const netSP      = sellPrice / (1 + gstPct/100);
   const commPct    = dept==='fashion' ? settings.fcFashionPct : settings.fcHealthPct;
   const commission = netSP * (commPct/100);
-  const overhead   = sellPrice * ((settings.overheadCost||0) / 100);
+  const overhead   = Math.min(sellPrice * ((settings.overheadPct||12) / 100), settings.overheadCap ?? 60);
   const totalComm  = commission;
   const totalDeduct= commission + overhead + cost;
   const profit     = netSP - totalDeduct;
@@ -4517,7 +4524,7 @@ function calcMynPnl(cost, sellPrice, cat, settings, gstPct) {
   const fixedFee   = getMynFixedFee(cat, sellPrice);
   const gstOnFees  = (commission + fixedFee) * 0.18;  // 18% GST on Myntra fees
   const adSpend    = sellPrice * ((settings.mynAdPct||0) / 100);
-  const overhead   = sellPrice * ((settings.overheadCost||0) / 100);
+  const overhead   = Math.min(sellPrice * ((settings.overheadPct||12) / 100), settings.overheadCap ?? 60);
   const totalComm  = commission + fixedFee + gstOnFees;
   const netCourier = settings.mynCourier / 1.18;
   const totalDeduct= totalComm + netCourier + adSpend + overhead + cost;
@@ -4534,7 +4541,7 @@ function calcShyPnl(cost, sellPrice, settings, gstPct) {
   const platformFee = sellPrice * ((settings.shyPlatformPct||1) / 100);  // on gross SP
   const gatewayFee  = sellPrice * ((settings.shyGatewayPct||0) / 100);   // on gross SP
   const adSpend     = sellPrice * ((settings.shyAdPct||0) / 100);
-  const overhead    = sellPrice * ((settings.overheadCost||0) / 100);
+  const overhead    = Math.min(sellPrice * ((settings.overheadPct||12) / 100), settings.overheadCap ?? 60);
   const totalComm   = platformFee + gatewayFee;
   const totalDeduct = netCourier + platformFee + gatewayFee + adSpend + overhead + cost;
   const profit      = netSP - totalDeduct;
@@ -4551,7 +4558,7 @@ function calcMeePnl(cost, sellPrice, meeOther, settings, gstPct) {
   const platformFee = sellPrice * ((settings.meePlatformPct||0) / 100);  // on gross SP
   const adSpend     = sellPrice * ((settings.meeAdPct||0) / 100);        // on gross SP
   const other       = meeOther || 0;
-  const overhead    = sellPrice * ((settings.overheadCost||0) / 100);
+  const overhead    = Math.min(sellPrice * ((settings.overheadPct||12) / 100), settings.overheadCap ?? 60);
   const totalComm   = platformFee;
   const totalDeduct = shipping + platformFee + adSpend + other + overhead + cost;
   const profit      = netSP - totalDeduct;
