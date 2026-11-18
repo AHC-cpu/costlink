@@ -1406,6 +1406,27 @@ function maybeInitGIS() {
         isSignedIn = true;
         setLoginStatus('✓ Signed in! Loading your data…');
         onSignedIn();
+      },
+      // Fires when the popup fails to open, is closed, or Google returns a non-OAuth error.
+      // Without this the screen stays stuck on "Opening Google sign-in popup…".
+      error_callback: (err) => {
+        console.error('Google sign-in error:', err);
+        const type = (err && err.type) || 'unknown';
+        let msg;
+        if (type === 'popup_failed_to_open') {
+          msg = 'Google sign-in popup was blocked by the browser. Allow popups for this site and click Sign in again.';
+        } else if (type === 'popup_closed') {
+          msg = 'Google sign-in window closed before sign-in finished (popup_closed). Click Sign in to try again.';
+        } else {
+          msg = 'Google sign-in error: ' + type + (err && err.message ? ' — ' + err.message : '') + '. Click Sign in to try again.';
+        }
+        setLoginStatus(msg, true);
+        setSyncStatus('err', 'Sign-in failed');
+        const btn = document.getElementById('gsi-btn');
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = 'Sign in with Google';
+        }
       }
     });
     gisReady = true;
@@ -5654,7 +5675,8 @@ function toggleColPicker() {
 //  INIT
 // ══════════════════════════════════════════════════
 window.addEventListener('load', () => {
-  document.getElementById('sb-date').textContent = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+  const _sbDate = document.getElementById('sb-date');
+  if (_sbDate) _sbDate.textContent = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
   // Pre-load Google API in background so Sign In button works instantly
   preloadGAPI();
   renderCostingForm();
